@@ -3,8 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLC-Sprung 2.24 · Messen und Auswerten</title>
+<title>RLC-Sprung 2.25 · Messen und Auswerten</title>
 <!--
+RLC_Sprung_2.25.html (23.11.2026) -- 2.25 (sein Wort: „klar gemeinsame html“): der Kennlinienweg (bisher eigene Seite Verfahren_HR_1.1.html) ist jetzt der Reiter
+„Verfahren_HR“ dieser Seite (verschmelze_2.25.py); er nutzt die hier geladenen Messungen mit Strom (rlc27), R_s und den Ausreißer-Median der Seite; Anker #hr öffnet den Reiter.
+Einzelseite und ihre Fassungen 1.0/1.1 entfallen (Wegweiser im Repositorium). Neu in 2.25 (sein Wort „streng prüfen und solange am Problem arbeiten bis gelöst“, Hardware
+für Experimente): Messungen T = 60 und T = 100 mit Strom aufgenommen (Überschwingfaktor 1,48 / 1,53 / 1,574 / 1,598 für T = 60/100/128/140: Dämpfung steigt bei
+kleiner Anregung). Kennlinienweg aus T140 allein trägt nicht (T60 12 %), Faltung aus T140 5,4 % bei T60; gemeinsame Suche über alle vier (Vorgabe) ein Parametersatz
+1,1 … 1,5 % ΔU. Nullabgleich von Strom und Anregung am Ende (T128: −0,043 mA, +10 mV; sonst R_Cu 420 Ω), R_Cu-Quelle wählbar (Angabe 92 Ω Vorgabe), Suche läuft
+automatisch nach Schritt 10 und erscheint in Schritt 10, Gewichtung nach Hüllkurve (seine Beobachtung: die späteren Maxima entscheiden), Stromkanal als Schalter
+(L/C-Trennung), h ≥ 0 geklemmt, Differenzenschritt 1 %, LM bis λ = 1e8. Kopf der Einzelseite, übernommen:
+Verfahren_HR_1.1.html (23.11.2026) -- 1.1: Schritt 11 „Simulation und Suche“ (sein Wort: „so dass die abweichungen minimal werden halt“): alle 16 Parameter
+(ψ̃, q̃, R_Cu, R_Fe) mit Levenberg-Marquardt (numerische Ableitung) so nachgestellt, dass die DGL-Lösung die gewählte Messung trifft; danach Vorhersage der zweiten
+Messung mit den nachgestellten Parametern (Überanpassung sichtbar). Befunde 23.11.2026 (sein Wort: „erst die DGL lösung so passend machen dass sie dem
+direkten fitt nahekommt“): (a) Höhen der Kennlinien-Bausteine >= 0 erzwungen (lsqPos) -- ein negativer Baustein machte ψ̃(i_m) stellenweise flach/fallend,
+die Umkehr ψ→i_m mehrdeutig und die DGL schrittweitenabhängig (4 gegen 80 Unterschritte: 15 mV; jetzt 10 gegen 80: 0,04 mV); (b) Anregung wahlweise Dreieck 5 ms (Vorgabe, mittelwerttreu) / roh / ideal (Mittelwert als Sprung): die blockweisen Rohwerte tragen den lastabhängigen
+Pegeleinbruch des Ports, lassen aber die Suche früh stehen (Rauschen stört die numerische Ableitung: 1,45 % nach 15 Schritten); Dreieck behält den Einbruch
+und kommt auf 0,26 % (150 Schritte), ideal 0,28 %; ein Median wäre falsch (verschiebt das Integral und R_Cu von 92,5 auf 105 Ω); (c) R_Cu festhalten (frei wandert es auf
+10 … 329 Ω und übernimmt fremde Dämpfung); (d) Hysterese-Glied h und Zeitversatz δ bringen nichts (h → 0, δ nur mit freiem R_Cu auf 2,2 ms); (e) K = 3 je
+Kennlinie: Suche 1,72 → 0,28 % ΔU an T140, T128 ohne Anpassung 1,32 %; K = 2: 0,58 %; K = 4 überbestimmt, bleibt bei 1,1 % stehen. Python-Gegenrechnung
+(hr_suche_0.5.py, K = 2, R_Cu frei): 2,08 → 0,56 %, T128 1,27 %. Schritt 12 „Faltung gegen DGL“ (seine Prüfung: „wenn er die impulsantwort
+approximiert kann er durch falten jede beliebige Sprungantwort erhalten“): Impulsantwort der gewählten Messung (sech²-Summe aus Schritt 9 und geglättete
+Differenz) als FIR mit der Anregung der anderen Messung gefaltet, gegen Messung und gegen die DGL-Vorhersage (vor/nach der Suche). Faltung gilt nur linear;
+Vorrechnung hr_faltung_0.6.py: T140→T128 0,56 % ΔU, T128→T140 1,10 % (Scheitel 2,8 % zu tief), Kennlinienweg 3,5 % / nach Suche 2,6 %. 1.0 -- eigene Seite (sein Wort: „dazu bitte eine eigene Seite!“, „ich möchte beim anfitten schritt für schritt die
+Methode am gemessenen sprungantwort sehen!“): Das Verfahren_HR (tanh-Summen) an der gemessenen Sprungantwort des nichtlinearen RLC-Glieds, in neun Schritten:
+1 Messung (u_C, u_A2, u_E, Strom über den Shunt) · 2 Kupferwiderstand aus ψ(∞) = 0 · 3 Fluss ψ(t) und Ladung q(t) durch Integration ·
+4 Kennlinien ψ(i) und q(u_C) als Punktwolken (Befund: ψ(i) ist eine Schleife) · 5 Eisenverlust R_Fe parallel zur Magnetisierung aus der Schleifenfläche ·
+6 Verfahren_HR-Summen für ψ(i_m) und q(u_C) als Gleichung mit Koeffiziententafel, gegen Polynom · 7 L_d(i) und C_d(u_C) als Ableitungen ·
+8 DGL lösen (RK4) und mit der Messung vergleichen, dazu Übertragung der Kennlinien auf die zweite Messung · 9 Sprungantwort und Impulsantwort direkt mit der
+Verfahren_HR-Summe (Impulsantwort = Ableitung, kein weiterer Fit) · 10 Vergleich der Parameterzahl (sein Wort: „ob die gleichung zum anfitten kleiner oder
+grösser ist wenn man die Sprungantwort direkt anfittet oder Kennlinien … und die sprungantwort dann durch lösen einer nichtlinearen DGL erhält“): direkter Fit
+K = 1 … 8 gegen Kennlinienweg K = 1 … 3, Fehler über der Parameterzahl, Rekonstruktionen bei gleicher Parameterzahl, Vorhersage der zweiten Messung.
+Jede Reihe als Gleichung mit Koeffizienten in Tabellen (sein Wort).
+Zahlen der Vorrechnung (hr_schritte_0.3.py, T = 140): R_Cu = 93 Ω (sein Wort: 92 Ω), Schleifenfläche ohne R_Fe −37 µJ, R_Fe ≈ 4…5 kΩ (Schleife → 0),
+DGL gegen Messung 2,6 % ΔU (ohne R_Fe 16,5 %), Übertragung auf T = 128: 3,8 % ΔU. Messungen eingebettet (bau_verfahren_hr_1.1.py); eigene Dateien im Format
+rlc27 (mit Strom) laden. Gemeinsame Zeichenhelfer aus rlc_sprung_vorlage_2.24.html (Marke GEMEINSAM, beim Bau eingesetzt, kein doppelter Quelltext).
+Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 RLC_Sprung_2.24.html (23.11.2026) -- 2.24: nur Formelsatz (sein Wort: „die gleichung fehlen die klamern“): Klammern um Funktionsargumente nicht mehr dehnbar (stretchy="false"), (Ih)_n und (Dr)_n mit zusammengehörigen Klammern, sin(ω_d t), cos(ω_d t), tanh(i/I_s) mit Argumentklammern; 96 Klammern gesetzt (formeln_klammern_1.0.py). Dazu (sein Wort): der frühere Name des Verfahrens überall durch „Verfahren_HR“ ersetzt; Reiter Anfitten zeigt unter den Tafeln jede Reihe als Gleichung mit Koeffiziententafel (tanh-Summe des Verfahren_HR mit b0, b1,k, b2,k, b3,k und der Impulsantwort g̃ = f̃′/ΔU als sech²-Summe; Fourier a_n, b_n; Potenzreihe c_n in Tschebyschow-Basis); Reiter Impulsantwort zeichnet g̃ (violett gepunktet) zum Vergleich mit der iterativen Lösung; Verweis auf die eigene Seite Verfahren_HR_1.0.html. Rechnung sonst unverändert gegenüber 2.23.
 RLC_Sprung_2.23.html (23.11.2026) -- 2.23: Anfitten bis 0,1 % (sein Wort: „der Fit der Sprungantwort passt ja gar nicht, das bitte so ausarbeiten dass max 0,1 %
 abweichung auftritt“): Levenberg-Marquardt mit echter Dämpfungssteuerung, bis 400 Schritte, Abbruch bei relativer Verbesserung < 1e-10; Starts: Wendepunkte,
@@ -81,7 +115,7 @@ U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U
 d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
 Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
 Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
-Gebaut mit bau_rlc_seite_2.24.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Gebaut mit bau_rlc_seite_2.25.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 -->
 <style>
@@ -166,11 +200,54 @@ td:first-child, th:first-child { text-align: left; }
 select { font: inherit; padding: 2px 4px; }
 .ablage { word-break: break-all; }
 #zone.ueber { outline: 2px dashed var(--akzent); }
+/* ---- Reiter Verfahren_HR (2.25, aus verfahren_hr_vorlage_1.1.html verschmolzen) ---- */
+#r_hr { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 12px; min-height: 0; min-width: 0; overflow: hidden; }
+#r_hr[hidden] { display: none; }
+#r_hr .hr_links { display: flex; flex-direction: column; gap: 8px; overflow: auto; min-height: 0; }
+#r_hr .hr_rechts { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 6px; min-height: 0; min-width: 0; }
+#r_hr .hr_rechts > div { min-width: 0; }
+#r_hr fieldset { border: 1px solid var(--rand); border-radius: 6px; padding: 6px 10px 8px; margin: 0; }
+#r_hr legend { font-weight: 600; padding: 0 4px; }
+#r_hr .schritte { display: flex; flex-direction: column; gap: 2px; }
+#r_hr .schritte button { text-align: left; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 5px; padding: 4px 8px; font: inherit; cursor: pointer; color: var(--text); }
+#r_hr .schritte button.aktiv { border-color: var(--akzent); background: #eef4fb; font-weight: 600; }
+#r_hr .schritte button .nr { display: inline-block; width: 24px; color: var(--akzent); font-weight: 600; }
+#r_hr label.zeile { display: grid; grid-template-columns: 1fr 70px 40px; gap: 6px; align-items: center; margin: 3px 0; font-size: 12px; }
+#r_hr label.zeile input, #r_hr label.zeile select { font: inherit; padding: 2px 4px; width: 100%; }
+#r_hr .einheit { color: var(--text2); font-size: 11px; }
+#r_hr button.haupt { background: var(--akzent); color: #fff; border: 1px solid var(--akzent); border-radius: 5px; padding: 4px 10px; font: inherit; cursor: pointer; }
+#r_hr button.haupt:disabled { opacity: 0.5; cursor: default; }
+#r_hr button.klein { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 5px; padding: 3px 8px; font: inherit; cursor: pointer; }
+#r_hr .hinweis { color: var(--text2); font-size: 12px; }
+#r_hr .stand { font-size: 12px; margin-top: 4px; min-height: 1.3em; }
+#r_hr .schritt { display: grid; grid-template-rows: auto minmax(220px, 1fr) minmax(0, auto); gap: 6px; min-height: 0; min-width: 0; overflow: auto; padding: 0 8px 8px 0; }   /* 2.25: Bildzeile mindestens so hoch wie die Bilder (min-height 190 px + Rand), sonst ragen sie in die Tafeln; der Schritt rollt dann */
+#r_hr .schritt[hidden] { display: none; }
+#r_hr .schritt h2 { font-size: 15px; margin: 2px 0 2px; }
+#r_hr .schritt p { max-width: 1250px; margin: 3px 0; }
+#r_hr .bilder { display: grid; gap: 8px; min-height: 0; }
+#r_hr .bilder.zwei { grid-template-columns: 1fr 1fr; }
+#r_hr .bild { position: relative; min-height: 190px; min-width: 0; border: 1px solid var(--rand); border-radius: 6px; background: var(--flaeche); overflow: hidden; }
+#r_hr .bild canvas { display: block; width: 100%; height: 100%; }
+#r_hr .tip { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.95); border: 1px solid var(--rand); border-radius: 5px; padding: 4px 8px; font-size: 12px; pointer-events: none; white-space: nowrap; }
+#r_hr .tafeln { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: flex-start; min-height: 60px; max-height: 260px; overflow: auto; }
+#r_hr .tafeln .block { min-width: 240px; }
+#r_hr table { border-collapse: collapse; font-size: 12px; margin: 2px 0 4px; }
+#r_hr th, #r_hr td { border: 1px solid #ddd; padding: 1px 6px; text-align: right; white-space: nowrap; }
+#r_hr th { background: var(--flaeche2); font-weight: 600; }
+#r_hr td.l, #r_hr th.l { text-align: left; }
+#r_hr math { font-size: 14px; }
+#r_hr math[display=block] { margin: 3px 0 3px 10px; }
+#r_hr .gut { color: var(--gut); } .schlecht { color: var(--schlecht); }
+#r_hr .kasten { background: var(--flaeche2); border: 1px solid var(--rand); border-radius: 6px; padding: 4px 10px; max-width: 1250px; }
+#r_hr ul.kurven { list-style: none; margin: 2px 0; padding: 0; }
+#r_hr ul.kurven li { display: flex; gap: 6px; align-items: center; padding: 2px 0; font-size: 12px; }
+#r_hr ul.kurven li .farbe { width: 12px; height: 3px; display: inline-block; }
+#r_hr ul.kurven li button { margin-left: auto; }
 </style>
 </head>
 <body>
 <header>
-  <h1>RLC-Sprung 2.24</h1>
+  <h1>RLC-Sprung 2.25</h1>
   <span class="neben">Nichtlineares RLC-Glied · Nano mit rlc_sprung_2_6/2_7 · D11 PWM → A0 = U<sub>C</sub>, A1 = Pin, A2 = Spulenende · Eingang = Mittelwert U<sub>E</sub></span>
   <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
 </header>
@@ -225,7 +302,7 @@ select { font: inherit; padding: 2px 4px; }
     </fieldset>
   </div>
   <div class="rechts">
-    <div class="reiterleiste"><button id="rt_aus" class="aktiv" data-r="aus">Auswertung</button><button id="rt_pruef" data-r="pruef" title="Nur zur Überprüfung: eine Kurve mit Messpunkten, Zoom in Sprung und Sprungantwort, Zählwerte des PWM-Sprungs">Prüfen · Zoom</button><button id="rt_theorie" data-r="theorie" title="Fotos des Aufbaus, Schaltplan, Bauteilwerte, Gleichungen">Aufbau und Theorie</button><button id="rt_fit" data-r="fit" title="Ansätze zum Anfitten der Sprungantwort: tanh-Netz (Verfahren_HR), Fourier-Reihe, Potenzreihe bei gleicher Parameterzahl">Anfitten</button><button id="rt_imp" data-r="imp" title="Impulsantwort aus der Sprungantwort: ableiten, integrieren, vergleichen, bis der Rest unter einer ADC-Stufe liegt">Impulsantwort</button></div>
+    <div class="reiterleiste"><button id="rt_aus" class="aktiv" data-r="aus">Auswertung</button><button id="rt_pruef" data-r="pruef" title="Nur zur Überprüfung: eine Kurve mit Messpunkten, Zoom in Sprung und Sprungantwort, Zählwerte des PWM-Sprungs">Prüfen · Zoom</button><button id="rt_theorie" data-r="theorie" title="Fotos des Aufbaus, Schaltplan, Bauteilwerte, Gleichungen">Aufbau und Theorie</button><button id="rt_fit" data-r="fit" title="Ansätze zum Anfitten der Sprungantwort: tanh-Netz (Verfahren_HR), Fourier-Reihe, Potenzreihe bei gleicher Parameterzahl">Anfitten</button><button id="rt_hr" data-r="hr" title="Das Verfahren_HR Schritt für Schritt: Kennlinien ψ(i) und q(u_C) aus der Messung extrahieren, als tanh-Summen anfitten, DGL lösen, Parameter nachstellen, Faltung gegen DGL">Verfahren_HR</button><button id="rt_imp" data-r="imp" title="Impulsantwort aus der Sprungantwort: ableiten, integrieren, vergleichen, bis der Rest unter einer ADC-Stufe liegt">Impulsantwort</button></div>
     <div class="inhalt" id="r_aus">
     <div class="bild" id="b1"><canvas id="c1" aria-label="Sprungantwort U_C über t"></canvas><div class="tip" id="tip1" hidden></div></div>
     <div class="bild" id="b2"><canvas id="c2" aria-label="Differenz zur Bezugskurve"></canvas><div class="tip" id="tip2" hidden></div></div>
@@ -296,7 +373,7 @@ select { font: inherit; padding: 2px 4px; }
       <p><b>Die neuronale Struktur der Kennlinien (Verfahren_HR).</b> Nachgebildet werden nicht L und C, sondern die integrierten Kennlinien ψ(i) und q(u<sub>C</sub>): Sie sind S-förmig mit einem Wendepunkt im Ursprung, also der Fall K = 1 des Verfahren_HR, plus ein fast gerader Baustein für den linearen Rest (L<sub>0</sub>i/μ<sub>e</sub> bzw. γC<sub>0</sub>u<sub>C</sub>). Beide sind ungerade, deshalb wird die Punktwolke am Ursprung gespiegelt. Die Ableitungen der Netze sind dann geschlossen Summen von sech²-Glocken:</p>
       <math display="block"><mrow><mover><mi>ψ</mi><mo>~</mo></mover><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><mi>tanh</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">(</mo><mi>i</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mspace width="0.8em"/><mo>⇒</mo><mspace width="0.8em"/><mi>L</mi><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><msup><mi>sech</mi><mn>2</mn></msup><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">(</mo><mi>i</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mo>;</mo><mspace width="1.5em"/><mtext>ebenso</mtext><mspace width="0.6em"/><mover><mi>q</mi><mo>~</mo></mover><mo stretchy="false">(</mo><msub><mi>u</mi><mi>C</mi></msub><mo stretchy="false">)</mo><mo>⇒</mo><mi>C</mi><mo stretchy="false">(</mo><msub><mi>u</mi><mi>C</mi></msub><mo stretchy="false">)</mo></mrow></math>
       <p>Auf der Theorieseite 1.2 zum Verfahren_HR ist das gegen Polynom siebten Grades, Tabelle mit 40 Klassen und kubischen Spline durchgerechnet (gleiche Punktwolken, gleiche Differentialgleichung, größter Fehler von u<sub>C</sub> in Prozent der Sprunghöhe), und das graue Modell – Dynamik aus der Physik, Kennlinien aus dem Netz – rechnet danach jede abgetastete Anregung, nicht nur die gelernte Sprunghöhe.</p>
-      <p><b>Wie die Verläufe L(i) und C(u) aus dem Fit kommen – drei Wege.</b> (0) <i>das Verfahren_HR wörtlich</i> braucht den Strom i(t): q(t) = ∫i dt über u<sub>C</sub>(t) aufgetragen gibt q(u<sub>C</sub>) Punkt für Punkt, ψ(t) = ∫(u<sub>E</sub> − R·i − u<sub>C</sub>) dt über i(t) gibt ψ(i); durch beide Punktwolken je ein tanh-Netz. Schritt für Schritt an der gemessenen Sprungantwort vorgeführt wird dieser Weg auf der eigenen Seite <a href="Verfahren_HR_1.0.html">Verfahren_HR 1.0</a> (Kennlinien ψ(i) und q(u<sub>C</sub>) extrahieren, R<sub>Cu</sub> aus ψ(∞) = 0, Eisenverlust R<sub>Fe</sub> aus der Schleife der ψ(i)-Punktwolke, Verfahren_HR-Summen ausgeschrieben, L<sub>d</sub>(i) und C<sub>d</sub>(u<sub>C</sub>) als Ableitungen, DGL lösen und mit der Messung vergleichen). Mit Firmware 2.7 misst die Seite i über den Messwiderstand R<sub>s</sub> zwischen Spule und Kondensator (A2 − A0); das macht die Trennung von L(i) und C(u<sub>C</sub>) aus einer einzigen Sprungantwort möglich. Ohne Shunt: (1) <i>Simulation und Suche</i> (Manuskript Abschn. 6): Zustandssystem integrieren, Parameter θ = (M<sub>s</sub>, a, α, k, L<sub>0</sub>, R<sub>0</sub>, C<sub>0</sub>, γ, R<sub>skin</sub>, t<sub>d</sub>) mit Differentialevolution so wählen, dass J(θ) = Σ w(t<sub>i</sub>)·[U<sub>C,sim</sub>(t<sub>i</sub>) − U<sub>C,mess</sub>(t<sub>i</sub>)]² (Gl. 6.4) klein wird; die Kennlinien folgen aus θ. (2) <i>Gleichungsfehler aus dem glatten Fit</i> – das ist der Weg, für den der Reiter „Anfitten“ gebaut wird: Erst wird die Messung durch eine glatte Funktion û<sub>C</sub>(t) angenähert, deren erste und zweite Ableitung in geschlossener Form vorliegen (bei tanh-Neuronen: tanh′ = 1 − tanh², tanh″ = −2·tanh·tanh′; bei Messwerten müsste man numerisch differenzieren und verstärkte das ADC-Rauschen). Dann sind Strom und Stromanstieg ohne Integration bekannt:</p>
+      <p><b>Wie die Verläufe L(i) und C(u) aus dem Fit kommen – drei Wege.</b> (0) <i>das Verfahren_HR wörtlich</i> braucht den Strom i(t): q(t) = ∫i dt über u<sub>C</sub>(t) aufgetragen gibt q(u<sub>C</sub>) Punkt für Punkt, ψ(t) = ∫(u<sub>E</sub> − R·i − u<sub>C</sub>) dt über i(t) gibt ψ(i); durch beide Punktwolken je ein tanh-Netz. Schritt für Schritt an der gemessenen Sprungantwort vorgeführt wird dieser Weg im Reiter <a href="#hr" onclick="reiterWahl('hr'); return false;">Verfahren_HR</a> (Kennlinien ψ(i) und q(u<sub>C</sub>) extrahieren, R<sub>Cu</sub> aus ψ(∞) = 0, Eisenverlust R<sub>Fe</sub> aus der Schleife der ψ(i)-Punktwolke, Verfahren_HR-Summen ausgeschrieben, L<sub>d</sub>(i) und C<sub>d</sub>(u<sub>C</sub>) als Ableitungen, DGL lösen und mit der Messung vergleichen). Mit Firmware 2.7 misst die Seite i über den Messwiderstand R<sub>s</sub> zwischen Spule und Kondensator (A2 − A0); das macht die Trennung von L(i) und C(u<sub>C</sub>) aus einer einzigen Sprungantwort möglich. Ohne Shunt: (1) <i>Simulation und Suche</i> (Manuskript Abschn. 6): Zustandssystem integrieren, Parameter θ = (M<sub>s</sub>, a, α, k, L<sub>0</sub>, R<sub>0</sub>, C<sub>0</sub>, γ, R<sub>skin</sub>, t<sub>d</sub>) mit Differentialevolution so wählen, dass J(θ) = Σ w(t<sub>i</sub>)·[U<sub>C,sim</sub>(t<sub>i</sub>) − U<sub>C,mess</sub>(t<sub>i</sub>)]² (Gl. 6.4) klein wird; die Kennlinien folgen aus θ. (2) <i>Gleichungsfehler aus dem glatten Fit</i> – das ist der Weg, für den der Reiter „Anfitten“ gebaut wird: Erst wird die Messung durch eine glatte Funktion û<sub>C</sub>(t) angenähert, deren erste und zweite Ableitung in geschlossener Form vorliegen (bei tanh-Neuronen: tanh′ = 1 − tanh², tanh″ = −2·tanh·tanh′; bei Messwerten müsste man numerisch differenzieren und verstärkte das ADC-Rauschen). Dann sind Strom und Stromanstieg ohne Integration bekannt:</p>
       <math display="block"><mrow><mi>i</mi><mo>=</mo><msub><mi>C</mi><mi>d</mi></msub><mo stretchy="false">(</mo><mover><mi>u</mi><mo>^</mo></mover><mo stretchy="false">)</mo><mo>·</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mo>′</mo></msup><mo>,</mo><mspace width="1.2em"/><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msubsup><mi>C</mi><mi>d</mi><mo>′</mo></msubsup><mo stretchy="false">(</mo><mover><mi>u</mi><mo>^</mo></mover><mo stretchy="false">)</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mrow><mo>′</mo><mn>2</mn></mrow></msup><mo>+</mo><msub><mi>C</mi><mi>d</mi></msub><mo stretchy="false">(</mo><mover><mi>u</mi><mo>^</mo></mover><mo stretchy="false">)</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mo>″</mo></msup><mo>,</mo><mspace width="1.5em"/><mi>r</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><mi>R</mi><mi>i</mi><mo>−</mo><msub><mi>L</mi><mi>d</mi></msub><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>−</mo><mover><mi>u</mi><mo>^</mo></mover><mo>,</mo><mspace width="1.2em"/><munder><mo>min</mo><mrow><msub><mi>L</mi><mi>d</mi></msub><mo>,</mo><msub><mi>C</mi><mi>d</mi></msub></mrow></munder><munder><mo>∑</mo><mi>n</mi></munder><mi>r</mi><msup><mrow><mo stretchy="false">(</mo><msub><mi>t</mi><mi>n</mi></msub><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow></math>
       <p>Der Maschensatz muss in jedem Abtastpunkt aufgehen; die Parameter der Kennlinien (L<sub>0</sub>, i<sub>s</sub> bzw. a<sub>k</sub>, b<sub>k</sub>; C<sub>0</sub>, γ) minimieren den Gleichungsfehler r, und daraus werden L<sub>d</sub>(i) und C<sub>d</sub>(u<sub>C</sub>) als Kurven gezeichnet. Dabei gilt ohne Strommessung: Aus <b>einer</b> Sprungantwort allein sind L(i) und C(u<sub>C</sub>) nicht zu trennen (nur ihr Zusammenwirken entlang der einen Bahn in der i-u<sub>C</sub>-Ebene ist angeregt); die Messung mit mehreren Tastgraden (T = 100 … 140, Wiederholungen W) liefert mehrere Bahnen und macht die Trennung möglich. Genau dafür zeichnet die Seite die Anregung U<sub>E</sub> exakt mit auf.</p>
       <p><b>Warum die Wahl der Ansatzfunktion die eigentliche Frage ist.</b> Fourier-Glieder sind periodisch und können den Übergang in den eingeschwungenen Zustand nur mit vielen Gliedern und Welligkeit nachbilden; Taylor-Polynome laufen außerhalb des Entwicklungspunkts davon. Gedämpfte Sinusglieder e<sup>−αt</sup>·sin(ω<sub>d</sub>t + φ) sind die exakte Lösungsklasse des linearen Falls und scheitern erst an der Nichtlinearität (Frequenz hängt von der Amplitude ab). tanh-Neuronen sind glatt, sättigen von selbst auf einen Endwert und haben geschlossene Ableitungen – deshalb der Vergleich bei gleicher Parameterzahl in Anstieg, Schwingen und eingeschwungenem Zustand. Ob der tanh die beste Ansatzfunktion für gedämpfte nichtlineare Schwingungen ist oder nur eine spezielle Lösung des allgemeinen Approximationsproblems, zeigt der Reiter „Anfitten“ an den Messungen: gleiche Parameterzahl, Fehler je Abschnitt, Fortsetzung ohne Stützpunkte.</p>
@@ -307,6 +384,139 @@ select { font: inherit; padding: 2px 4px; }
       <h3>Schutz des ADC-Eingangs (Datenblatt ATmega328P 7810D)</h3>
       <p>Zulässig an jedem Pin −0,5 V … V<sub>CC</sub> + 0,5 V, Injektionsstrom in die Schutzdioden ±1 mA (§28.1), ADC-Eingang GND … V<sub>REF</sub> (§28.9). Der Überschwingfaktor steigt mit der Anregung (1,54 → 1,63); bei T = 150 lag der Scheitel schon bei 4,77 V. Deshalb ist T ≤ 140 fest im Nano und in dieser Seite (Scheitel 4,39 … 4,47 V), und nach jeder Messung fährt die Anregung als Rampe (R ms) auf 0: Ein Sprung auf 0 schwänge mit −0,55·U<sub>end</sub> ins Negative. Der größte Pinstrom ist C·dU<sub>C</sub>/dt ≈ 4 mA (92 V/s gemessen).</p>
       <p class="hinweis">Quellen: rlc_manuskript.docx (Streckenausmessung, 04.03.2026), Simulink-Messung RLC_Glied_2.txt (03.03.2026), Messungen rlc25/rlc26 (22.11.2026), Datenblatt ATmega328P 7810D–AVR–01/15, RUPPERT_Theorie_1.2.html (Reiter „Reihenschwingkreis mit sättigbarer Spule und spannungsabhängigem Kondensator“, 10.11.2026; Würth Elektronik ANP062a, Abb. 5), Verfahren_HR: IFAC-PapersOnLine 55(7), 2022, S. 568–573. Diese Seite: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code), gemeinsam erstellt.</p>
+    </div>
+    <div class="inhalt" id="r_hr" hidden>
+      <div class="hr_links">
+    <fieldset>
+      <legend>Schritte</legend>
+      <div class="schritte" id="hr_schritte">
+        <button data-s="0" class="aktiv"><span class="nr">0</span>Das Verfahren_HR</button>
+        <button data-s="1"><span class="nr">1</span>Messung: u<sub>C</sub>, u<sub>A2</sub>, u<sub>E</sub>, Strom</button>
+        <button data-s="2"><span class="nr">2</span>Kupferwiderstand aus ψ(∞) = 0</button>
+        <button data-s="3"><span class="nr">3</span>Fluss ψ(t) und Ladung q(t)</button>
+        <button data-s="4"><span class="nr">4</span>Kennlinien ψ(i) und q(u<sub>C</sub>)</button>
+        <button data-s="5"><span class="nr">5</span>Eisenverlust R<sub>Fe</sub> aus der Schleife</button>
+        <button data-s="6"><span class="nr">6</span>Verfahren_HR-Summen für ψ(i<sub>m</sub>), q(u<sub>C</sub>)</button>
+        <button data-s="7"><span class="nr">7</span>L<sub>d</sub>(i) und C<sub>d</sub>(u<sub>C</sub>) als Ableitungen</button>
+        <button data-s="8"><span class="nr">8</span>DGL lösen und mit der Messung vergleichen</button>
+        <button data-s="9"><span class="nr">9</span>Sprung- und Impulsantwort direkt</button>
+        <button data-s="10"><span class="nr">10</span>Vergleich: wie viele Glieder braucht welcher Weg?</button>
+        <button data-s="11"><span class="nr">11</span>Simulation und Suche: Parameter nachstellen</button>
+        <button data-s="12"><span class="nr">12</span>Faltung mit der Impulsantwort gegen DGL</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Rechenwerte</legend>
+      <div class="hinweis">Messungen und Shunt R<sub>s</sub> kommen aus der linken Spalte der Seite (gewählte Kurve, Format rlc27 mit Strom); Ausreißer-Median wie in der Auswertung.</div>
+      <label class="zeile" title="Kupferwiderstand der Spule: seine Angabe (Ohmmeter) oder aus der Bedingung ψ(∞) = 0 der gewählten Messung (Schritt 2; empfindlich gegen Nullpunktfehler des Stroms: T128 liefert 137 Ω, T140 90 Ω)">R<sub>Cu</sub> Quelle<select id="hr_RCu_art"><option value="angabe" selected>Angabe 92 Ω</option><option value="psi">aus ψ(∞) = 0</option></select><span class="einheit"></span></label>
+      <label class="zeile" title="Fenster, in dem die Kennlinien gezählt werden: bis der Strom unter diese Schwelle abgeklungen ist (+50 ms)">Strom-Schwelle Fenster<input id="hr_schwelle" type="number" min="0.05" max="2" step="0.05" value="0.1"><span class="einheit">mA</span></label>
+      <label class="zeile">Bausteine K für ψ(i<sub>m</sub>)<input id="hr_Kpsi" type="number" min="1" max="5" step="1" value="3"><span class="einheit"></span></label>
+      <label class="zeile">Bausteine K für q(u<sub>C</sub>)<input id="hr_Kq" type="number" min="1" max="5" step="1" value="3"><span class="einheit"></span></label>
+      <label class="zeile">Starts je Fit<input id="hr_starts" type="number" min="1" max="40" step="1" value="8"><span class="einheit"></span></label>
+      <label class="zeile" title="Wie der Eisenverlustwiderstand bestimmt wird (Schritt 5)">R<sub>Fe</sub> bestimmen<select id="hr_RFe_art"><option value="dgl" selected>kleinster DGL-Fehler</option><option value="schleife">Schleife ∮ψ di_m = 0</option><option value="fest">fest (Wert unten)</option></select><span class="einheit"></span></label>
+      <label class="zeile" title="Nur bei „fest“">R<sub>Fe</sub> fest<input id="hr_RFe" type="number" min="100" max="1000000" step="100" value="3000"><span class="einheit">Ω</span></label>
+      <label class="zeile">Unterschritte RK4 je Abtastwert<input id="hr_unter" type="number" min="1" max="50" step="1" value="10"><span class="einheit"></span></label>
+      <label class="zeile">K für Sprungantwort (Schritt 9)<input id="hr_Kdir" type="number" min="1" max="12" step="1" value="8"><span class="einheit"></span></label>
+      <label class="zeile" title="Die blockweisen Werte u_E = d·U_H + (1−d)·U_L streuen ±0,1 … 0,2 V je 1-ms-Block, tragen aber echte Physik: der Pin-Pegel sackt mit dem Strom (Ausgangswiderstand des Ports). Dreieck 5 ms glättet mittelwerttreu und behält den Einbruch; ideal (Mittelwert als Sprung) wirft ihn weg; ein Median wäre falsch (verschiebt Integral und R_Cu)">Anregung u<sub>E</sub><select id="hr_ue_art"><option value="dreieck" selected>Dreieck 5 ms</option><option value="roh">roh (je Block)</option><option value="ideal">ideal: Mittelwert</option></select><span class="einheit"></span></label>
+      <button id="hr_rechnen" class="haupt" style="margin-top:4px">Alle Schritte rechnen</button>
+      <div class="stand" id="hr_stand">Noch nicht gerechnet.</div>
+    </fieldset>
+      </div>
+      <div class="hr_rechts">
+    <div class="hinweis" id="hr_kopfzeile"></div>
+    <div class="schritt" id="hr_s0">
+      <div>
+        <h2>0 · Das Verfahren_HR: eine Summe aus tanh-Bausteinen als Ansatzfunktion</h2>
+        <p>Das Verfahren_HR bildet eine glatte Funktion f(x) durch eine Summe von K Bausteinen nach, jeder ein um b<sub>3,k</sub> verschobener, mit b<sub>2,k</sub> gestreckter und mit b<sub>1,k</sub> gewichteter Tangens hyperbolicus; b<sub>0</sub> ist der Sockel. Die Höhen b<sub>0</sub>, b<sub>1,k</sub> gehen linear ein und folgen bei festen b<sub>2</sub>, b<sub>3</sub> exakt aus den Normalgleichungen; Steilheiten und Lagen werden nichtlinear mit Levenberg-Marquardt gesucht (mehrere Startlagen, bestes Ergebnis zählt). Die Ableitung ist geschlossen: ein sech²-Baustein je tanh-Baustein.</p>
+        <math display="block"><mrow><mover><mi>f</mi><mo>~</mo></mover><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>·</mo><mi>tanh</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>·</mo><mo stretchy="false">(</mo><mi>x</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mo>,</mo><mspace width="1.2em"/><mfrac><mrow><mi>d</mi><mover><mi>f</mi><mo>~</mo></mover></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>·</mo><msup><mi>sech</mi><mn>2</mn></msup><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>·</mo><mo stretchy="false">(</mo><mi>x</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow></math>
+        <p><b>Drei Anwendungen an derselben Messung.</b> (a) <i>Sprungantwort direkt:</i> x = τ = t/t<sub>end</sub>, f = u<sub>C</sub>; die Summe beschreibt den gemessenen Verlauf (Schritt 9, auf der Messseite bis 0,1 % der Sprunghöhe). (b) <i>Impulsantwort:</i> kein eigener Fit, sondern die Ableitung der Sprungantwort-Summe durch ΔU, also eine sech²-Summe (Schritt 9). (c) <i>Kennlinien:</i> x = i bzw. u<sub>C</sub>, f = ψ bzw. q. Dazu müssen Fluss und Ladung erst aus der Messung gewonnen werden (Schritte 1–5); dann werden die Kennlinien angefittet (Schritt 6), abgeleitet (Schritt 7) und die Differentialgleichung damit gelöst (Schritt 8). Erst (c) liefert ein Modell, das auch eine <i>andere</i> Anregung vorhersagt – das prüft Schritt 8 an der zweiten Messung.</p>
+        <div class="kasten"><b>Ersatzschaltbild, das sich aus den Schritten ergibt:</b> u<sub>E</sub> (Mittelwert der PWM) → R<sub>Cu</sub> → [Magnetisierung ψ(i<sub>m</sub>) ∥ Eisenverlust R<sub>Fe</sub>] → Shunt R<sub>s</sub> → C(u<sub>C</sub>) → Masse. Gemessen: u<sub>C</sub> (A0), u<sub>A2</sub> am Spulenende (A2), Pinspannung (A1); i = (u<sub>A2</sub> − u<sub>C</sub>)/R<sub>s</sub>. Die Spulenspannung u<sub>L</sub> = dψ/dt liegt über der Magnetisierung: u<sub>L</sub> = u<sub>E</sub> − R<sub>Cu</sub>·i − u<sub>A2</sub>.</div>
+      </div>
+      <div></div><div></div>
+    </div>
+    <div class="schritt" id="hr_s1" hidden>
+      <div><h2>1 · Messung: Spannungen und Strom</h2>
+        <p>Vier Reihen je Abtastwert (1 ms): u<sub>C</sub> am Kondensator (A0), u<sub>A2</sub> am Spulenende hinter R<sub>Cu</sub> (A2), die Anregung u<sub>E</sub> = d·U<sub>H</sub> + (1 − d)·U<sub>L</sub> aus der gemessenen Pinspannung (A1) und daraus der Strom i = (u<sub>A2</sub> − u<sub>C</sub>)/R<sub>s</sub>. Eine ADC-Stufe (4,89 mV) entspricht 0,10 mA; der 3-Punkt-Median nimmt die Einzelwert-Ausreißer heraus, die alle 51 Abtastwerte von einer PWM-Flanke stammen.</p>
+        <math display="block"><mrow><mi>i</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><msub><mi>u</mi><mrow><mi>A</mi><mn>2</mn></mrow></msub><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>−</mo><msub><mi>u</mi><mi>C</mi></msub><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><msub><mi>R</mi><mi>s</mi></msub></mfrac><mo>,</mo><mspace width="1.2em"/><msub><mi>u</mi><mi>E</mi></msub><mo>=</mo><mi>d</mi><mo>·</mo><msub><mi>U</mi><mi>H</mi></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>d</mi><mo stretchy="false">)</mo><mo>·</mo><msub><mi>U</mi><mi>L</mi></msub><mo>,</mo><mspace width="1.2em"/><mi>d</mi><mo>=</mo><mi>T</mi><mo>/</mo><mn>255</mn></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c1a"></canvas><div class="tip" id="t1a" hidden></div></div><div class="bild"><canvas id="c1b"></canvas><div class="tip" id="t1b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z1"></div>
+    </div>
+    <div class="schritt" id="hr_s2" hidden>
+      <div><h2>2 · Kupferwiderstand der Spule aus der Bedingung ψ(∞) = 0</h2>
+        <p>Der Fluss ψ ist das Zeitintegral der Spulenspannung. Am Ende der Messung fließt kein Strom mehr, also muss auch der Fluss wieder null sein. Das legt R<sub>Cu</sub> fest, ohne ein Ohmmeter: Der ohmsche Anteil muss genau das Integral der gemessenen Spannung u<sub>E</sub> − u<sub>A2</sub> aufzehren. Der Quotient zweier Integrale ist unempfindlich gegen das Rauschen der Einzelwerte, aber empfindlich gegen einen Nullpunktfehler des Stroms: 0,04 mA Versatz über 600 ms sind 26 µC, ein Drittel der Gesamtladung. Deshalb werden Strom und Anregung am Ende der Aufzeichnung abgeglichen (dort ist sicher i = 0 und u<sub>C</sub> = u<sub>E</sub>), und voreingestellt wird die Angabe 92 Ω verwendet; der Wert aus ψ(∞) = 0 steht daneben als Kontrolle (T = 140: 90 Ω, T = 128 auch nach Abgleich 137 Ω).</p>
+        <math display="block"><mrow><mi>ψ</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>t</mi></msubsup><mo stretchy="false">[</mo><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><msub><mi>u</mi><mrow><mi>A</mi><mn>2</mn></mrow></msub><mo>−</mo><msub><mi>R</mi><mi>Cu</mi></msub><mo>·</mo><mi>i</mi><mo stretchy="false">]</mo><mi>d</mi><mi>τ</mi><mo>,</mo><mspace width="1em"/><mi>ψ</mi><mo stretchy="false">(</mo><msub><mi>t</mi><mi>end</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mn>0</mn><mspace width="0.6em"/><mo>⇒</mo><mspace width="0.6em"/><msub><mi>R</mi><mi>Cu</mi></msub><mo>=</mo><mfrac><mrow><mo>∫</mo><mo stretchy="false">(</mo><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><msub><mi>u</mi><mrow><mi>A</mi><mn>2</mn></mrow></msub><mo stretchy="false">)</mo><mi>d</mi><mi>τ</mi></mrow><mrow><mo>∫</mo><mi>i</mi><mspace width="0.2em"/><mi>d</mi><mi>τ</mi></mrow></mfrac></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c2a"></canvas><div class="tip" id="t2a" hidden></div></div><div class="bild"><canvas id="c2b"></canvas><div class="tip" id="t2b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z2"></div>
+    </div>
+    <div class="schritt" id="hr_s3" hidden>
+      <div><h2>3 · Fluss ψ(t) und Ladung q(t) durch Integration der Messreihen</h2>
+        <p>Mit R<sub>Cu</sub> aus Schritt 2 folgt der Fluss als Integral der Spulenspannung, die Ladung als Integral des Stroms. Beide Integrale starten bei null (entladener Kondensator, stromlose Spule) und werden als Rechtecksumme über die Abtastwerte gebildet; q(t<sub>end</sub>)/u<sub>C</sub>(t<sub>end</sub>) ist die mittlere Kapazität bis zur Endspannung.</p>
+        <math display="block"><mrow><mi>ψ</mi><mo stretchy="false">(</mo><msub><mi>t</mi><mi>n</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mi>Δ</mi><mi>t</mi><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>0</mn></mrow><mi>n</mi></munderover><mo stretchy="false">(</mo><msub><mi>u</mi><mrow><mi>E</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>u</mi><mrow><mi>A</mi><mn>2</mn><mo>,</mo><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>R</mi><mi>Cu</mi></msub><msub><mi>i</mi><mi>j</mi></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="1.2em"/><mi>q</mi><mo stretchy="false">(</mo><msub><mi>t</mi><mi>n</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mi>Δ</mi><mi>t</mi><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>0</mn></mrow><mi>n</mi></munderover><msub><mi>i</mi><mi>j</mi></msub></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c3a"></canvas><div class="tip" id="t3a" hidden></div></div><div class="bild"><canvas id="c3b"></canvas><div class="tip" id="t3b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z3"></div>
+    </div>
+    <div class="schritt" id="hr_s4" hidden>
+      <div><h2>4 · Kennlinien als Punktwolken: ψ über i und q über u<sub>C</sub></h2>
+        <p>Jeder Abtastwert liefert ein Punktepaar (i, ψ) und (u<sub>C</sub>, q); die Farbe läuft mit der Zeit. Eine Kennlinie im Sinne des Verfahren_HR ist eine <i>eindeutige</i> Funktion. Befund: q(u<sub>C</sub>) ist eindeutig, Hin- und Rückweg decken sich. ψ(i) ist eine <b>Schleife</b>: Beim Anstieg des Stroms liegt der Fluss unter, beim Abfall über der Mittellinie. Die eingeschlossene Fläche ∮ψ di ist Energie, die je Umlauf im Eisen verloren geht – der Fluss ist keine Funktion des Stroms allein. Schritt 5 trennt den Verlustanteil ab.</p></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c4a"></canvas><div class="tip" id="t4a" hidden></div></div><div class="bild"><canvas id="c4b"></canvas><div class="tip" id="t4b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z4"></div>
+    </div>
+    <div class="schritt" id="hr_s5" hidden>
+      <div><h2>5 · Eisenverlust: Widerstand R<sub>Fe</sub> parallel zur Magnetisierung aus der Schleifenfläche</h2>
+        <p>Das einfachste Modell für die Schleife ist das der Drossel mit Eisenkern: Der gemessene Strom teilt sich in den Magnetisierungsstrom i<sub>m</sub>, der den Fluss aufbaut, und einen Verluststrom u<sub>L</sub>/R<sub>Fe</sub>, der mit der Spulenspannung geht (Wirbelstrom- und Ummagnetisierungsverluste, hier zusammengefasst). Für den richtigen R<sub>Fe</sub> wird ψ(i<sub>m</sub>) eindeutig, die Schleifenfläche verschwindet. Die Seite tastet R<sub>Fe</sub> ab, zeigt die Fläche A(R<sub>Fe</sub>) und sucht den Nulldurchgang (Bisektion). Ein Rest der Schleife, der sich nicht durch R<sub>Fe</sub> wegnehmen lässt, ist ratenunabhängige Hysterese; sie bleibt als Streuung in Schritt 6 sichtbar. <b>Zwei Kriterien</b> stehen zur Wahl (links): die Schleifenfläche null (reine Kennlinien-Extraktion, bei T = 140 etwa 4,4 kΩ) oder der kleinste Fehler der DGL-Lösung gegen die gewählte Messung (etwa 2,5 … 3 kΩ; die restliche Hysterese dämpft mit und wird so dem R<sub>Fe</sub> zugeschlagen). Die Tafel zeigt für jede Abtaststelle Fläche, Fit-Rest und DGL-Fehler; die Vorhersage der zweiten Messung in Schritt 8 bleibt in beiden Fällen ohne Anpassung.</p>
+        <math display="block"><mrow><msub><mi>i</mi><mi>m</mi></msub><mo>=</mo><mi>i</mi><mo>−</mo><mfrac><msub><mi>u</mi><mi>L</mi></msub><msub><mi>R</mi><mi>Fe</mi></msub></mfrac><mo>,</mo><mspace width="1em"/><msub><mi>u</mi><mi>L</mi></msub><mo>=</mo><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><msub><mi>R</mi><mi>Cu</mi></msub><mo>·</mo><mi>i</mi><mo>−</mo><msub><mi>u</mi><mrow><mi>A</mi><mn>2</mn></mrow></msub><mo>,</mo><mspace width="1em"/><mi>A</mi><mo stretchy="false">(</mo><msub><mi>R</mi><mi>Fe</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mo>∮</mo><mi>ψ</mi><mspace width="0.2em"/><mi>d</mi><msub><mi>i</mi><mi>m</mi></msub><mo>=</mo><mn>0</mn></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c5a"></canvas><div class="tip" id="t5a" hidden></div></div><div class="bild"><canvas id="c5b"></canvas><div class="tip" id="t5b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z5"></div>
+    </div>
+    <div class="schritt" id="hr_s6" hidden>
+      <div><h2>6 · Verfahren_HR-Summen für ψ(i<sub>m</sub>) und q(u<sub>C</sub>) – Gleichung und Koeffizienten, gegen ein Polynom gleicher Parameterzahl</h2>
+        <p>Durch jede Punktwolke wird eine tanh-Summe gelegt (K Bausteine, P = 3K + 1 Parameter) und zum Vergleich ein Polynom mit ebenso vielen Koeffizienten (Grad P − 1, Tschebyschow-Basis). Der Fehler wird auf den Hub der Kennlinie bezogen. Beide Kennlinien sind S-förmig mit einem Wendepunkt nahe dem Ursprung; nach der Regel K = Zahl der Wendepunkte reicht K = 1, ein zweiter Baustein nimmt den fast geraden Anteil auf. Die Höhen b<sub>1,k</sub> werden nicht negativ zugelassen (1.1): Mit b<sub>2,k</sub> &gt; 0 ist die Summe dann monoton steigend, also L<sub>d</sub> &gt; 0 und C<sub>d</sub> &gt; 0 überall – ein negativer Baustein hätte die Flusskennlinie stellenweise flach oder fallend gemacht, die Umkehr ψ → i<sub>m</sub> in Schritt 8 mehrdeutig und die DGL-Lösung schrittweitenabhängig.</p></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c6a"></canvas><div class="tip" id="t6a" hidden></div></div><div class="bild"><canvas id="c6b"></canvas><div class="tip" id="t6b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z6"></div>
+    </div>
+    <div class="schritt" id="hr_s7" hidden>
+      <div><h2>7 · Differentielle Induktivität L<sub>d</sub>(i<sub>m</sub>) und Kapazität C<sub>d</sub>(u<sub>C</sub>) als Ableitungen der Summen</h2>
+        <p>Die Ableitungen sind geschlossen: Jeder tanh-Baustein wird zu einem sech²-Baustein. L<sub>d</sub> ist die Steigung der Flusskennlinie, C<sub>d</sub> die der Ladungskennlinie; beide hängen vom Arbeitspunkt ab und gelten nur dort (kein fester Bauteilwert). Zum Vergleich die Nennwerte 3,9 H und 23 µF und die linearen Kennwerte der Messseite. <b>Vorsicht bei L<sub>d</sub>(0):</b> Die Steigung im Ursprung liegt dort, wo die Punktwolke ψ(i<sub>m</sub>) am dichtesten und die Restschleife am breitesten ist; je nach Fenstergrenze (Strom-Schwelle links) kommt bei T = 140 zwischen 3,8 und 11 H heraus, während der DGL-Fehler dabei nur zwischen 2,0 und 2,6 % schwankt – die Sprungantwort ist gegen L<sub>d</sub> nahe i = 0 unempfindlich, weil dort kaum Energie umgesetzt wird. Belastbar ist L<sub>d</sub> im Bereich der Stromscheitel.</p>
+        <math display="block"><mrow><msub><mi>L</mi><mi>d</mi></msub><mo stretchy="false">(</mo><msub><mi>i</mi><mi>m</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><mi>d</mi><mover><mi>ψ</mi><mo>~</mo></mover></mrow><mrow><mi>d</mi><msub><mi>i</mi><mi>m</mi></msub></mrow></mfrac><mo>=</mo><munderover><mo>∑</mo><mi>k</mi><mi>K</mi></munderover><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><msup><mi>sech</mi><mn>2</mn></msup><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>i</mi><mi>m</mi></msub><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mo>,</mo><mspace width="1.2em"/><msub><mi>C</mi><mi>d</mi></msub><mo stretchy="false">(</mo><msub><mi>u</mi><mi>C</mi></msub><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><mi>d</mi><mover><mi>q</mi><mo>~</mo></mover></mrow><mrow><mi>d</mi><msub><mi>u</mi><mi>C</mi></msub></mrow></mfrac><mo>=</mo><munderover><mo>∑</mo><mi>k</mi><mi>K</mi></munderover><msub><mi>c</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>c</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><msup><mi>sech</mi><mn>2</mn></msup><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>c</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>+</mo><msub><mi>c</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c7a"></canvas><div class="tip" id="t7a" hidden></div></div><div class="bild"><canvas id="c7b"></canvas><div class="tip" id="t7b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z7"></div>
+    </div>
+    <div class="schritt" id="hr_s8" hidden>
+      <div><h2>8 · Die Differentialgleichung mit den Kennlinien lösen und mit der Messung vergleichen</h2>
+        <p>Zustände sind der Fluss ψ und die Kondensatorspannung u<sub>C</sub>. Aus ψ folgt i<sub>m</sub> durch Umkehren der Flusskennlinie (Newton), die Spulenspannung aus der Maschengleichung mit dem Verluststrom, der Gesamtstrom lädt den Kondensator. Gerechnet wird mit Runge-Kutta 4. Ordnung und der gemessenen Anregung u<sub>E</sub>(t) der jeweiligen Kurve. Die Kennlinien stammen aus der <b>gewählten</b> Messung; für jede andere geladene Messung ist die Rechnung eine Vorhersage ohne Anpassung.</p>
+        <math display="block"><mrow><mfrac><mrow><mi>d</mi><mi>ψ</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msub><mi>u</mi><mi>L</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><mi>R</mi><mo>·</mo><msub><mi>i</mi><mi>m</mi></msub><mo>−</mo><msub><mi>u</mi><mi>C</mi></msub></mrow><mrow><mn>1</mn><mo>+</mo><mi>R</mi><mo>/</mo><msub><mi>R</mi><mi>Fe</mi></msub></mrow></mfrac><mo>,</mo><mspace width="1em"/><mi>i</mi><mo>=</mo><msub><mi>i</mi><mi>m</mi></msub><mo>+</mo><mfrac><msub><mi>u</mi><mi>L</mi></msub><msub><mi>R</mi><mi>Fe</mi></msub></mfrac><mo>,</mo><mspace width="1em"/><mfrac><mrow><mi>d</mi><msub><mi>u</mi><mi>C</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mfrac><mi>i</mi><mrow><msub><mi>C</mi><mi>d</mi></msub><mo stretchy="false">(</mo><msub><mi>u</mi><mi>C</mi></msub><mo stretchy="false">)</mo></mrow></mfrac><mo>,</mo><mspace width="1em"/><msub><mi>i</mi><mi>m</mi></msub><mo>=</mo><msup><mover><mi>ψ</mi><mo>~</mo></mover><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false">(</mo><mi>ψ</mi><mo stretchy="false">)</mo><mo>,</mo><mspace width="1em"/><mi>R</mi><mo>=</mo><msub><mi>R</mi><mi>Cu</mi></msub><mo>+</mo><msub><mi>R</mi><mi>s</mi></msub></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c8a"></canvas><div class="tip" id="t8a" hidden></div></div><div class="bild"><canvas id="c8b"></canvas><div class="tip" id="t8b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z8"></div>
+    </div>
+    <div class="schritt" id="hr_s9" hidden>
+      <div><h2>9 · Sprungantwort und Impulsantwort direkt mit der Verfahren_HR-Summe</h2>
+        <p>Hier wird die gemessene Sprungantwort u<sub>C</sub>(t) selbst als tanh-Summe über τ = t/t<sub>end</sub> angefittet (K wählbar; auf der Messseite erreicht K = 11 den Fehler 0,1 % der Sprunghöhe). Die Impulsantwort folgt ohne weiteren Fit als Ableitung durch ΔU – eine sech²-Summe. Zum Vergleich die geglättete Differenz der Messwerte (Dreieckskern 3 ms). Beide Summen stehen als Gleichung mit ihren Koeffizienten darunter.</p>
+        <math display="block"><mrow><mover><mi>u</mi><mo>~</mo></mover><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><munderover><mo>∑</mo><mi>k</mi><mi>K</mi></munderover><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><mi>tanh</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">(</mo><mi>τ</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mo>,</mo><mspace width="1.2em"/><mover><mi>g</mi><mo>~</mo></mover><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mi>Δ</mi><mi>U</mi></mrow></mfrac><mfrac><mrow><mi>d</mi><mover><mi>u</mi><mo>~</mo></mover></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><munderover><mo>∑</mo><mi>k</mi><mi>K</mi></munderover><mfrac><mrow><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub></mrow><mrow><mi>Δ</mi><mi>U</mi><mo>·</mo><msub><mi>t</mi><mi>end</mi></msub></mrow></mfrac><msup><mi>sech</mi><mn>2</mn></msup><mo>⁡</mo><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">(</mo><mi>τ</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c9a"></canvas><div class="tip" id="t9a" hidden></div></div><div class="bild"><canvas id="c9b"></canvas><div class="tip" id="t9b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z9"></div>
+    </div>
+    <div class="schritt" id="hr_s10" hidden>
+      <div><h2>10 · Vergleich: Wie viele Glieder braucht der direkte Fit, wie viele der Kennlinienweg?</h2>
+        <p>Zwei Wege zur selben Sprungantwort. <b>Direkt</b> (Schritt 9): eine tanh-Summe über der Zeit mit P = 3K + 1 Parametern; sie beschreibt genau diese eine Anregung. <b>Kennlinienweg</b> (Schritte 2–8): je eine tanh-Summe für ψ(i<sub>m</sub>) und q(u<sub>C</sub>) mit zusammen 2·(3K + 1) Parametern plus R<sub>Cu</sub> und R<sub>Fe</sub>, die Sprungantwort entsteht durch Lösen der nichtlinearen DGL. Verglichen werden der Fehler an der gewählten Messung über der Parameterzahl, die beiden Rekonstruktionen bei gleicher Parameterzahl und – das kann nur der Kennlinienweg – die Vorhersage einer anderen Anregung ohne neue Anpassung. Der Kennlinienweg erscheint zweimal: ohne Nachstellen (Schritte 2–8, schwarz) und nach der Suche aus Schritt 11 (grüner Punkt, R<sub>Fe</sub> als zusätzlicher Parameter gezählt); erst sie bringt ihn in die Nähe des direkten Fits.</p></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c10a"></canvas><div class="tip" id="t10a" hidden></div></div><div class="bild"><canvas id="c10b"></canvas><div class="tip" id="t10b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z10"></div>
+    </div>
+    <div class="schritt" id="hr_s11" hidden>
+      <div><h2>11 · Simulation und Suche: die Parameter so nachstellen, dass die DGL-Lösung die Messung trifft</h2>
+        <p>Der Kennlinienweg (Schritte 2–8) liefert sein Modell <i>ohne</i> die Sprungantwort anzusehen; sein Rest von etwa 2 % ist Modellfehler (Restschleife, feste Widerstände). Hier wird derselbe Parametersatz – die 2·(3K + 1) Koeffizienten von ψ̃(i<sub>m</sub>) und q̃(u<sub>C</sub>) sowie R<sub>Cu</sub> und R<sub>Fe</sub> – mit Levenberg-Marquardt so verschoben, dass der Fehler der DGL-Lösung gegen die <b>gewählte</b> Messung minimal wird (Startpunkt: das Ergebnis der Schritte 2–8, Ableitungen numerisch, Parameter auf ihre Startwerte skaliert). Die Probe darauf ist die <b>andere</b> Messung: Verbessert sie sich mit, hat die Suche Physik gefunden; verschlechtert sie sich, hat sie die Messung auswendig gelernt (Überanpassung). <b>Die späteren Maxima entscheiden, ob das Modell trägt:</b> Dort ist die Amplitude klein, die Verluste sind eher Hysterese als Wirbelstrom, und die Flusskennlinie nahe i = 0 ist aus der Messung am schlechtesten bestimmt; ein ungewichteter Fehler wird vom ersten Scheitel beherrscht und übersieht das. Mit der Gewichtung nach der Hüllkurve zählen zweites und drittes Maximum so viel wie der erste Scheitel; die Tafel unten weist den Fehler an jedem Maximum vorher und nachher aus. <b>Alle Messungen gemeinsam</b> (Vorgabe): Erst ein Parametersatz für alle Anregungen zeigt, ob das Modell über die Amplitude trägt – aus einer Messung allein kommt T = 60 auf 12 % Fehler, gemeinsam auf gut 1 % (Faltung: 5 %). <b>Strom mitfitten</b> (Schalter): Aus u<sub>C</sub> allein sind L und C nicht einzeln bestimmbar (Frequenz und Dämpfung legen nur L·C und L/C fest), die Suche treibt dann C(0) auf 35 µF und L(0) auf 4 H, obwohl der gemessene Strom bei T = 60 anfangs nur halb so schnell steigt wie der des Modells. Mit dem Strom als zweitem Kanal wird die Aufteilung physikalisch (L bei 2,8 mA ≈ 1,7 H, C von 29 auf 20 µF fallend), der Spannungsfehler steigt aber auf 1,3 … 2,6 %, weil das Stromrauschen (eine ADC-Stufe = 0,1 mA bei 2,8 mA Scheitel) die Fehlersumme beherrscht. Das Hysterese-Glied h läuft in allen Läufen gegen null: Die amplitudenabhängige Dämpfung steckt nicht in einer Koerzitivspannung dieser Form.</p>
+        <math display="block"><mrow><munder><mi>min</mi><mrow><mi>θ</mi></mrow></munder><mspace width="0.3em"/><munderover><mo>∑</mo><mi>n</mi><mi>N</mi></munderover><msup><mrow><mo stretchy="false">[</mo><msub><mi>u</mi><mrow><mi>C</mi><mo>,</mo><mi>DGL</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>t</mi><mi>n</mi></msub><mo>;</mo><mi>θ</mi><mo stretchy="false">)</mo><mo>−</mo><msub><mi>u</mi><mrow><mi>C</mi><mo>,</mo><mi>mess</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>t</mi><mi>n</mi></msub><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow><mn>2</mn></msup><mo>,</mo><mspace width="1em"/><mi>θ</mi><mo>=</mo><mo stretchy="false">(</mo><msub><mi>b</mi><mrow><mn>0</mn><mo>…</mo><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>,</mo><msub><mi>c</mi><mrow><mn>0</mn><mo>…</mo><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>,</mo><msub><mi>R</mi><mi>Cu</mi></msub><mo>,</mo><msub><mi>R</mi><mi>Fe</mi></msub><mo stretchy="false">)</mo></mrow></math>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="hr_suchen" class="haupt">Suche starten</button><span class="hinweis">höchstens <input id="hr_such_it" type="number" min="1" max="200" step="1" value="30" style="width:50px;padding:1px 3px;font:inherit"> Schritte</span><label class="hinweis" style="display:flex;gap:4px" title="Zusätzlicher Parameter: Koerzitivspannung u_h = h·tanh(u_L/20 mV) in der Masche – die ratenunabhängige Hysterese, die als Restschleife in Schritt 5 übrig bleibt"><input id="hr_such_h" type="checkbox" checked> Hysterese-Glied h mitsuchen</label><label class="hinweis" style="display:flex;gap:4px" title="Zusätzlicher Parameter: Zeitversatz δ zwischen Rechnung und Abtastung (die Wandlungen A0, A2, A1 liegen innerhalb des 1-ms-Blocks an verschiedenen Stellen); die DGL-Lösung wird um δ verschoben verglichen"><input id="hr_such_d" type="checkbox"> Zeitversatz δ mitsuchen (±0,6 ms)</label><label class="hinweis" style="display:flex;gap:4px" title="R_Cu ist aus ψ(∞) = 0 bekannt (und am Ohmmeter); frei gelassen übernimmt es Dämpfung, die anderswo fehlt, und wandert auf unphysikalische Werte"><input id="hr_such_rcu" type="checkbox" checked> R<sub>Cu</sub> festhalten</label><label class="hinweis" style="display:flex;gap:4px" title="Fehler je Abtastwert durch die lokale Hüllkurve der Schwingung (plus 10 % der Sprunghöhe) teilen: zweites und drittes Maximum zählen dann so viel wie der erste Scheitel (seine Beobachtung: dort liegt die größte Abweichung)"><input id="hr_such_gew" type="checkbox" checked> spätere Maxima gleich gewichten</label><label class="hinweis" style="display:flex;gap:4px" title="Alle geladenen Messungen mit Strom gehen zugleich in den Fehler ein (je auf ihre Sprunghöhe bezogen). Nur so werden die Parameter bestimmt, die über die Amplitude tragen – vor allem das Hysterese-Glied h, das die stärkere Dämpfung bei kleiner Anregung erklärt. Aus: nur die gewählte Messung"><input id="hr_such_alle" type="checkbox" checked> alle Messungen gemeinsam</label><label class="hinweis" style="display:flex;gap:4px" title="Auch der gemessene Strom geht in den Fehler ein (bezogen auf seinen Scheitel, Gewicht 0,5). Aus u_C allein sind L und C nicht trennbar – Frequenz und Dämpfung legen nur L·C und L/C fest; die Suche trieb C(0) auf 37 µF und L(0) auf 3,7 H. Der Strom legt beide einzeln fest"><input id="hr_such_strom" type="checkbox"> Strom mitfitten</label><span class="hinweis" id="hr_such_stand">Noch nicht gesucht – erst „Alle Schritte rechnen“, dann „Suche starten“ (etwa eine Minute).</span></div></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c11a"></canvas><div class="tip" id="t11a" hidden></div></div><div class="bild"><canvas id="c11b"></canvas><div class="tip" id="t11b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z11"></div>
+    </div>
+    <div class="schritt" id="hr_s12" hidden>
+      <div><h2>12 · Faltung mit der Impulsantwort gegen die Lösung der Differentialgleichung</h2>
+        <p>Der Satz „mit der approximierten Impulsantwort erhält man durch Faltung jede beliebige Antwort“ gilt für <b>lineare, zeitinvariante</b> Glieder: y = g ∗ u<sub>E</sub>. Hier wird er am nichtlinearen RLC-Glied geprüft. Die Impulsantwort der <b>gewählten</b> Messung (violett: sech²-Summe aus Schritt 9, grau: geglättete Differenz) wird als FIR-Filter mit der gemessenen Anregung u<sub>E</sub>(t) der <b>anderen</b> Messung gefaltet und mit deren gemessener Sprungantwort verglichen; daneben steht die Vorhersage des Kennlinienwegs (DGL, vor und nach der Suche aus Schritt 11). Die Faltung kann die Amplitudenabhängigkeit grundsätzlich nicht abbilden (Überschwingfaktor, Periode wandern mit der Anregung); wie groß dieser Fehler gegen den Modellfehler der DGL ist, entscheidet der Abstand der beiden Anregungen. Für eine deutlich kleinere oder größere Anregung (z. B. T = 60 gegen 140) wäre der Unterschied größer; dafür fehlt bisher die Messung mit Strom.</p>
+        <math display="block"><mrow><msub><mi>y</mi><mi>n</mi></msub><mo>=</mo><mi>Δ</mi><mi>t</mi><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mi>n</mi></munderover><msub><mi>g</mi><mi>k</mi></msub><mo>·</mo><msub><mi>u</mi><mrow><mi>E</mi><mo>,</mo><mi>n</mi><mo>−</mo><mi>k</mi></mrow></msub><mo>,</mo><mspace width="1em"/><mi>g</mi><mo>=</mo><mfrac><mn>1</mn><mrow><mi>Δ</mi><mi>U</mi></mrow></mfrac><mfrac><mrow><mi>d</mi><mi>s</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mspace width="0.6em"/><mtext>(nur linear gültig)</mtext></mrow></math></div>
+      <div class="bilder zwei"><div class="bild"><canvas id="c12a"></canvas><div class="tip" id="t12a" hidden></div></div><div class="bild"><canvas id="c12b"></canvas><div class="tip" id="t12b" hidden></div></div></div>
+      <div class="tafeln" id="hr_z12"></div>
+    </div>
+      </div>
     </div>
     <div class="inhalt" id="r_imp" hidden>
       <div>
@@ -566,16 +776,16 @@ function tafel() {
     const tn = document.createElement("td"); tn.textContent = r.n; tr.append(tn); tb.append(tr);
   }
 }
-function alles() { liste(); tafel(); if (reiter === "aus") { zeichne1(); zeichne2(); } else if (reiter === "pruef") { zeichne3(); zeichne4(); } }
+function alles() { liste(); tafel(); if (reiter === "aus") { zeichne1(); zeichne2(); } else if (reiter === "pruef") { zeichne3(); zeichne4(); } else if (reiter === "hr" && typeof HR !== "undefined") HR.zeige(); }
 new ResizeObserver(() => { zeichne1(); zeichne2(); }).observe($("b1"));
 new ResizeObserver(() => { zeichne3(); zeichne4(); }).observe($("b3"));
 for (const id of ["UE", "glatt", "unten", "bezug", "i_median"]) $(id).onchange = alles;
 let reiter = "aus";
 function reiterWahl(r) {
-  reiter = r; for (const n of ["aus", "pruef", "theorie", "fit", "imp"]) { $("r_" + n).hidden = r !== n; $("rt_" + n).classList.toggle("aktiv", r === n); }
-  if (r === "aus" || r === "pruef") requestAnimationFrame(alles); if (r === "fit") requestAnimationFrame(() => { fitTafel(); zeichneFit(); }); if (r === "imp") requestAnimationFrame(() => { impListe(); zeichneImp(); });
+  reiter = r; for (const n of ["aus", "pruef", "theorie", "fit", "imp", "hr"]) { $("r_" + n).hidden = r !== n; $("rt_" + n).classList.toggle("aktiv", r === n); }
+  if (r === "aus" || r === "pruef") requestAnimationFrame(alles); if (r === "fit") requestAnimationFrame(() => { fitTafel(); zeichneFit(); }); if (r === "imp") requestAnimationFrame(() => { impListe(); zeichneImp(); }); if (r === "hr") requestAnimationFrame(() => HR.zeige());
 }
-for (const n of ["aus", "pruef", "theorie", "fit", "imp"]) $("rt_" + n).onclick = () => reiterWahl(n);
+for (const n of ["aus", "pruef", "theorie", "fit", "imp", "hr"]) $("rt_" + n).onclick = () => reiterWahl(n);
 
 // ---------- Impulsantwort (2.12): g = s'/ΔU, iterativ ableiten – integrieren – vergleichen, bis der Rest unter ε liegt
 let imp = null, ansicht6 = null, ansicht7 = null;
@@ -641,7 +851,7 @@ function zeichneImp() {
     linie(g, X, Y, imp.t, imp.rest.map(x => x * 1000), "#b42318", 1.2, []); g.restore(); }
 }
 new ResizeObserver(() => zeichneImp()).observe($("b6"));
-const idsImp = {aus: ["c1", "c2"], pruef: ["c3", "c4"], theorie: [], fit: ["c9", "c10"], imp: ["c6", "c7", "c8"]};
+const idsImp = {aus: ["c1", "c2"], pruef: ["c3", "c4"], theorie: [], fit: ["c9", "c10"], imp: ["c6", "c7", "c8"], hr: []};
 for (const id of ["i_roh", "i_lin", "i_hr"]) $(id).onchange = zeichneImp;
 (function () { const c = $("c6"), tip = $("tip6"); c.addEventListener("mousemove", ev => { const A = ansicht6; if (!A || !imp) return; const {mx} = zoomMaus(c, ev); if (mx < RAND.l || mx > A.w - RAND.r) { tip.hidden = true; return; }
   const tms = xVon(A, mx), i = naechster(imp.t, tms); tip.innerHTML = `t = ${zahl(imp.t[i] * 1000, 1)} ms<br>g iterativ <b>${zahl(imp.g[i], 3)} s⁻¹</b>` + (imp.lin ? `<br>linear ${zahl(imp.lin[i], 3)} s⁻¹` : "") + (A.reihen.some(r => r[4] === "Verfahren_HR") ? `<br>Verfahren_HR ${zahl(A.reihen.find(r => r[4] === "Verfahren_HR")[0][i], 3)} s⁻¹` : "") + `<br>rohe Differenz ${zahl(imp.roh[i], 2)} s⁻¹<br>s ${zahl(imp.s[i], 4)} V · ∫g·ΔU ${zahl(imp.sI[i], 4)} V · Rest ${zahl(imp.rest[i] * 1000, 2)} mV`; tip.hidden = false;
@@ -1048,14 +1258,14 @@ async function eineMessung(E, nr) {
     const roh6 = roh.map(z => [z[0], z[1], z[3], z[4], z[5], z[6], z[7]]), a = anregung(roh6, E.T, E.F, E.B); d = a.d;
     const hb = E.B / 2, u = roh.map(z => z[1] / hb * LSB), u2 = roh.map(z => z[2] / hb * LSB), im = u2.map((x, i) => E.Rs > 0 ? (x - u[i]) / E.Rs : NaN);
     anschlag = roh.filter(z => z[0] >= 0 && (z[2] === 0 || z[2] >= 1023 * hb)).length;   // nur ab dem Sprung: vor dem Sprung ist A2 = 0 V richtig
-    text = `# RLC_Sprung_2.24.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
+    text = `# RLC_Sprung_2.25.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
     roh.forEach(([kq, s0, s2, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${s2} ${sH} ${nH} ${sL} ${nL} ${nF} ${u[i].toFixed(6)} ${u2[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)} ${(im[i] * 1000).toFixed(4)}\n`; });
     name = `rlc223_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, u2, im, Rs: E.Rs, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   } else {
     const a = anregung(roh, E.T, E.F, E.B); d = a.d;
-    text = `# RLC_Sprung_2.24.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+    text = `# RLC_Sprung_2.25.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
     roh.forEach(([kq, s0, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
     name = `rlc223_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
@@ -1117,7 +1327,7 @@ function bildZusammen() {   // die Leinwände des aktuellen Reiters untereinande
   const w = Math.max(...cs.map(c => c.width)), kopf = 28 * (window.devicePixelRatio || 1), h = cs.reduce((a, c) => a + c.height, 0) + kopf;
   const o = document.createElement("canvas"); o.width = w; o.height = h; const g = o.getContext("2d");
   g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#111"; g.font = `${12 * (window.devicePixelRatio || 1)}px system-ui, Segoe UI, Arial`;
-  g.fillText(`RLC-Sprung 2.24 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
+  g.fillText(`RLC-Sprung 2.25 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
   let y = kopf; for (const c of cs) { g.drawImage(c, 0, y); y += c.height; }
   return o;
 }
@@ -1150,6 +1360,358 @@ gewaehlt = kurven.length ? kurven[kurven.length - 1].id : null;
 if (kurven.length) $("bezug").value = kurven[0].id;
 if (kurven.some(k => k.im)) { $("unten").value = "i"; $("unten4").value = "i"; } else $("unten").value = "d";
 knoepfe(); alles();
+// ---------- Reiter Verfahren_HR (2.25): verschmolzen aus verfahren_hr_vorlage_1.1.html; eigener Gültigkeitsbereich, Kennungen hr_*
+const HR = (() => {
+// ---------- Daten: die Messungen der Seite (nur mit Strom und Spulenende: Format rlc27), ab dem Sprung (t >= 0)
+let E = null; const vorrat = new Map();
+function hrForm(k) {   // Kurve der Seite -> Form des Kennlinienwegs {id, name, farbe, n, t, uC, u2, uE, i}
+  let d = vorrat.get(k.id); if (d && d.quelle === k) return d;
+  const ab = k.t.findIndex(t => t >= 0), s = a => a.slice(ab);
+  const uEroh = k.ue_fertig || k.t.map((t, i) => { const dd = k.kk[i] >= 0 ? k.d : 0; return dd * k.uh[i] + (1 - dd) * k.ul[i]; });   // je Block wie die Spalte U_E_V der Datei (roh, ohne den Glättungsschalter der Seite)
+  d = {id: k.id, name: k.name, farbe: k.farbe, quelle: k, t: s(k.t), uC: s(k.u), u2: s(k.u2), uE: s(uEroh), i: s(k.im)}; d.n = d.t.length; vorrat.set(k.id, d); return d;
+}
+const kurvenHR = () => kurven.filter(k => k.im && k.u2 && (k.ue_fertig || k.uh) && k.t.some(t => t >= 0)).map(hrForm);
+const kurveHR = () => { const v = kurvenHR(); return v.find(d => d.id === gewaehlt) || v[0] || null; };
+function stand(t, art) { const e = $("hr_stand"); e.textContent = t; e.className = "stand" + (art ? " " + art : ""); }
+// ---------- Verfahren_HR: tanh-Summe anfitten (Höhen linear, b2/b3 Levenberg-Marquardt), x wird intern auf [−1, 1] normiert
+function lsq(A, y) { const P = A[0].length, M = Array.from({length: P}, () => new Array(P).fill(0)), g = new Array(P).fill(0);
+  for (let n = 0; n < A.length; n++) { const r = A[n]; for (let i = 0; i < P; i++) { g[i] += r[i] * y[n]; for (let j = i; j < P; j++) M[i][j] += r[i] * r[j]; } }
+  for (let i = 0; i < P; i++) for (let j = 0; j < i; j++) M[i][j] = M[j][i]; for (let i = 0; i < P; i++) M[i][i] += 1e-12 * (1 + M[i][i]); return cholLoesen(M, g); }
+function cholLoesen(A, b) { const n = b.length, L = Array.from({length: n}, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++) for (let j = 0; j <= i; j++) { let s = A[i][j]; for (let k = 0; k < j; k++) s -= L[i][k] * L[j][k]; if (i === j) { if (s <= 0) s = 1e-18; L[i][i] = Math.sqrt(s); } else L[i][j] = s / L[j][j]; }
+  const y = new Array(n); for (let i = 0; i < n; i++) { let s = b[i]; for (let k = 0; k < i; k++) s -= L[i][k] * y[k]; y[i] = s / L[i][i]; }
+  const x = new Array(n); for (let i = n - 1; i >= 0; i--) { let s = y[i]; for (let k = i + 1; k < n; k++) s -= L[k][i] * x[k]; x[i] = s / L[i][i]; } return x; }
+function lsqPos(A, y) {   // kleinste Quadrate mit b[1…] >= 0 (b[0] = Sockel frei): aktive Menge -- negative Höhen auf 0 setzen und den Rest neu lösen
+  const P = A[0].length; let frei = Array.from({length: P}, (_, j) => j), b = lsq(A, y);
+  for (let runde = 0; runde < P; runde++) { const neg = frei.filter(j => j > 0 && b[j] < 0); if (!neg.length) break; frei = frei.filter(j => !neg.includes(j)); const bf = lsq(A.map(row => frei.map(j => row[j])), y); b = new Array(P).fill(0); frei.forEach((j, q) => { b[j] = bf[q]; }); }
+  return b;
+}
+function fitTanh(x, y, K, starts, seed0, warm, positiv) {   // liefert {b0, b1[], b2[], b3[], f(x), df(x), rmse} in den Einheiten von x und y; warm = Ergebnis für K−1 (Warmstart); positiv: Höhen >= 0 (monotone Kennlinie, L_d bzw. C_d > 0)
+  const N = x.length; let xmin = Infinity, xmax = -Infinity; for (const v of x) { if (v < xmin) xmin = v; if (v > xmax) xmax = v; }
+  const xm = (xmin + xmax) / 2, xs = Math.max((xmax - xmin) / 2, 1e-12), z = x.map(v => (v - xm) / xs), th = Math.tanh, B2 = [0.2, 400], B3 = [-1.6, 1.6];
+  const hoehen = (b2, b3) => (positiv ? lsqPos : lsq)(z.map(v => [1, ...b2.map((s, k) => th(s * (v + b3[k])))]), y);
+  const fehler = (b0, b1, b2, b3) => z.map((v, n) => b0 + b1.reduce((a, h, k) => a + h * th(b2[k] * (v + b3[k])), 0) - y[n]);
+  let best = null;
+  const lauf = (b2, b3) => {
+    b2 = b2.map(s => Math.min(B2[1], Math.max(B2[0], s))); b3 = b3.map(s => Math.min(B3[1], Math.max(B3[0], s)));
+    let lam = 1e-3, c = hoehen(b2, b3), r = fehler(c[0], c.slice(1), b2, b3), O = r.reduce((a, v) => a + v * v, 0);
+    for (let it = 0; it < 300; it++) {
+      const b1 = c.slice(1), P2 = 2 * K, M = Array.from({length: P2}, () => new Array(P2).fill(0)), g = new Array(P2).fill(0);
+      for (let n = 0; n < N; n++) { const row = new Array(P2); for (let k = 0; k < K; k++) { const u = th(b2[k] * (z[n] + b3[k])), d = b1[k] * (1 - u * u); row[2 * k] = d * (z[n] + b3[k]); row[2 * k + 1] = d * b2[k]; }
+        for (let i = 0; i < P2; i++) { g[i] += row[i] * r[n]; for (let j = i; j < P2; j++) M[i][j] += row[i] * row[j]; } }
+      for (let i = 0; i < P2; i++) for (let j = 0; j < i; j++) M[i][j] = M[j][i];
+      let ok = false;
+      for (let v = 0; v < 12; v++) { const Md = M.map((row, i) => row.map((q, j) => i === j ? q + lam * (q + 1e-9) : q)), dl = cholLoesen(Md, g.map(q => -q));
+        const b2n = b2.map((s, k) => Math.min(B2[1], Math.max(B2[0], s + dl[2 * k]))), b3n = b3.map((s, k) => Math.min(B3[1], Math.max(B3[0], s + dl[2 * k + 1])));
+        const cn = hoehen(b2n, b3n), rn = fehler(cn[0], cn.slice(1), b2n, b3n), On = rn.reduce((a, q) => a + q * q, 0);
+        if (On < O) { const rel = (O - On) / O; b2 = b2n; b3 = b3n; c = cn; r = rn; O = On; lam = Math.max(1e-9, lam / 4); ok = true; if (rel < 1e-10) it = 1e9; break; } else lam *= 5; }
+      if (!ok) break; }
+    if (!best || O < best.O) best = {O, b0: c[0], b1: c.slice(1), b2: b2.slice(), b3: b3.slice()}; };
+  lauf(Array.from({length: K}, (_, k) => 1 + k), Array.from({length: K}, (_, k) => K === 1 ? 0 : -0.6 + 1.2 * k / (K - 1)));
+  if (warm && warm.b2.length === K - 1) { const b2w = warm.b2.map(v => v * xs), b3w = warm.b3.map(v => (v + xm) / xs), rw = fehler(warm.b0, warm.b1, b2w, b3w); let imx = 0; for (let n = 1; n < N; n++) if (Math.abs(rw[n]) > Math.abs(rw[imx])) imx = n; lauf([...b2w, 6], [...b3w, -z[imx]]); }
+  let seed = (seed0 || 777) + 31 * K; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  for (let s = 1; s < starts; s++) lauf(Array.from({length: K}, () => 0.5 + 6 * rnd()), Array.from({length: K}, () => -1 + 2 * rnd()));
+  const b0 = best.b0, b1 = best.b1, b2 = best.b2.map(s => s / xs), b3 = best.b3.map((s, k) => s * xs - xm);   // zurück in x-Einheiten: tanh(b2z·((x−xm)/xs + b3z)) = tanh((b2z/xs)·(x + b3z·xs − xm))
+  const f = v => b0 + b1.reduce((a, h, k) => a + h * th(b2[k] * (v + b3[k])), 0), df = v => b1.reduce((a, h, k) => { const c = Math.cosh(Math.min(300, Math.abs(b2[k] * (v + b3[k])))); return a + h * b2[k] / (c * c); }, 0);
+  return {b0, b1, b2, b3, K, P: 3 * K + 1, f, df, rmse: Math.sqrt(best.O / N)};
+}
+function fitPolynom(x, y, P) {   // Tschebyschow-Basis in z ∈ [−1, 1], Grad P−1; liefert f und Koeffizienten
+  let xmin = Infinity, xmax = -Infinity; for (const v of x) { if (v < xmin) xmin = v; if (v > xmax) xmax = v; } const xm = (xmin + xmax) / 2, xs = Math.max((xmax - xmin) / 2, 1e-12), d = P - 1;
+  const basis = v => { const z = (v - xm) / xs, r = [1, z]; for (let n = 2; n <= d; n++) r.push(2 * z * r[n - 1] - r[n - 2]); return r.slice(0, d + 1); };
+  const c = lsq(x.map(basis), y), f = v => basis(v).reduce((a, b, j) => a + b * c[j], 0); let s = 0; for (let n = 0; n < x.length; n++) { const e = f(x[n]) - y[n]; s += e * e; }
+  return {c, d, P, f, xm, xs, rmse: Math.sqrt(s / x.length)};
+}
+// ---------- Rechnung der Schritte
+const median3 = a => a.map((v, j) => { const w = [a[j - 1], v, a[j + 1]].filter(Number.isFinite).sort((p, q) => p - q); return w[w.length >> 1]; });
+const median5 = a => a.map((v, j) => { const w = [a[j - 2], a[j - 1], v, a[j + 1], a[j + 2]].filter(Number.isFinite).sort((p, q) => p - q); return w[w.length >> 1]; });
+const anregung = kk => { const art = $("hr_ue_art").value; if (art === "roh") return kk.uE; if (!kk.uEart) kk.uEart = {}; if (!kk.uEart[art]) { if (art === "ideal") { const m = kk.uE.reduce((a, v) => a + v, 0) / kk.uE.length; kk.uEart[art] = kk.uE.map(() => m); } else kk.uEart[art] = dreieck(kk.uE, 5); } return kk.uEart[art]; };   // 1.1: Anregung roh / Dreieck 5 ms (mittelwerttreu) / ideal; überall dieselbe Quelle
+const kumul = (a, dt) => { const s = new Array(a.length); let c = 0; for (let n = 0; n < a.length; n++) { c += a[n] * dt; s[n] = c; } return s; };
+const spanne = a => { let lo = Infinity, hi = -Infinity; for (const v of a) if (Number.isFinite(v)) { if (v < lo) lo = v; if (v > hi) hi = v; } return [lo, hi]; };
+const rms = a => Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length);
+function schleife(psi, im, w) { let A = 0; for (let n = 1; n < w; n++) A += 0.5 * (psi[n] + psi[n - 1]) * (im[n] - im[n - 1]); return A; }   // ∮ψ di_m (Trapez), geschlossen bis zum Fensterende (dort i ≈ 0, ψ ≈ 0)
+const pause = () => new Promise(r => setTimeout(r, 0));
+async function rechnen() {
+  const k = kurveHR(); if (!k) { stand("Keine Messung mit Strom geladen (Format rlc27, Firmware 2.7).", "schlecht"); return; }
+  const schrittStand = async t => { stand("Rechnet … " + t); await pause(); };
+  const Rs = Number($("Rs").value) || (k.quelle.Rs > 0 ? k.quelle.Rs : 47), dt = (k.t[k.n - 1] - k.t[0]) / (k.n - 1), n = k.n, t = k.t, uC = k.uC, u2 = k.u2;
+  // Nullabgleich am Ende der Aufzeichnung (dort sicher i = 0 und u_C = u_E): Nullpunkt des Stromkanals und Pegelversatz der Anregung (2.25; T128: −0,043 mA, +10,4 mV -- ohne Abgleich R_Cu 420 Ω)
+  const eEnd = Math.min(100, Math.floor(n / 6)), mw = a => a.slice(-eEnd).reduce((p, q) => p + q, 0) / eEnd, iRoh = $("i_median").checked ? median3(k.i) : k.i.slice(), i0 = mw(iRoh), i = iRoh.map(v => v - i0);
+  const uEa = anregung(k), uOff = mw(uEa) - mw(uC), uE = uEa.map(v => v - uOff); k.abgleich = {i0, uOff};
+  // Schritt 2: R_Cu aus ψ(∞) = 0
+  const I1 = kumul(uE.map((v, j) => v - u2[j]), dt), I2 = kumul(i, dt), RCuPsi = I1[n - 1] / I2[n - 1], RCuVerlauf = I1.map((v, j) => j > 50 ? v / I2[j] : NaN);
+  const RCu = $("hr_RCu_art").value === "psi" ? RCuPsi : 92;
+  // Schritt 3: ψ, q
+  const uL = uE.map((v, j) => v - u2[j] - RCu * i[j]), psi = kumul(uL, dt), q = I2;
+  // Fenster: bis der Strom abgeklungen ist (+50 ms)
+  const schw = Number($("hr_schwelle").value) / 1000; let letzte = 0; for (let j = 0; j < n; j++) if (Math.abs(i[j]) > schw) letzte = j; const w = Math.min(n, letzte + Math.round(0.05 / dt));
+  const A0 = schleife(psi, i, w);
+  // Schritt 5: R_Fe aus A(R_Fe) = 0 (Bisektion in log R zwischen 300 Ω und 1 MΩ); dazu Abtastung für das Bild
+  const imVon = R => i.map((v, j) => v - uL[j] / R), Avon = R => schleife(psi, imVon(R), w);
+  const abtast = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 8000, 10000, 15000, 20000, 50000, 1e6].map(R => [R, Avon(R)]);
+  // R_Fe aus ∮ψ di_m = 0 (Bisektion in log R zwischen 300 Ω und 1 MΩ)
+  let RFeSchleife = Infinity; { let a = Math.log(300), b = Math.log(1e6); const fa = Avon(Math.exp(a)), fb = Avon(Math.exp(b));
+    if (fa * fb < 0) { for (let s = 0; s < 60; s++) { const m = (a + b) / 2, fm = Avon(Math.exp(m)); if (fm * fa > 0) a = m; else b = m; } RFeSchleife = Math.exp((a + b) / 2); } }
+  const starts = Number($("hr_starts").value), Kpsi = Number($("hr_Kpsi").value), Kq = Number($("hr_Kq").value), R = RCu + Rs, unter = Number($("hr_unter").value), stK = Math.max(2, Math.min(starts, 6));
+  const xu = uC.slice(0, w), yq = q.slice(0, w), yp = psi.slice(0, w);
+  await schrittStand("Schritt 6: q(u_C)"); const fQ = fitTanh(xu, yq, Kq, starts, 23, undefined, true), pQ = fitPolynom(xu, yq, fQ.P);
+  // je R_Fe: ψ(i_m) anfitten und DGL an der gewählten Messung lösen (Tafel in Schritt 5, Kriterium „kleinster DGL-Fehler“)
+  const probeRFe = RF => { const imx = isFinite(RF) ? imVon(RF) : i.slice(), f = fitTanh(imx.slice(0, w), yp, Kpsi, stK, 11, undefined, true), d = dgl(f, fQ, RF, R, unter, k); return {RFe: RF, A: schleife(psi, imx, w), rest: f.rmse / (Math.max(...yp) - Math.min(...yp)) * 100, dglFehler: d.rmse}; };
+  const tafelRFe = []; const stellen = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 8000, 12000, 20000, Infinity];
+  for (const RF of stellen) { await schrittStand(`Schritt 5: R_Fe = ${isFinite(RF) ? RF + " Ω" : "∞"}`); tafelRFe.push(probeRFe(RF)); }
+  const art = $("hr_RFe_art").value; let RFe, RFeArt;
+  if (art === "fest") { RFe = Number($("hr_RFe").value); RFeArt = "fest vorgegeben"; }
+  else if (art === "schleife") { RFe = RFeSchleife; RFeArt = isFinite(RFe) ? "aus ∮ψ di_m = 0" : "kein Nulldurchgang – ohne R_Fe"; }
+  else { // kleinster DGL-Fehler: bestes Abtastintervall, dann goldener Schnitt in log R
+    const endl = tafelRFe.filter(e => isFinite(e.RFe)); let bi = 0; for (let j = 1; j < endl.length; j++) if (endl[j].dglFehler < endl[bi].dglFehler) bi = j;
+    let a = Math.log(endl[Math.max(0, bi - 1)].RFe), b = Math.log(endl[Math.min(endl.length - 1, bi + 1)].RFe); const gs = (Math.sqrt(5) - 1) / 2; let c = b - gs * (b - a), d = a + gs * (b - a), fc = probeRFe(Math.exp(c)).dglFehler, fd = probeRFe(Math.exp(d)).dglFehler;
+    for (let s = 0; s < 7; s++) { await schrittStand("Schritt 5: R_Fe eingrenzen"); if (fc < fd) { b = d; d = c; fd = fc; c = b - gs * (b - a); fc = probeRFe(Math.exp(c)).dglFehler; } else { a = c; c = d; fc = fd; d = a + gs * (b - a); fd = probeRFe(Math.exp(d)).dglFehler; } }
+    RFe = Math.exp((a + b) / 2); RFeArt = "kleinster DGL-Fehler an " + k.name; }
+  const im = isFinite(RFe) ? imVon(RFe) : i.slice(), A1 = schleife(psi, im, w);
+  // Schritt 6: Verfahren_HR-Summe für ψ(i_m) und Polynome im Fenster
+  await schrittStand("Schritt 6: ψ(i_m)"); const xi = im.slice(0, w);
+  const fPsi = fitTanh(xi, yp, Kpsi, starts, 11, undefined, true), pPsi = fitPolynom(xi, yp, fPsi.P);
+  // Schritt 8: DGL für jede geladene Kurve mit diesen Kennlinien
+  await schrittStand("Schritt 8: DGL"); const sim = kurvenHR().map(kk => dgl(fPsi, fQ, RFe, R, unter, kk));
+  // Schritt 9: Sprungantwort direkt, Impulsantwort als Ableitung
+  const dU = uC.slice(-20).reduce((a, v) => a + v, 0) / 20, tEnd = t[n - 1], tau = t.map(v => v / tEnd), Kdir = Number($("hr_Kdir").value);
+  // Schritt 10 (zuerst, weil Schritt 9 den Warmstart der K-Reihe nutzt): direkter Fit K = 1 … 8 mit Warmstart gegen Kennlinienweg K = 1 … 3
+  const vgl = {direkt: [], weg: []}; let warm = null;
+  for (let K = 1; K <= 8; K++) { await schrittStand(`Schritt 10: direkter Fit K = ${K}`); const f = fitTanh(tau, uC, K, stK, 5, warm), r = tau.map((v, j) => (f.f(v) - uC[j]) / dU * 100); vgl.direkt.push({K, P: 3 * K + 1, rmse: rms(r), max: Math.max(...r.map(Math.abs)), u: tau.map(f.f), f}); warm = f; }
+  let wp = null, wq = null;
+  for (let K = 1; K <= 3; K++) { await schrittStand(`Schritt 10: Kennlinienweg K = ${K}`); const fp = fitTanh(xi, yp, K, stK, 11, wp, true), fq = fitTanh(xu, yq, K, stK, 23, wq, true), s = kurvenHR().map(kk => dgl(fp, fq, RFe, R, unter, kk)), eig = s.find(z => z.k === k), and = s.filter(z => z.k !== k); wp = fp; wq = fq;
+    vgl.weg.push({K, P: 2 * (3 * K + 1) + 2, rmse: eig.rmse, max: eig.max, u: eig.u, vorher: and.length ? and[0].rmse : NaN, vorherName: and.length ? and[0].k.name : ""}); }
+  // Schritt 9: Sprungantwort direkt (Warmstart aus der K-Reihe), Impulsantwort als Ableitung
+  await schrittStand("Schritt 9"); const fDir = fitTanh(tau, uC, Kdir, stK, 5, vgl.direkt[Kdir - 2] ? vgl.direkt[Kdir - 2].f : null), uFit = tau.map(fDir.f), gHR = tau.map(v => fDir.df(v) / (dU * tEnd));
+  const roh = uC.map((v, j) => j > 0 && j < n - 1 ? (uC[j + 1] - uC[j - 1]) / (2 * dt) / dU : NaN), glatt = dreieck0(roh, 3);   // zentrale Differenz (1.1: die Vorwärtsdifferenz lag eine halbe Abtastung früh und verschob die Faltung)
+  E = {k, dt, i, uL, psi, q, I1, I2, RCu, RCuPsi, RCuVerlauf, w, A0, A1, RFe, RFeArt, RFeSchleife, tafelRFe, abtast, im, fPsi, pPsi, fQ, pQ, R, Rs, sim, dU, tEnd, tau, fDir, uFit, gHR, roh, glatt, vgl};
+  await schrittStand("Schritt 11: Suche"); await suche(true);   // 2.25: die Suche läuft mit (sein Wort: der DGL-Fit soll dem direkten nahekommen); Schritt 10 zeigt ihr Ergebnis
+  const nachS = E.suche ? E.suche.sim.find(s => s.k === k) : null;
+  stand(`Gerechnet: R_Cu = ${zahl(RCu, 1)} Ω, R_Fe = ${isFinite(RFe) ? zahl(RFe, 0) + " Ω" : "–"}, DGL gegen Messung ${zahl(sim.find(s => s.k === k).rmse, 2)} % ΔU` + (nachS ? `, nach der Suche ${zahl(nachS.rmse, 2)} %.` : "."), "gut");
+  $("hr_kopfzeile").textContent = `Gewählte Messung: ${k.name} · ${n} Werte je ${zahl(dt * 1000, 1)} ms · R_s = ${zahl(Rs, 1)} Ω · Fenster für Kennlinien 0 … ${zahl(t[w - 1] * 1000, 0)} ms (Strom über ${zahl(schw * 1000, 2)} mA)`;
+  zeichneAlles();
+}
+function dgl(fPsi, fQ, RFe, R, unter, kk, erw) {   // erw (1.1): {h} Koerzitivspannung der Hysterese, 0 = ohne   // Schritt 8: Zustände ψ, u_C; i_m = ψ̃⁻¹(ψ) per Newton; RK4 mit der gemessenen Anregung u_E(t) der Kurve kk
+  const ik = $("i_median").checked ? median3(kk.i) : kk.i, dtk = (kk.t[kk.n - 1] - kk.t[0]) / (kk.n - 1), h = dtk / unter, hK = erw && erw.h ? erw.h : 0; let y = [fPsi.f(0), 0], x0 = 0, ulAlt = 0; const ui = [], uu = [];
+  const imVonPsi = ps => { let x = x0; for (let s = 0; s < 30; s++) { const d = Math.max(fPsi.df(x), 0.05), dx = (fPsi.f(x) - ps) / d; x -= dx; if (Math.abs(dx) < 1e-9) break; } return x; };
+  const rhs = (ps, uc, ue) => { const x = imVonPsi(ps); x0 = x; const uh = hK ? hK * Math.tanh(ulAlt / 0.02) : 0; const ul = isFinite(RFe) ? (ue - R * x - uc - uh) / (1 + R / RFe) : (ue - R * x - uc - uh); ulAlt = ul; const ii = x + (isFinite(RFe) ? ul / RFe : 0); return [ul, ii / Math.max(fQ.df(uc), 1e-6), ii]; };
+  const uEk = anregung(kk);
+  for (let j = 0; j < kk.n; j++) { const ue = uEk[j], r0 = rhs(y[0], y[1], ue); ui.push(r0[2]); uu.push(y[1]);
+    for (let s = 0; s < unter; s++) { const k1 = rhs(y[0], y[1], ue), k2 = rhs(y[0] + h / 2 * k1[0], y[1] + h / 2 * k1[1], ue), k3 = rhs(y[0] + h / 2 * k2[0], y[1] + h / 2 * k2[1], ue), k4 = rhs(y[0] + h * k3[0], y[1] + h * k3[1], ue);
+      y = [y[0] + h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]), y[1] + h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])]; if (!Number.isFinite(y[0]) || !Number.isFinite(y[1])) { y = [NaN, NaN]; break; } } }
+  const dU = kk.uC.slice(-20).reduce((a, v) => a + v, 0) / 20, e = uu.map((v, j) => v - kk.uC[j]), ei = ui.map((v, j) => v - ik[j]);
+  return {k: kk, u: uu, i: ui, dU, rmse: rms(e) / dU * 100, max: Math.max(...e.map(Math.abs)) / dU * 100, irms: rms(ei) * 1000, scheitel: Math.max(...uu), scheitelMess: Math.max(...kk.uC)};
+}
+function tanhAus(p, K) {   // Parametervektor [b1…, b2…, b3…, b0] -> Summe mit f, df (wie fitTanh liefert); Höhen >= 0 und Steilheiten > 0 festgeklemmt (monoton)
+  const b1 = p.slice(0, K).map(v => Math.max(0, v)), b2 = p.slice(K, 2 * K).map(v => Math.max(1e-6, v)), b3 = p.slice(2 * K, 3 * K), b0 = p[3 * K], th = Math.tanh;
+  return {b0, b1, b2, b3, K, P: 3 * K + 1, f: v => b0 + b1.reduce((a, h, k) => a + h * th(b2[k] * (v + b3[k])), 0), df: v => b1.reduce((a, h, k) => { const c = Math.cosh(Math.min(300, Math.abs(b2[k] * (v + b3[k])))); return a + h * b2[k] / (c * c); }, 0)};
+}
+async function suche(still) {   // Schritt 11: alle Parameter des Kennlinienwegs gegen die gewählte Messung nachstellen; still = aus rechnen() heraus (kein eigenes Neuzeichnen)
+  if (!E) { $("hr_such_stand").textContent = "Erst „Alle Schritte rechnen“."; return; }
+  const k = E.k, Kp = E.fPsi.K, Kq = E.fQ.K, dU = E.dU, maxIt = Number($("hr_such_it").value), unterS = 4, unter = Number($("hr_unter").value), t0 = performance.now();
+  const mitH = $("hr_such_h").checked, mitD = $("hr_such_d").checked, p0 = [...E.fPsi.b1, ...E.fPsi.b2, ...E.fPsi.b3, E.fPsi.b0, ...E.fQ.b1, ...E.fQ.b2, ...E.fQ.b3, E.fQ.b0, E.RCu, isFinite(E.RFe) ? E.RFe : 1e5].concat(mitH ? [0.005] : []).concat(mitD ? [0] : []);   // h startet bei 5 mV (bei 0 ist die Ableitung im Rauschen)
+  const skala = p0.map(v => Math.abs(v) > 1e-12 ? Math.abs(v) : 1e-3), nP = p0.length, nPsi = 3 * Kp + 1, iR = nPsi + 3 * Kq + 1, iH = mitH ? iR + 2 : -1, iD = mitD ? iR + 2 + (mitH ? 1 : 0) : -1; if (mitH) skala[iH] = 0.05; if (mitD) skala[iD] = 0.0005;   // h: Skala 50 mV, δ: Skala 0,5 ms
+  const entpacken = z => { const p = z.map((v, j) => v * skala[j]); return {fP: tanhAus(p.slice(0, nPsi), Kp), fQ: tanhAus(p.slice(nPsi, iR), Kq), RCu: p[iR], RFe: p[iR + 1], h: mitH ? Math.max(0, p[iH]) : 0, d: mitD ? p[iD] : 0}; };   // h >= 0: eine Koerzitivspannung kann nur Verlust sein
+  const verschoben = (u, t, d) => { if (!d) return u; const dtk = t[1] - t[0]; return u.map((v, j) => { const x = j - d / dtk, j0 = Math.floor(x), f = x - j0; const a = u[Math.min(u.length - 1, Math.max(0, j0))], b = u[Math.min(u.length - 1, Math.max(0, j0 + 1))]; return a + f * (b - a); }); };   // u_sim(t − δ), linear interpoliert
+  const rcuFest = $("hr_such_rcu").checked, rcu0 = E.RCu;
+  const gewichtet = $("hr_such_gew").checked, ziele = $("hr_such_alle").checked ? kurvenHR() : [k];
+  const huelleVon = z => { const dUz = z.uC.slice(-20).reduce((p, q) => p + q, 0) / 20, a = z.uC.map(v => Math.abs(v - dUz)), h = Math.round(0.06 / E.dt), e = new Array(z.n); for (let j = 0; j < z.n; j++) { let mx = 0; for (let q = Math.max(0, j - h); q <= Math.min(z.n - 1, j + h); q++) mx = Math.max(mx, a[q]); e[j] = mx + 0.1 * dUz; } const mitt = e.reduce((p, q) => p + q, 0) / z.n; return e.map(v => mitt / v); };   // Gewicht ~ 1/Hüllkurve, auf Mittel 1 normiert
+  const mitStrom = $("hr_such_strom").checked, wI = 1;
+  const zielDaten = ziele.map(z => { const iR = $("i_median").checked ? median3(z.i) : z.i, e0 = Math.min(100, Math.floor(z.n / 6)), i0 = iR.slice(-e0).reduce((p, q) => p + q, 0) / e0, iK = iR.map(v => v - i0), iMax = Math.max(...iK.map(Math.abs)); return {z, dUz: z.uC.slice(-20).reduce((p, q) => p + q, 0) / 20, gew: gewichtet ? huelleVon(z) : z.uC.map(() => 1), iK, iMax}; });
+  const resid = (z, u) => { const m = entpacken(z); if (rcuFest) m.RCu = rcu0; if (m.RCu < 10 || m.RFe < 200 || Math.abs(m.d) > 0.0006) return null; const r = []; for (const {z, dUz, gew, iK, iMax} of zielDaten) { const d = dgl(m.fP, m.fQ, m.RFe, m.RCu + E.Rs, u, z, {h: m.h}); const us = verschoben(d.u, z.t, m.d), is = mitStrom ? verschoben(d.i, z.t, m.d) : null; for (let j = 0; j < z.n; j++) { r.push(Number.isFinite(us[j]) ? gew[j] * (us[j] - z.uC[j]) / dUz : 10); if (mitStrom) r.push(Number.isFinite(is[j]) ? wI * gew[j] * (is[j] - iK[j]) / iMax : 10); } } return r; };
+  const O = r => r.reduce((a, v) => a + v * v, 0), pause = () => new Promise(r => setTimeout(r, 0));
+  let z = p0.map((v, j) => v / skala[j]), r = resid(z, unterS), Oz = O(r), lam = 1e-2, it = 0, ausw = 1; const verlauf = [Math.sqrt(Oz / r.length) * 100];   // gewichteter Effektivwert (bei Gewichtung ≠ RMSE der Tafel)
+  for (; it < maxIt; it++) {
+    $("hr_such_stand").textContent = `Schritt ${it + 1} von höchstens ${maxIt}: RMSE ${zahl(Math.sqrt(Oz / r.length) * 100, 3)} % ΔU, ${ausw} DGL-Läufe, ${zahl((performance.now() - t0) / 1000, 0)} s`; await pause();
+    const J = []; for (let j = 0; j < nP; j++) { const zj = z.slice(); zj[j] += 1e-2; const rj = resid(zj, unterS); ausw++; J.push(rj ? rj.map((v, n) => (v - r[n]) / 1e-2) : r.map(() => 0)); }   // Differenzenschritt 1 % der Skala (bei 0,1 % ging die Ableitung nach h im Rauschen der DGL unter)
+    const M = Array.from({length: nP}, () => new Array(nP).fill(0)), g = new Array(nP).fill(0);
+    for (let a = 0; a < nP; a++) { for (let n = 0; n < r.length; n++) g[a] += J[a][n] * r[n]; for (let b = a; b < nP; b++) { let sum = 0; for (let n = 0; n < r.length; n++) sum += J[a][n] * J[b][n]; M[a][b] = M[b][a] = sum; } }
+    let ok = false;
+    for (let v = 0; v < 22; v++) { const Md = M.map((row, a) => row.map((q, b) => a === b ? q + lam * (q + 1e-9) : q)), dl = cholLoesen(Md, g.map(q => -q)), zn = z.map((q, j) => q + dl[j]), rn = resid(zn, unterS); ausw++;   // bis λ ≈ 1e8 (22 Versuche), erst dann aufgeben
+      if (rn && O(rn) < Oz) { const rel = (Oz - O(rn)) / Oz; z = zn; r = rn; Oz = O(rn); lam = Math.max(1e-7, lam / 3); ok = true; verlauf.push(Math.sqrt(Oz / r.length) * 100); if (rel < 1e-6) it = maxIt; break; } else lam *= 4; }
+    if (!ok) break;
+  }
+  const m = entpacken(z); if (rcuFest) m.RCu = rcu0; const sim = kurvenHR().map(kk => { const d = dgl(m.fP, m.fQ, m.RFe, m.RCu + E.Rs, unter, kk, {h: m.h}); if (m.d) { d.u = verschoben(d.u, kk.t, m.d); const e = d.u.map((v, j) => v - kk.uC[j]); d.rmse = rms(e) / d.dU * 100; d.max = Math.max(...e.map(Math.abs)) / d.dU * 100; } return d; });
+  E.suche = {m, sim, verlauf, it: verlauf.length - 1, ausw, dauer: (performance.now() - t0) / 1000, ziele: ziele.map(z => z.id)};
+  const eig = sim.find(x => x.k === k), vor = E.sim.find(x => x.k === k);
+  $("hr_such_stand").textContent = `Fertig nach ${E.suche.it} Schritten (${ausw} DGL-Läufe, ${zahl(E.suche.dauer, 0)} s): ${k.name} ${zahl(vor.rmse, 2)} → ${zahl(eig.rmse, 2)} % ΔU.`;
+  if (!still) zeichneAlles();
+}
+$("hr_suchen").onclick = async () => { $("hr_suchen").disabled = true; try { await suche(); } catch (e) { $("hr_such_stand").textContent = "Fehler: " + e.message; console.error(e); } $("hr_suchen").disabled = false; };
+function falte(g, u, dt) { const n = u.length, y = new Array(n).fill(0); for (let i = 0; i < n; i++) { let a = 0; for (let k = 0; k <= i; k++) { const gk = g[k]; if (Number.isFinite(gk)) a += gk * u[i - k]; } y[i] = a * dt; } return y; }   // FIR-Faltung y = Δt·Σ g_k u_{n−k}
+function mittel(a, w) { const h = w >> 1, r = new Array(a.length); for (let n = 0; n < a.length; n++) { let s = 0, c = 0; for (let j = n - h; j <= n + h; j++) if (j >= 0 && j < a.length && Number.isFinite(a[j])) { s += a[j]; c++; } r[n] = c ? s / c : NaN; } return r; }
+function dreieck(a, w) { return mittel(mittel(a, w), w); }
+function mittel0(a, w) { const h = w >> 1, r = new Array(a.length); for (let n = 0; n < a.length; n++) { let s = 0; for (let j = n - h; j <= n + h; j++) if (j >= 0 && j < a.length && Number.isFinite(a[j])) s += a[j]; r[n] = s / w; } return r; }   // Rand und NaN zählen als 0 (für die Impulsantwort: g = 0 vor dem Sprung) -- der schrumpfende Rand von mittel() hob ∫g um 0,5 % an und verschob die Faltung
+function dreieck0(a, w) { return mittel0(mittel0(a, w), w); }
+// ---------- Darstellung: Gleichungen und Tafeln
+const mi = t => `<mi>${t}</mi>`, mn = t => `<mn>${t}</mn>`, mo = t => `<mo>${t}</mo>`, mof = t => `<mo stretchy="false">${t}</mo>`, sub = (a, b) => `<msub>${mi(a)}<mrow>${b}</mrow></msub>`, idx = (z, k) => `<mn>${z}</mn><mo>,</mo><mi>${k}</mi>`;
+const mathe = inner => `<math display="block"><mrow>${inner}</mrow></math>`;
+function tafel(kopf, zeilen) { return `<table><thead><tr>${kopf.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${zeilen.map(z => `<tr>${z.map((x, j) => `<td${j === 0 && typeof x === "string" && /[a-zA-Zäöü]/.test(x) ? ' class="l"' : ""}>${x}</td>`).join("")}</tr>`).join("")}</tbody></table>`; }
+function summeHtml(titel, m, xName, yEinheit, xEinheit, xFaktor, yFaktor, mitAbleitung, ablName) {   // Gleichung + Koeffiziententafel einer tanh-Summe
+  const K = m.K, gl = mathe(`<mover>${mi(titel)}<mo>~</mo></mover>${mof("(")}${mi(xName)}${mof(")")}${mo("=")}${sub("b", mn(0))}${mo("+")}<munderover>${mo("∑")}<mrow>${mi("k")}${mo("=")}${mn(1)}</mrow>${mn(K)}</munderover>${sub("b", idx(1, "k"))}${mo("·")}${mi("tanh")}${mo("⁡")}${mof("(")}${sub("b", idx(2, "k"))}${mo("·")}${mof("(")}${mi(xName)}${mo("+")}${sub("b", idx(3, "k"))}${mof(")")}${mof(")")}`);
+  const abl = mitAbleitung ? mathe(`${mi(ablName)}${mof("(")}${mi(xName)}${mof(")")}${mo("=")}<munderover>${mo("∑")}<mrow>${mi("k")}${mo("=")}${mn(1)}</mrow>${mn(K)}</munderover>${sub("b", idx(1, "k"))}${sub("b", idx(2, "k"))}${mo("·")}<msup>${mi("sech")}${mn(2)}</msup>${mo("⁡")}${mof("(")}${sub("b", idx(2, "k"))}${mo("·")}${mof("(")}${mi(xName)}${mo("+")}${sub("b", idx(3, "k"))}${mof(")")}${mof(")")}`) : "";
+  const zeilen = m.b1.map((h, k) => [k + 1, zahl(h * yFaktor, 4), zahl(m.b2[k] / xFaktor, 4), zahl(m.b3[k] * xFaktor, 4)].concat(mitAbleitung ? [zahl(h * m.b2[k] * yFaktor / xFaktor, 4)] : []));
+  return `<div class="block"><b>${titel} als Verfahren_HR-Summe, K = ${K}, P = ${m.P}</b>${gl}${abl}<div>b<sub>0</sub> = ${zahl(m.b0 * yFaktor, 4)} ${yEinheit}; x = ${xName} in ${xEinheit}</div>` +
+    tafel(["k", `b<sub>1,k</sub> / ${yEinheit}`, `b<sub>2,k</sub> / (${xEinheit})⁻¹`, `b<sub>3,k</sub> / ${xEinheit}`].concat(mitAbleitung ? [`b<sub>1,k</sub>·b<sub>2,k</sub> / (${yEinheit}/${xEinheit})`] : []), zeilen) + `</div>`;
+}
+function polynomHtml(titel, p, xName, yEinheit) {
+  return `<div class="block"><b>Vergleich: Polynom Grad ${p.d}, P = ${p.P}</b>` + mathe(`${mi(titel)}${mof("(")}${mi(xName)}${mof(")")}${mo("=")}<munderover>${mo("∑")}<mrow>${mi("n")}${mo("=")}${mn(0)}</mrow>${mn(p.d)}</munderover>${sub("c", mi("n"))}${mo("·")}${sub("T", mi("n"))}${mof("(")}${mi("z")}${mof(")")}${mo(",")}<mspace width="0.6em"/>${mi("z")}${mo("=")}<mfrac><mrow>${mi(xName)}${mo("−")}${sub("x", mi("m"))}</mrow>${sub("x", mi("s"))}</mfrac>`) +
+    `<div class="hinweis">Tschebyschow-Basis T<sub>n</sub>, x<sub>m</sub> = ${zahl(p.xm, 5)}, x<sub>s</sub> = ${zahl(p.xs, 5)}</div>` + tafel(["n", `c<sub>n</sub> / ${yEinheit}`], p.c.map((c, n) => [n, zahl(c, 5)])) + `</div>`;
+}
+// ---------- Zeichnen
+const ansichten = {};
+function bildAchsen(c, x0, x1, y0, y1, ytext, xtext) { const {g, w, h} = leinwand(c); const [achse, ...rest] = xtext.split("   ·   "); const {X, Y} = achsen(g, w, h, x0, x1, y0, y1, ytext, achse);
+  if (rest.length) { g.font = "11px system-ui, Segoe UI, Arial"; g.fillStyle = "#555"; g.textAlign = "left"; const zeilen = []; let z = ""; for (const t of rest) { if (z && g.measureText(z + " · " + t).width > w - RAND.l - RAND.r - 10) { zeilen.push(z); z = t; } else z = z ? z + " · " + t : t; } if (z) zeilen.push(z); zeilen.forEach((t, j) => g.fillText(t, RAND.l + 6, RAND.o + 13 + 13 * j)); } ansichten[c.id] = {X, Y, w, h, x0, x1, y0, y1}; klipp(g, w, h); g.strokeStyle = "#ccc"; if (y0 < 0 && y1 > 0) { g.beginPath(); g.moveTo(RAND.l, Y(0)); g.lineTo(w - RAND.r, Y(0)); g.stroke(); } if (x0 < 0 && x1 > 0) { g.beginPath(); g.moveTo(X(0), RAND.o); g.lineTo(X(0), h - RAND.u); g.stroke(); } return {g, X, Y, w, h}; }
+function zug(g, X, Y, xs, ys, farbe, breite, strich) { g.strokeStyle = farbe; g.lineWidth = breite; g.setLineDash(strich || []); g.beginPath(); let an = false; for (let j = 0; j < xs.length; j++) { if (!Number.isFinite(ys[j]) || !Number.isFinite(xs[j])) { an = false; continue; } an ? g.lineTo(X(xs[j]), Y(ys[j])) : g.moveTo(X(xs[j]), Y(ys[j])); an = true; } g.stroke(); g.setLineDash([]); }
+function punkte(g, X, Y, xs, ys, farbeVon, r) { for (let j = 0; j < xs.length; j++) { if (!Number.isFinite(ys[j])) continue; g.fillStyle = farbeVon(j); g.beginPath(); g.arc(X(xs[j]), Y(ys[j]), r, 0, 2 * Math.PI); g.fill(); } }
+const zeitfarbe = (j, n) => `hsl(${Math.round(240 - 240 * j / n)}, 75%, 42%)`;
+function rahmen(x0, x1, y0, y1) { const px = (x1 - x0) * 0.04 || 1, py = (y1 - y0) * 0.06 || 1; return [x0 - px, x1 + px, y0 - py, y1 + py]; }
+function leer(c, text) { const {g, w, h} = leinwand(c); achsen(g, w, h, 0, 1, 0, 1, "", ""); g.fillStyle = "#666"; g.textAlign = "center"; g.font = "12px system-ui, Segoe UI, Arial"; g.fillText(text, w / 2, h / 2); ansichten[c.id] = null; }
+let schritt = 0;
+function zeichneAlles() { const s = schritt; if (!E) { for (const c of document.querySelectorAll(`#hr_s${s} canvas`)) leer(c, kurvenHR().length ? "„Alle Schritte rechnen“ drücken" : "Keine Messung geladen"); const z = $("hr_z" + s); if (z) z.innerHTML = ""; return; } (ZEICHNER[s] || (() => {}))(); }
+const ms = a => a.map(v => v * 1000), mA = a => a.map(v => v * 1000);
+const ZEICHNER = {
+  1() { const {k, i} = E, T = ms(k.t), [lo, hi] = spanne([...k.uC, ...k.u2, ...k.uE]);
+    { const {g, X, Y} = bildAchsen($("c1a"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, lo), hi).slice(2), "U / V", "t / ms   ·   blau u_C (A0)   ·   orange u_A2 Spulenende (A2)   ·   grau gestrichelt u_E Mittelwert der PWM" + ($("hr_ue_art").value === "roh" ? "" : " (" + ($("hr_ue_art").value === "ideal" ? "ideal: Mittelwert als Sprung" : "Dreieck 5 ms") + "; hellgrau: blockweise gemessen)"));
+      zug(g, X, Y, T, k.uE, "#ccc", 0.8); zug(g, X, Y, T, anregung(k), "#555", 1.2, [6, 4]); zug(g, X, Y, T, k.u2, "#eb6834", 1.4); zug(g, X, Y, T, k.uC, "#2a78d6", 2); g.restore(); }
+    { const I = mA(i), [a, b] = spanne(I), {g, X, Y} = bildAchsen($("c1b"), 0, T[T.length - 1], ...rahmen(0, 0, a, b).slice(2), "i / mA", "t / ms   ·   Strom i = (u_A2 − u_C)/R_s" + ($("i_median").checked ? " nach 3-Punkt-Median" : " roh") + "   ·   hellgrau: Rohwerte");
+      zug(g, X, Y, T, mA(k.i), "#bbb", 0.8); zug(g, X, Y, T, I, "#b42318", 1.6); g.restore(); }
+    const [ia, ib] = spanne(i); $("hr_z1").innerHTML = tafel(["Größe", "Wert"], [["Werte ab dem Sprung", k.n], ["Abtastschritt Δt / ms", zahl(E.dt * 1000, 2)], ["Endwert u_C = ΔU / V", zahl(E.dU, 4)], ["Scheitel u_C / V", zahl(Math.max(...k.uC), 3)], ["Strom max / mA", zahl(ib * 1000, 2)], ["Strom min / mA", zahl(ia * 1000, 2)], ["Shunt R_s / Ω", zahl(E.Rs, 1)], ["1 ADC-Stufe am Shunt / mA", zahl(5 / 1023 / E.Rs * 1000, 3)], ["Nullabgleich Strom am Ende / mA", zahl(k.abgleich.i0 * 1000, 3)], ["Nullabgleich Anregung u_E − u_C am Ende / mV", zahl(k.abgleich.uOff * 1000, 1)]]); },
+  2() { const {k, I1, I2, RCu, RCuVerlauf} = E, T = ms(k.t), [a, b] = spanne([...I1, ...I2.map(v => v * RCu)]);
+    { const {g, X, Y} = bildAchsen($("c2a"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, a), b).slice(2), "∫ dτ / V·s", "t / ms   ·   schwarz ∫(u_E − u_A2) dτ   ·   rot gestrichelt R_Cu·∫i dτ   ·   am Ende gleich groß (Bedingung ψ(∞) = 0)");
+      zug(g, X, Y, T, I1, "#111", 1.8); zug(g, X, Y, T, I2.map(v => v * RCu), "#b42318", 1.4, [6, 4]); g.restore(); }
+    { const v = RCuVerlauf.filter(Number.isFinite), [a2, b2] = spanne(v), lo = Math.max(0, Math.min(a2, RCu * 0.7, E.RCuPsi * 0.9)), hi = Math.min(Math.max(b2, RCu * 1.3, E.RCuPsi * 1.1), Math.max(RCu, E.RCuPsi) * 3);
+      const {g, X, Y} = bildAchsen($("c2b"), 0, T[T.length - 1], lo, hi, "R / Ω", "t / ms   ·   Quotient der beiden Integrale bis t: läuft gegen " + zahl(E.RCuPsi, 1) + " Ω; gestrichelt: verwendetes R_Cu = " + zahl(RCu, 1) + " Ω; früh ist er unbestimmt (kleine Integrale)");
+      zug(g, X, Y, T, RCuVerlauf, "#2a78d6", 1.6); g.strokeStyle = "#555"; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(RAND.l, Y(RCu)); g.lineTo(X(T[T.length - 1]), Y(RCu)); g.stroke(); g.setLineDash([]); g.restore(); }
+    $("hr_z2").innerHTML = tafel(["Größe", "Wert"], [["∫(u_E − u_A2) dτ bis t_end / mV·s", zahl(I1[k.n - 1] * 1000, 3)], ["∫i dτ bis t_end = q(t_end) / µC", zahl(I2[k.n - 1] * 1e6, 2)], ["R_Cu = Quotient aus ψ(∞) = 0 / Ω", zahl(E.RCuPsi, 1)], ["Angabe (Ohmmeter) / Ω", "92"], ["<b>R_Cu verwendet / Ω</b>", `<b>${zahl(RCu, 1)}</b> (${$("hr_RCu_art").value === "psi" ? "aus ψ(∞) = 0" : "Angabe"})`], ["R_Cu bis 300 ms / Ω", zahl(RCuVerlauf[Math.min(k.n - 1, Math.round(0.3 / E.dt))], 1)], ["R_Cu bis 450 ms / Ω", zahl(RCuVerlauf[Math.min(k.n - 1, Math.round(0.45 / E.dt))], 1)]]); },
+  3() { const {k, psi, q} = E, T = ms(k.t);
+    { const P = psi.map(v => v * 1000), [a, b] = spanne(P), {g, X, Y} = bildAchsen($("c3a"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, a), b).slice(2), "ψ / mWb", "t / ms   ·   Fluss ψ(t) = ∫(u_E − u_A2 − R_Cu·i) dτ   ·   endet bei 0"); zug(g, X, Y, T, P, "#6250d6", 1.8); g.restore(); }
+    { const Q = q.map(v => v * 1e6), [a, b] = spanne(Q), {g, X, Y} = bildAchsen($("c3b"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, a), b).slice(2), "q / µC", "t / ms   ·   Ladung q(t) = ∫i dτ   ·   endet bei C_mittel·ΔU"); zug(g, X, Y, T, Q, "#1baf7a", 1.8); g.restore(); }
+    const [pa, pb] = spanne(psi); $("hr_z3").innerHTML = tafel(["Größe", "Wert"], [["ψ max / mWb", zahl(pb * 1000, 2)], ["t(ψ max) / ms", zahl(k.t[psi.indexOf(pb)] * 1000, 0)], ["ψ min / mWb", zahl(pa * 1000, 2)], ["ψ(t_end) / mWb", zahl(psi[k.n - 1] * 1000, 3)], ["q(t_end) / µC", zahl(q[k.n - 1] * 1e6, 2)], ["C_mittel = q(t_end)/ΔU / µF", zahl(q[k.n - 1] / E.dU * 1e6, 2)], ["Nennwert C / µF", "23"]]); },
+  4() { const {k, i, psi, q, w, A0} = E, I = mA(i).slice(0, w), P = psi.map(v => v * 1000).slice(0, w), U = k.uC.slice(0, w), Q = q.map(v => v * 1e6).slice(0, w);
+    { const [a, b] = spanne(I), [c, d] = spanne(P), {g, X, Y} = bildAchsen($("c4a"), ...rahmen(a, b, c, d), "ψ / mWb", "i / mA   ·   Punktwolke ψ(i), Farbe von blau (t = 0) nach rot (Fensterende)   ·   Befund: Schleife, Fläche " + zahl(A0 * 1e6, 1) + " µJ"); zug(g, X, Y, I, P, "#ddd", 0.8); punkte(g, X, Y, I, P, j => zeitfarbe(j, w), 2); g.restore(); }
+    { const [a, b] = spanne(U), [c, d] = spanne(Q), {g, X, Y} = bildAchsen($("c4b"), ...rahmen(Math.min(0, a), b, Math.min(0, c), d), "q / µC", "u_C / V   ·   Punktwolke q(u_C)   ·   Hin- und Rückweg decken sich: eindeutige Kennlinie"); zug(g, X, Y, U, Q, "#ddd", 0.8); punkte(g, X, Y, U, Q, j => zeitfarbe(j, w), 2); g.restore(); }
+    $("hr_z4").innerHTML = tafel(["Größe", "Wert"], [["Fenster / ms", `0 … ${zahl(k.t[w - 1] * 1000, 0)}`], ["Punkte je Wolke", w], ["Schleifenfläche ∮ψ di / µJ", zahl(A0 * 1e6, 2)], ["Deutung", "Energie je Umlauf im Eisen; ψ ist keine Funktion von i allein"], ["q(u_C)", "eindeutig (Hin- und Rückweg gleich)"]]); },
+  5() { const {abtast, RFe, A0, A1, im, psi, w, i, RFeArt} = E, xs = abtast.map(a => Math.log10(a[0])), ys = abtast.map(a => a[1] * 1e6);
+    { const [c, d] = spanne([...ys, A0 * 1e6]), {g, X, Y} = bildAchsen($("c5a"), 2.9, 6.1, ...rahmen(0, 0, Math.min(c, 0), Math.max(d, 0)).slice(2), "A / µJ", "lg(R_Fe / Ω)   ·   Schleifenfläche A(R_Fe) = ∮ψ di_m   ·   Nulldurchgang " + (isFinite(E.RFeSchleife) ? "bei " + zahl(E.RFeSchleife, 0) + " Ω" : "nicht gefunden") + "   ·   rot gestrichelt: gewähltes R_Fe (" + RFeArt + ")   ·   rechts: ohne R_Fe (" + zahl(A0 * 1e6, 1) + " µJ)");
+      zug(g, X, Y, xs, ys, "#2a78d6", 1.6); punkte(g, X, Y, xs, ys, () => "#2a78d6", 3); if (isFinite(RFe)) { g.strokeStyle = "#b42318"; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(X(Math.log10(RFe)), RAND.o); g.lineTo(X(Math.log10(RFe)), Y(0)); g.stroke(); g.setLineDash([]); } g.restore(); }
+    { const I = mA(im).slice(0, w), P = psi.map(v => v * 1000).slice(0, w), I0 = mA(i).slice(0, w), [a, b] = spanne([...I, ...I0]), [c, d] = spanne(P), {g, X, Y} = bildAchsen($("c5b"), ...rahmen(a, b, c, d), "ψ / mWb", "i_m / mA   ·   ψ über dem Magnetisierungsstrom i_m = i − u_L/R_Fe (farbig)   ·   hellgrau: vorher über i   ·   Restschleife " + zahl(A1 * 1e6, 1) + " µJ");
+      zug(g, X, Y, I0, P, "#ddd", 1); punkte(g, X, Y, I, P, j => zeitfarbe(j, w), 2); g.restore(); }
+    $("hr_z5").innerHTML = tafel(["Größe", "Wert"], [["<b>R_Fe gewählt / Ω</b>", `<b>${isFinite(RFe) ? zahl(RFe, 0) : "–"}</b>`], ["Bestimmung", RFeArt], ["R_Fe aus ∮ψ di_m = 0 / Ω", isFinite(E.RFeSchleife) ? zahl(E.RFeSchleife, 0) : "–"], ["Schleifenfläche ohne R_Fe / µJ", zahl(A0 * 1e6, 2)], ["Schleifenfläche mit gewähltem R_Fe / µJ", zahl(A1 * 1e6, 2)], ["Verluststrom max u_L/R_Fe / mA", isFinite(RFe) ? zahl(Math.max(...E.uL.map(Math.abs)) / RFe * 1000, 2) : "–"], ["Deutung", "Wirbelstrom-/Ummagnetisierungsverlust als Parallelwiderstand; Rest = ratenunabhängige Hysterese"]]) +
+      tafel(["R_Fe / Ω", "Schleife A / µJ", "Rest ψ(i_m)-Fit / % des Hubs", "DGL-Fehler an " + E.k.name + " / % ΔU"], E.tafelRFe.map(e => [isFinite(e.RFe) ? zahl(e.RFe, 0) : "∞ (ohne)", zahl(e.A * 1e6, 2), zahl(e.rest, 2), zahl(e.dglFehler, 2)])); },
+  6() { const {k, im, psi, q, w, fPsi, pPsi, fQ, pQ} = E, I = mA(im).slice(0, w), P = psi.map(v => v * 1000).slice(0, w), U = k.uC.slice(0, w), Q = q.map(v => v * 1e6).slice(0, w);
+    const hubP = spanne(P), hubQ = spanne(Q), ePsi = fPsi.rmse * 1000 / (hubP[1] - hubP[0]) * 100, ePPsi = pPsi.rmse * 1000 / (hubP[1] - hubP[0]) * 100, eQ = fQ.rmse * 1e6 / (hubQ[1] - hubQ[0]) * 100, ePQ = pQ.rmse * 1e6 / (hubQ[1] - hubQ[0]) * 100;
+    { const [a, b] = spanne(I), [c, d] = spanne(P), {g, X, Y} = bildAchsen($("c6a"), ...rahmen(a, b, c, d), "ψ / mWb", "i_m / mA   ·   Punkte: Messung   ·   blau: Verfahren_HR K = " + fPsi.K + " (RMSE " + zahl(ePsi, 2) + " % des Hubs)   ·   rot gestrichelt: Polynom Grad " + pPsi.d + " (" + zahl(ePPsi, 2) + " %)");
+      punkte(g, X, Y, I, P, () => "#bbb", 2); const xs = Array.from({length: 200}, (_, j) => (a + (b - a) * j / 199) / 1000); zug(g, X, Y, mA(xs), xs.map(v => pPsi.f(v) * 1000), "#b42318", 1.4, [6, 4]); zug(g, X, Y, mA(xs), xs.map(v => fPsi.f(v) * 1000), "#2a78d6", 2); g.restore(); }
+    { const [a, b] = spanne(U), [c, d] = spanne(Q), {g, X, Y} = bildAchsen($("c6b"), ...rahmen(Math.min(0, a), b, Math.min(0, c), d), "q / µC", "u_C / V   ·   Punkte: Messung   ·   grün: Verfahren_HR K = " + fQ.K + " (RMSE " + zahl(eQ, 2) + " % des Hubs)   ·   rot gestrichelt: Polynom Grad " + pQ.d + " (" + zahl(ePQ, 2) + " %)");
+      punkte(g, X, Y, U, Q, () => "#bbb", 2); const xs = Array.from({length: 200}, (_, j) => Math.min(0, a) + (b - Math.min(0, a)) * j / 199); zug(g, X, Y, xs, xs.map(v => pQ.f(v) * 1e6), "#b42318", 1.4, [6, 4]); zug(g, X, Y, xs, xs.map(v => fQ.f(v) * 1e6), "#1baf7a", 2); g.restore(); }
+    $("hr_z6").innerHTML = tafel(["Kennlinie", "Ansatz", "P", "RMSE / % des Hubs"], [["ψ(i_m)", "Verfahren_HR", fPsi.P, zahl(ePsi, 2)], ["ψ(i_m)", "Polynom", pPsi.P, zahl(ePPsi, 2)], ["q(u_C)", "Verfahren_HR", fQ.P, zahl(eQ, 2)], ["q(u_C)", "Polynom", pQ.P, zahl(ePQ, 2)]]) +
+      summeHtml("ψ", fPsi, "i", "mWb", "mA", 1000, 1000, false) + summeHtml("q", fQ, "u", "µC", "V", 1, 1e6, false) + polynomHtml("ψ", {...pPsi, c: pPsi.c.map(v => v * 1000)}, "i", "mWb") + polynomHtml("q", {...pQ, c: pQ.c.map(v => v * 1e6)}, "u", "µC"); },
+  7() { const {k, im, w, fPsi, fQ} = E, [a, b] = spanne(im.slice(0, w)), xs = Array.from({length: 240}, (_, j) => a + (b - a) * j / 239), L = xs.map(fPsi.df), [ua, ub] = spanne(k.uC), us = Array.from({length: 240}, (_, j) => Math.min(0, ua) + (ub - Math.min(0, ua)) * j / 239), C = us.map(v => fQ.df(v) * 1e6);
+    { const [c, d] = spanne([...L, 3.9]), {g, X, Y} = bildAchsen($("c7a"), ...rahmen(a * 1000, b * 1000, Math.min(0, c), d), "L_d / H", "i_m / mA   ·   differentielle Induktivität L_d = dψ̃/di_m   ·   gestrichelt: Nennwert 3,9 H"); zug(g, X, Y, mA(xs), L, "#2a78d6", 2); g.strokeStyle = "#555"; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(RAND.l, Y(3.9)); g.lineTo(X(b * 1000), Y(3.9)); g.stroke(); g.setLineDash([]); g.restore(); }
+    { const [c, d] = spanne([...C, 23]), {g, X, Y} = bildAchsen($("c7b"), ...rahmen(Math.min(0, ua), ub, Math.min(0, c), d), "C_d / µF", "u_C / V   ·   differentielle Kapazität C_d = dq̃/du_C   ·   gestrichelt: Nennwert 23 µF"); zug(g, X, Y, us, C, "#1baf7a", 2); g.strokeStyle = "#555"; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(RAND.l, Y(23)); g.lineTo(X(ub), Y(23)); g.stroke(); g.setLineDash([]); g.restore(); }
+    $("hr_z7").innerHTML = tafel(["Arbeitspunkt", "Wert"], [["L_d(0) / H", zahl(fPsi.df(0), 2)], [`L_d(${zahl(b * 1000, 2)} mA) / H`, zahl(fPsi.df(b), 2)], [`L_d(${zahl(a * 1000, 2)} mA) / H`, zahl(fPsi.df(a), 2)], ["Nennwert L / H", "3,9"], ["C_d(0) / µF", zahl(fQ.df(0) * 1e6, 1)], ["C_d(ΔU) / µF", zahl(fQ.df(E.dU) * 1e6, 1)], [`C_d(${zahl(ub, 2)} V) / µF`, zahl(fQ.df(ub) * 1e6, 1)], ["Nennwert C / µF", "23"]]) +
+      summeHtml("ψ", fPsi, "i", "mWb", "mA", 1000, 1000, true, "L_d") + summeHtml("q", fQ, "u", "µC", "V", 1, 1e6, true, "C_d"); },
+  8() { const {sim, k} = E, eigen = sim.find(s => s.k === k), andere = sim.filter(s => s.k !== k);
+    { const T = ms(k.t), [c, d] = spanne([...k.uC, ...eigen.u]), {g, X, Y} = bildAchsen($("c8a"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, c), d).slice(2), "u_C / V", "t / ms   ·   Punkte: Messung " + k.name + "   ·   Linie: DGL mit den Kennlinien dieser Messung   ·   RMSE " + zahl(eigen.rmse, 2) + " % ΔU, größter Fehler " + zahl(eigen.max, 2) + " %");
+      g.strokeStyle = k.farbe; g.lineWidth = 1; for (let j = 0; j < k.n; j += 2) { g.beginPath(); g.arc(X(T[j]), Y(k.uC[j]), 1.8, 0, 2 * Math.PI); g.stroke(); } zug(g, X, Y, T, eigen.u, "#111", 1.6); zug(g, X, Y, T, mA(eigen.i).map(v => v / 1000 * 0 + NaN), "#fff", 0); g.restore(); }
+    { const c = $("c8b"); if (andere.length) { const s = andere[0], T = ms(s.k.t), [c0, d0] = spanne([...s.k.uC, ...s.u]), {g, X, Y} = bildAchsen(c, 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, c0), d0).slice(2), "u_C / V", "t / ms   ·   Übertragung: Messung " + s.k.name + " (Punkte) gegen DGL mit den Kennlinien aus " + k.name + "   ·   RMSE " + zahl(s.rmse, 2) + " % ΔU");
+        g.strokeStyle = s.k.farbe; g.lineWidth = 1; for (let j = 0; j < s.k.n; j += 2) { g.beginPath(); g.arc(X(T[j]), Y(s.k.uC[j]), 1.8, 0, 2 * Math.PI); g.stroke(); } zug(g, X, Y, T, s.u, "#111", 1.6); g.restore(); }
+      else { const T = ms(k.t), I = mA(E.i), [c0, d0] = spanne([...I, ...mA(eigen.i)]), {g, X, Y} = bildAchsen(c, 0, T[T.length - 1], ...rahmen(0, 0, c0, d0).slice(2), "i / mA", "t / ms   ·   Strom: gemessen (rot) und aus der DGL (schwarz)"); zug(g, X, Y, T, I, "#b42318", 1.4); zug(g, X, Y, T, mA(eigen.i), "#111", 1.4); g.restore(); } }
+    $("hr_z8").innerHTML = tafel(["Messung", "Rolle", "RMSE u_C / % ΔU", "größter Fehler / % ΔU", "Scheitel DGL / V", "Scheitel gemessen / V", "RMSE Strom / mA"], sim.map(s => [s.k.name, s.k === k ? "Quelle der Kennlinien" : "Vorhersage (keine Anpassung)", zahl(s.rmse, 2), zahl(s.max, 2), zahl(s.scheitel, 3), zahl(s.scheitelMess, 3), zahl(s.irms, 3)])) +
+      tafel(["Parameter der DGL", "Wert"], [["R = R_Cu + R_s / Ω", zahl(E.R, 1)], ["R_Fe / Ω", isFinite(E.RFe) ? zahl(E.RFe, 0) : "–"], ["ψ̃(i_m): K, P", `${E.fPsi.K}, ${E.fPsi.P}`], ["q̃(u_C): K, P", `${E.fQ.K}, ${E.fQ.P}`], ["Unterschritte RK4 je Δt", $("hr_unter").value], ["Anregung", "gemessenes u_E(t) der jeweiligen Kurve"]]); },
+  9() { const {k, tau, uFit, gHR, glatt, fDir, dU, tEnd} = E, T = ms(k.t), rest = uFit.map((v, j) => (v - k.uC[j]) / dU * 100), er = rms(rest), emax = Math.max(...rest.map(Math.abs));
+    { const [c, d] = spanne(k.uC), {g, X, Y} = bildAchsen($("c9a"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, c), d).slice(2), "u_C / V", "t / ms   ·   Punkte: Messung   ·   blau: Verfahren_HR-Summe K = " + fDir.K + " über τ = t/t_end   ·   RMSE " + zahl(er, 3) + " % ΔU, größter Fehler " + zahl(emax, 2) + " %");
+      g.strokeStyle = "#999"; g.lineWidth = 1; for (let j = 0; j < k.n; j += 2) { g.beginPath(); g.arc(X(T[j]), Y(k.uC[j]), 1.8, 0, 2 * Math.PI); g.stroke(); } zug(g, X, Y, T, uFit, "#2a78d6", 1.8); g.restore(); }
+    { const [c, d] = spanne([...gHR, ...glatt]), {g, X, Y} = bildAchsen($("c9b"), 0, T[T.length - 1], ...rahmen(0, 0, c, d).slice(2), "g / s⁻¹", "t / ms   ·   Impulsantwort: violett g̃ = Ableitung der Summe / ΔU (sech²-Summe, kein Fit)   ·   grau: geglättete Differenz der Messwerte (Dreieck 3 ms)");
+      zug(g, X, Y, T, glatt, "#999", 1.2); zug(g, X, Y, T, gHR, "#6250d6", 2); g.restore(); }
+    const fak = 1 / (dU * tEnd);
+    $("hr_z9").innerHTML = tafel(["Größe", "Wert"], [["K, P", `${fDir.K}, ${fDir.P}`], ["RMSE / % ΔU", zahl(er, 3)], ["größter Fehler / % ΔU", zahl(emax, 2)], ["t_end / ms", zahl(tEnd * 1000, 0)], ["ΔU / V", zahl(dU, 4)], ["g̃ max / s⁻¹", zahl(Math.max(...gHR), 2)], ["t(g̃ max) / ms", zahl(k.t[gHR.indexOf(Math.max(...gHR))] * 1000, 0)], ["∫g̃ dt bis t_end", zahl(gHR.reduce((a, v) => a + v, 0) * E.dt, 3)]]) +
+      summeHtml("u", fDir, "τ", "V", "1", 1, 1, false) +
+      `<div class="block"><b>Impulsantwort als Ableitung, K = ${fDir.K}</b>` + mathe(`<mover>${mi("g")}<mo>~</mo></mover>${mof("(")}${mi("t")}${mof(")")}${mo("=")}<munderover>${mo("∑")}<mrow>${mi("k")}${mo("=")}${mn(1)}</mrow>${mn(fDir.K)}</munderover>${sub("a", mi("k"))}${mo("·")}<msup>${mi("sech")}${mn(2)}</msup>${mo("⁡")}${mof("(")}${sub("b", idx(2, "k"))}${mo("·")}${mof("(")}${mi("τ")}${mo("+")}${sub("b", idx(3, "k"))}${mof(")")}${mof(")")}${mo(",")}<mspace width="0.6em"/>${sub("a", mi("k"))}${mo("=")}<mfrac><mrow>${sub("b", idx(1, "k"))}${sub("b", idx(2, "k"))}</mrow><mrow>${mi("Δ")}${mi("U")}${mo("·")}${sub("t", mi("end"))}</mrow></mfrac>`) +
+      tafel(["k", "a<sub>k</sub> / s⁻¹", "b<sub>2,k</sub>", "b<sub>3,k</sub>", "Lage t<sub>k</sub> = −b<sub>3,k</sub>·t<sub>end</sub> / ms"], fDir.b1.map((h, kk) => [kk + 1, zahl(h * fDir.b2[kk] * fak, 3), zahl(fDir.b2[kk], 3), zahl(fDir.b3[kk], 4), zahl(-fDir.b3[kk] * tEnd * 1000, 1)])) + `</div>`; },
+  10() { const {k, vgl, sim} = E, T = ms(k.t), D = vgl.direkt, W = vgl.weg, lg = v => Math.log10(Math.max(v, 1e-3)), S = E.suche, nachS = S ? S.sim.find(x => x.k === k) : null, nachA = S ? S.sim.find(x => x.k !== k) : null, PS = S ? 2 * (3 * E.fPsi.K + 1) + 2 * 0 + 1 : 0;
+    // gleiche Parameterzahl: Kennlinienweg K = 2 (P = 16) gegen den direkten Fit mit der nächstliegenden Parameterzahl
+    const w2 = W.find(x => x.K === 2) || W[W.length - 1], dN = D.reduce((a, x) => Math.abs(x.P - w2.P) < Math.abs(a.P - w2.P) ? x : a, D[0]);
+    { const ys = [...D.map(x => lg(x.rmse)), ...W.map(x => lg(x.rmse)), ...W.filter(x => Number.isFinite(x.vorher)).map(x => lg(x.vorher))], [c, d] = spanne(ys), Pmax = Math.max(D[D.length - 1].P, W[W.length - 1].P) + 2;
+      const {g, X, Y} = bildAchsen($("c10a"), 0, Pmax, c - 0.2, d + 0.2, "lg(RMSE / % ΔU)", "Parameterzahl P   ·   blau: direkter Fit (K = 1 … 8)   ·   schwarz: Kennlinienweg ψ, q (K = 1 … 3) an derselben Messung   ·   rot: Kennlinienweg als Vorhersage der anderen Messung");
+      for (const v of [-1, 0, 1]) { if (v > c - 0.2 && v < d + 0.2) { g.strokeStyle = "#ddd"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(RAND.l, Y(v)); g.lineTo(X(Pmax), Y(v)); g.stroke(); g.setLineDash([]); g.fillStyle = "#888"; g.textAlign = "left"; g.fillText(["0,1 %", "1 %", "10 %"][v + 1], RAND.l + 4, Y(v) - 3); } }
+      zug(g, X, Y, D.map(x => x.P), D.map(x => lg(x.rmse)), "#2a78d6", 1.6); punkte(g, X, Y, D.map(x => x.P), D.map(x => lg(x.rmse)), () => "#2a78d6", 3.5);
+      zug(g, X, Y, W.map(x => x.P), W.map(x => lg(x.rmse)), "#111", 1.6); punkte(g, X, Y, W.map(x => x.P), W.map(x => lg(x.rmse)), () => "#111", 3.5);
+      const V = W.filter(x => Number.isFinite(x.vorher)); if (V.length) { zug(g, X, Y, V.map(x => x.P), V.map(x => lg(x.vorher)), "#b42318", 1.4, [5, 4]); punkte(g, X, Y, V.map(x => x.P), V.map(x => lg(x.vorher)), () => "#b42318", 3.5); }
+      if (nachS) { const PN = 3 * E.fPsi.K + 1 + 3 * E.fQ.K + 1 + 1; g.fillStyle = "#1b8a3a"; g.beginPath(); g.arc(X(PN), Y(lg(nachS.rmse)), 5, 0, 2 * Math.PI); g.fill(); g.fillStyle = "#1b8a3a"; g.textAlign = "left"; g.fillText("Kennlinienweg nach der Suche (Schritt 11)", X(PN) + 8, Y(lg(nachS.rmse)) + 4); if (nachA) { g.fillStyle = "#b42318"; g.beginPath(); g.arc(X(PN), Y(lg(nachA.rmse)), 4, 0, 2 * Math.PI); g.fill(); } }
+      g.fillStyle = "#333"; g.textAlign = "center"; for (const x of D) g.fillText("K=" + x.K, X(x.P), Y(lg(x.rmse)) - 8); for (const x of W) g.fillText("K=" + x.K, X(x.P), Y(lg(x.rmse)) + 14); g.restore(); }
+    { const [c, d] = spanne([...k.uC, ...w2.u, ...dN.u]), {g, X, Y} = bildAchsen($("c10b"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, c), d).slice(2), "u_C / V", "t / ms   ·   Punkte: Messung   ·   schwarz: Kennlinienweg K = " + w2.K + " (P = " + w2.P + ", RMSE " + zahl(w2.rmse, 2) + " %)   ·   blau: direkter Fit K = " + dN.K + " (P = " + dN.P + ", RMSE " + zahl(dN.rmse, 2) + " %)");
+      g.strokeStyle = "#999"; g.lineWidth = 1; for (let j = 0; j < k.n; j += 2) { g.beginPath(); g.arc(X(T[j]), Y(k.uC[j]), 1.8, 0, 2 * Math.PI); g.stroke(); } zug(g, X, Y, T, dN.u, "#2a78d6", 1.6); zug(g, X, Y, T, w2.u, "#111", 1.6); g.restore(); }
+    const dGleich = D.filter(x => x.rmse <= w2.rmse)[0], and = sim.find(s => s.k !== k), dNach = nachS ? D.filter(x => x.rmse <= nachS.rmse)[0] : null;
+    const schluss = [`<b>Befund an ${k.name}.</b> Bei gleicher Parameterzahl (P ≈ ${w2.P}) erreicht der direkte Fit ${zahl(dN.rmse, 2)} % ΔU, der Kennlinienweg ${zahl(w2.rmse, 2)} % ΔU.`,
+      dGleich ? `Den Fehler des Kennlinienwegs (${zahl(w2.rmse, 2)} %) unterbietet der direkte Fit ab K = ${dGleich.K} (P = ${dGleich.P}).` : `Der direkte Fit erreicht den Fehler des Kennlinienwegs bis K = 8 nicht.`,
+      `Mehr Glieder helfen dem Kennlinienweg kaum (K = 1 … 3: ${W.map(x => zahl(x.rmse, 2)).join(" / ")} %): sein Fehler ist nicht Ansatz-, sondern Modellfehler (Restschleife = Hysterese, feste R<sub>Cu</sub>, R<sub>Fe</sub>). Der direkte Fit fällt mit K weiter (auf der Messseite bis 0,1 % bei K = 11), beschreibt aber nur diese eine Anregung.`,
+      and ? `Nur der Kennlinienweg sagt die andere Messung ${and.k.name} vorher: RMSE ${zahl(and.rmse, 2)} % ΔU ohne jede Anpassung; der direkte Fit kann das nicht (τ-Skala, Höhen und Lagen gehören zu dieser Anregung).` : `Zweite Messung laden, um die Vorhersage des Kennlinienwegs zu prüfen.`,
+      nachS ? `<b>Mit Nachstellen (Schritt 11, grüner Punkt):</b> derselbe Kennlinienweg mit K = ${E.fPsi.K} + ${E.fQ.K} erreicht ${zahl(nachS.rmse, 2)} % ΔU (größter Fehler ${zahl(nachS.max, 1)} %)` + (dNach ? `, so viel wie der direkte Fit mit K = ${dNach.K} (P = ${dNach.P}); ` : `, besser als jeder direkte Fit bis K = 8; `) + (nachA ? `die Vorhersage von ${nachA.k.name} liegt dann bei ${zahl(nachA.rmse, 2)} % (roter Punkt).` : ``) : ``].join(" ");
+    $("hr_z10").innerHTML = `<div class="kasten" style="max-width:1400px">${schluss}</div>` +
+      tafel(["Weg", "K", "Parameter P", "RMSE / % ΔU", "größter Fehler / % ΔU", "Vorhersage der anderen Messung / % ΔU"], D.map(x => ["direkter Fit u_C(τ)", x.K, x.P, zahl(x.rmse, 3), zahl(x.max, 2), "nicht möglich"]).concat(W.map(x => ["Kennlinienweg ψ(i_m), q(u_C) → DGL (Schritte 2–8, ohne Nachstellen)", x.K + " + " + x.K, x.P, zahl(x.rmse, 2), zahl(x.max, 2), Number.isFinite(x.vorher) ? zahl(x.vorher, 2) + " (" + x.vorherName + ")" : "–"])).concat(nachS ? [["<b>Kennlinienweg nach der Suche (Schritt 11)</b>", E.fPsi.K + " + " + E.fQ.K, 3 * E.fPsi.K + 1 + 3 * E.fQ.K + 1 + 1, `<b>${zahl(nachS.rmse, 3)}</b>`, zahl(nachS.max, 2), nachA ? zahl(nachA.rmse, 2) + " (" + nachA.k.name + ")" : "–"]] : [])); },
+  11() { const {k, sim} = E, S = E.suche, T = ms(k.t), vor = sim.find(x => x.k === k);
+    if (!S) { for (const c of ["c11a", "c11b"]) leer($(c), "„Suche starten“ (Startpunkt sind die Schritte 2–8)"); $("hr_z11").innerHTML = tafel(["Start (Schritte 2–8)", "Wert"], sim.map(x => [x.k.name + (x.k === k ? " (gewählt)" : " (Vorhersage)"), zahl(x.rmse, 2) + " % ΔU"])); return; }
+    const nach = S.sim.find(x => x.k === k), andere = S.sim.filter(x => x.k !== k);
+    { const [c, d] = spanne([...k.uC, ...nach.u]), {g, X, Y} = bildAchsen($("c11a"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, c), d).slice(2), "u_C / V", "t / ms   ·   Punkte: Messung " + k.name + "   ·   grau: DGL vor der Suche (" + zahl(vor.rmse, 2) + " %)   ·   schwarz: nach der Suche (" + zahl(nach.rmse, 2) + " %)");
+      g.strokeStyle = k.farbe; g.lineWidth = 1; for (let j = 0; j < k.n; j += 2) { g.beginPath(); g.arc(X(T[j]), Y(k.uC[j]), 1.8, 0, 2 * Math.PI); g.stroke(); } zug(g, X, Y, T, vor.u, "#999", 1.3, [5, 4]); zug(g, X, Y, T, nach.u, "#111", 1.6); g.restore(); }
+    { const rv = vor.u.map((v, j) => (v - k.uC[j]) / E.dU * 100), rn = nach.u.map((v, j) => (v - k.uC[j]) / E.dU * 100), rA = andere.length ? andere[0].u.map((v, j) => (v - andere[0].k.uC[j]) / andere[0].dU * 100) : [], [c, d] = spanne([...rv, ...rn, ...rA]);
+      const {g, X, Y} = bildAchsen($("c11b"), 0, T[T.length - 1], ...rahmen(0, 0, c, d).slice(2), "Rest / % ΔU", "t / ms   ·   Rest DGL − Messung: grau vorher, schwarz nachher" + (andere.length ? "   ·   rot: " + andere[0].k.name + " mit den nachgestellten Parametern (Vorhersage, " + zahl(andere[0].rmse, 2) + " %)" : ""));
+      zug(g, X, Y, T, rv, "#999", 1.2, [5, 4]); if (andere.length) zug(g, X, Y, ms(andere[0].k.t), rA, "#b42318", 1.2); zug(g, X, Y, T, rn, "#111", 1.6); g.restore(); }
+    const m = S.m, vP = E.fPsi, vQ = E.fQ, gemeinsam = S.ziele.length > 1, urteil = gemeinsam ? `Alle ${S.ziele.length} Messungen wurden gemeinsam nachgestellt: ein Parametersatz für alle Anregungen (${S.sim.map(x => zahl(x.rmse, 2)).join(" / ")} % ΔU). Das ist der eigentliche Test des Modells über die Amplitude; das Hysterese-Glied h = ${zahl((m.h || 0) * 1000, 1)} mV trägt die stärkere Dämpfung bei kleiner Anregung.` : (andere.length ? (andere[0].rmse < E.sim.find(x => x.k !== k).rmse ? "Die andere Messung wird mit den nachgestellten Parametern <b>besser</b> getroffen: die Suche hat Physik gefunden." : "Die andere Messung wird mit den nachgestellten Parametern <b>schlechter</b> getroffen: die Suche hat zum Teil diese eine Messung auswendig gelernt (Überanpassung); der Rest ist Modellfehler, kein Parameterfehler.") : "");
+    const maxima = (() => { const u = k.uC, m = []; for (let j = 2; j < k.n - 2 && m.length < 3; j++) if (u[j] > u[j - 1] && u[j] >= u[j + 1] && u[j] > E.dU * 1.01 && (!m.length || j - m[m.length - 1] > 30)) m.push(j); return m; })();
+    const anMax = (u) => maxima.map(j => zahl((u[j] - k.uC[j]) / E.dU * 100, 2) + " %");
+    $("hr_z11").innerHTML = `<div class="kasten" style="max-width:1400px"><b>Befund.</b> ${S.it} Levenberg-Marquardt-Schritte, ${S.ausw} DGL-Läufe, ${zahl(S.dauer, 0)} s. ${k.name}: ${zahl(vor.rmse, 2)} → ${zahl(nach.rmse, 2)} % ΔU (größter Fehler ${zahl(vor.max, 1)} → ${zahl(nach.max, 1)} %). ${urteil}</div>` +
+      tafel(["Messung", "Rolle", "vorher RMSE / % ΔU", "nachher RMSE / % ΔU", "vorher max / %", "nachher max / %", "Strom RMSE vorher / mA", "nachher / mA"], S.sim.map(x => { const v0 = E.sim.find(y => y.k === x.k); return [x.k.name, S.ziele.includes(x.k.id) ? (x.k === k ? "Ziel der Suche (gewählt)" : "Ziel der Suche") : "Vorhersage", zahl(v0.rmse, 2), zahl(x.rmse, 2), zahl(v0.max, 1), zahl(x.max, 1), zahl(v0.irms, 3), zahl(x.irms, 3)]; })) +
+      (maxima.length ? tafel(["Fehler am Maximum (DGL − Messung)"].concat(maxima.map((j, q) => `${q + 1}. Maximum (${zahl(k.t[j] * 1000, 0)} ms)`)), [["vorher"].concat(anMax(vor.u)), ["nachher"].concat(anMax(nach.u))]) : "") +
+      tafel(["Parameter", "vorher", "nachher"], [["R_Cu / Ω", zahl(E.RCu, 1), zahl(m.RCu, 1)], ["R_Fe / Ω", isFinite(E.RFe) ? zahl(E.RFe, 0) : "–", zahl(m.RFe, 0)], ["Hysterese h / mV (u_h = h·tanh(u_L/20 mV))", "0 (nicht im Kennlinienweg)", zahl((m.h || 0) * 1000, 1)], ["Zeitversatz δ / ms (Rechnung gegen Abtastung)", "0", zahl((m.d || 0) * 1000, 3)], ["L_d(0) / H", zahl(vP.df(0), 2), zahl(m.fP.df(0), 2)], ["L_d(i_max) / H", zahl(vP.df(Math.max(...E.im)), 2), zahl(m.fP.df(Math.max(...E.im)), 2)], ["C_d(0) / µF", zahl(vQ.df(0) * 1e6, 1), zahl(m.fQ.df(0) * 1e6, 1)], ["C_d(ΔU) / µF", zahl(vQ.df(E.dU) * 1e6, 1), zahl(m.fQ.df(E.dU) * 1e6, 1)]]
+        .concat(vP.b1.map((_, j) => [`ψ: b1,${j + 1} / mWb · b2,${j + 1} / mA⁻¹ · b3,${j + 1} / mA`, `${zahl(vP.b1[j] * 1000, 3)} · ${zahl(vP.b2[j] / 1000, 4)} · ${zahl(vP.b3[j] * 1000, 4)}`, `${zahl(m.fP.b1[j] * 1000, 3)} · ${zahl(m.fP.b2[j] / 1000, 4)} · ${zahl(m.fP.b3[j] * 1000, 4)}`]))
+        .concat([["ψ: b0 / mWb", zahl(vP.b0 * 1000, 3), zahl(m.fP.b0 * 1000, 3)]])
+        .concat(vQ.b1.map((_, j) => [`q: c1,${j + 1} / µC · c2,${j + 1} / V⁻¹ · c3,${j + 1} / V`, `${zahl(vQ.b1[j] * 1e6, 3)} · ${zahl(vQ.b2[j], 4)} · ${zahl(vQ.b3[j], 4)}`, `${zahl(m.fQ.b1[j] * 1e6, 3)} · ${zahl(m.fQ.b2[j], 4)} · ${zahl(m.fQ.b3[j], 4)}`]))
+        .concat([["q: c0 / µC", zahl(vQ.b0 * 1e6, 3), zahl(m.fQ.b0 * 1e6, 3)]])) +
+      `<div class="block"><b>Verlauf der Suche (${$("hr_such_gew").checked ? "gewichteter " : ""}Effektivwert / % ΔU je angenommenem Schritt)</b>` + tafel(["Schritt", "RMSE"], S.verlauf.map((v, j) => [j, zahl(v, 3)])) + `</div>`; },
+  12() { const {k, gHR, glatt, dt, sim} = E, andere = kurvenHR().filter(x => x !== k), S = E.suche;
+    const ziele = andere.length ? andere : [k];
+    const zeilen = [], ergebnisse = [];
+    for (const z of ziele) { const dUz = z.uC.slice(-20).reduce((a, v) => a + v, 0) / 20, uEz = anregung(z), yH = falte(gHR, uEz, dt), yG = falte(glatt, uEz, dt), f = y => { const e = y.map((v, j) => v - z.uC[j]); return [rms(e) / dUz * 100, Math.max(...e.map(Math.abs)) / dUz * 100, Math.max(...y)]; };
+      const eH = f(yH), eG = f(yG), dv = sim.find(x => x.k === z), dn = S ? S.sim.find(x => x.k === z) : null; ergebnisse.push({z, yH, yG, dUz, eH, eG, dv, dn});
+      zeilen.push([z.name + (z === k ? " (gewählt, Selbsttest)" : ""), "Faltung mit g̃ (sech²-Summe, K = " + E.fDir.K + ")", zahl(eH[0], 2), zahl(eH[1], 1), zahl(eH[2], 3)], [z.name, "Faltung mit g (geglättete Differenz)", zahl(eG[0], 2), zahl(eG[1], 1), zahl(eG[2], 3)], [z.name, "DGL, Kennlinien aus den Schritten 2–8", zahl(dv.rmse, 2), zahl(dv.max, 1), zahl(dv.scheitel, 3)]);
+      if (dn) zeilen.push([z.name, "DGL nach der Suche (Schritt 11)", zahl(dn.rmse, 2), zahl(dn.max, 1), zahl(dn.scheitel, 3)]); zeilen.push([z.name, "Messung", "–", "–", zahl(Math.max(...z.uC), 3)]); }
+    const e0 = ergebnisse[0], z = e0.z, T = ms(z.t);
+    { const [c, d] = spanne([...z.uC, ...e0.yH, ...e0.dv.u]), {g, X, Y} = bildAchsen($("c12a"), 0, T[T.length - 1], ...rahmen(0, 0, Math.min(0, c), d).slice(2), "u_C / V", "t / ms   ·   Punkte: Messung " + z.name + "   ·   violett: Faltung g̃ ∗ u_E (g̃ aus " + k.name + ")   ·   schwarz: DGL-Vorhersage" + (e0.dn ? " nach der Suche" : ""));
+      g.strokeStyle = z.farbe; g.lineWidth = 1; for (let j = 0; j < z.n; j += 2) { g.beginPath(); g.arc(X(T[j]), Y(z.uC[j]), 1.8, 0, 2 * Math.PI); g.stroke(); } zug(g, X, Y, T, (e0.dn || e0.dv).u, "#111", 1.4); zug(g, X, Y, T, e0.yH, "#6250d6", 1.8); g.restore(); }
+    { const rH = e0.yH.map((v, j) => (v - z.uC[j]) / e0.dUz * 100), rD = (e0.dn || e0.dv).u.map((v, j) => (v - z.uC[j]) / e0.dUz * 100), [c, d] = spanne([...rH, ...rD]);
+      const {g, X, Y} = bildAchsen($("c12b"), 0, T[T.length - 1], ...rahmen(0, 0, c, d).slice(2), "Rest / % ΔU", "t / ms   ·   Rest gegen die Messung " + z.name + ": violett Faltung (" + zahl(e0.eH[0], 2) + " %), schwarz DGL (" + zahl((e0.dn || e0.dv).rmse, 2) + " %)");
+      zug(g, X, Y, T, rD, "#111", 1.3); zug(g, X, Y, T, rH, "#6250d6", 1.6); g.restore(); }
+    const dUk = E.dU, ueK = Math.max(...k.uC) / dUk, ueZ = Math.max(...z.uC) / e0.dUz;
+    const befund = andere.length ? `<b>Befund.</b> Anregung ${zahl(dUk, 2)} V (${k.name}) gegen ${zahl(e0.dUz, 2)} V (${z.name}); Überschwingfaktoren ${zahl(ueK, 3)} und ${zahl(ueZ, 3)} – so groß ist die Nichtlinearität zwischen den beiden Anregungen. Die Faltung trifft ${z.name} auf ${zahl(e0.eH[0], 2)} % ΔU, die DGL auf ${zahl((e0.dn || e0.dv).rmse, 2)} %. ` + (e0.eH[0] < (e0.dn || e0.dv).rmse ? `Hier gewinnt die Faltung: Der Amplitudenunterschied der Anregungen ist kleiner als der Modellfehler des Kennlinienwegs (Restschleife, feste Widerstände). Der Satz gilt aber nur linear – mit wachsendem Abstand der Anregungen wächst ihr Fehler zwangsläufig (Scheitel und Periode wandern), der der DGL nicht.` : `Hier gewinnt die DGL: Die Nichtlinearität zwischen den Anregungen ist größer als ihr Modellfehler; die Faltung kann Scheitel und Periode nicht mitführen.`) : `<b>Nur eine Messung geladen:</b> Faltung mit der eigenen Anregung ist ein Selbsttest (zeigt die Güte von g). Für die eigentliche Prüfung eine zweite Messung mit anderer Anregung laden.`;
+    $("hr_z12").innerHTML = `<div class="kasten" style="max-width:1400px">${befund}</div>` + tafel(["Messung", "Weg", "RMSE / % ΔU", "größter Fehler / % ΔU", "Scheitel / V"], zeilen); }
+};
+// ---------- Zeigertipp (Zeitbilder): nächster Abtastwert
+for (const c of document.querySelectorAll("#r_hr .bild canvas")) { const tip = c.parentElement.querySelector(".tip");
+  c.addEventListener("mousemove", ev => { const A = ansichten[c.id]; if (!A || !E) { tip.hidden = true; return; } const b = c.getBoundingClientRect(), mx = ev.clientX - b.left, my = ev.clientY - b.top; if (mx < RAND.l || mx > A.w - RAND.r || my < RAND.o || my > A.h - RAND.u) { tip.hidden = true; return; }
+    const x = A.x0 + (mx - RAND.l) / (A.w - RAND.l - RAND.r) * (A.x1 - A.x0), y = A.y0 + (A.h - RAND.u - my) / (A.h - RAND.o - RAND.u) * (A.y1 - A.y0); tip.textContent = `x = ${zahl(x, 3)} · y = ${zahl(y, 3)}`; tip.hidden = false; tip.style.left = (mx + 14 + tip.offsetWidth > b.width ? Math.max(0, mx - 14 - tip.offsetWidth) : mx + 14) + "px"; tip.style.top = Math.max(4, my - 28) + "px"; });
+  c.addEventListener("mouseleave", () => { tip.hidden = true; }); }
+// ---------- Bedienung
+function schrittWahl(s) { schritt = s; for (const b of $("hr_schritte").querySelectorAll("button")) b.classList.toggle("aktiv", Number(b.dataset.s) === s); for (let j = 0; j <= 12; j++) $("hr_s" + j).hidden = j !== s; zeichneAlles(); }
+$("hr_schritte").addEventListener("click", ev => { const b = ev.target.closest("button"); if (b) schrittWahl(Number(b.dataset.s)); });
+new ResizeObserver(() => zeichneAlles()).observe($("hr_s1").parentElement);
+$("hr_rechnen").onclick = async () => { $("hr_rechnen").disabled = true; stand("Rechnet …"); await pause(); try { await rechnen(); } catch (e) { stand("Fehler: " + e.message, "schlecht"); console.error(e); } $("hr_rechnen").disabled = false; gerechnetFuer = kurvenHR().map(d => d.id).join(",") + "|" + (kurveHR() ? kurveHR().id : "") + "|" + (kurveHR() ? kurveHR().n : 0); };
+for (const id of ["hr_RCu_art", "hr_schwelle", "hr_Kpsi", "hr_Kq", "hr_starts", "hr_RFe", "hr_RFe_art", "hr_unter", "hr_Kdir", "hr_ue_art"]) $(id).onchange = () => { E = null; stand("Werte geändert – „Alle Schritte rechnen“."); zeichneAlles(); };
+async function dateienLaden(files) { let ok = 0; for (const f of files) { try { neueKurve(lesen(await f.text(), f.name)); ok++; } catch (e) { stand(`Laden: ${f.name}: ${e.message}`, "schlecht"); } } if (ok) { E = null; stand(`${ok} Datei(en) geladen – „Alle Schritte rechnen“.`); zeichneAlles(); } }
+$("laden").onclick = () => $("datei").click(); $("datei").onchange = () => { dateienLaden([...$("datei").files]); $("datei").value = ""; };
+document.body.addEventListener("dragover", ev => ev.preventDefault()); document.body.addEventListener("drop", ev => { ev.preventDefault(); if (ev.dataTransfer.files.length) dateienLaden([...ev.dataTransfer.files]); });
+let gerechnetFuer = "";
+function zeige() {   // beim Öffnen des Reiters und nach Änderungen der Kurvenliste
+  const v = kurvenHR(), k = kurveHR(), kenn = v.map(d => d.id).join(",") + "|" + (k ? k.id : "") + "|" + (k ? k.n : 0);
+  if (kenn !== gerechnetFuer) { E = null; gerechnetFuer = kenn; if (k && location.hash !== "#ohne") { $("hr_rechnen").click(); return; } }
+  if (!k) stand("Keine Messung mit Strom geladen (Format rlc27, Firmware 2.7).", "schlecht");
+  zeichneAlles();
+}
+schrittWahl(0);
+return {zeige, get E() { return E; }, ansichten, kurvenHR, kurveHR, dgl, rechnen: () => $("hr_rechnen").click()};
+})();
+if (location.hash === "#hr") reiterWahl("hr");
 </script>
 </body>
 </html>

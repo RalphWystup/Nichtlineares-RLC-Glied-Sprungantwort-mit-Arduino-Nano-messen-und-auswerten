@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.26.mjs -- (1.26: für Seite 2.25: Reiter Verfahren_HR (verschmolzene Einzelseite) mit den Prüfungen H1 … H22 (Rechnung mit Suche, jeder Schritt, Gleichungen, Klammern, Vergleichstafel, Faltung, Eingabe ändern, dritte Kurve);
 // rlc_seite_probe_1.25.mjs -- (1.25: für Seite 2.24: P1 erwartet 2.24; neu P18c Klammern: jede nicht dehnbare Klammer ( ) [ ] | ist höchstens 1,6 Schrifthöhen hoch,
 //   jede dehnbare Klammer steht mit einem Bruch in einer eigenen <mrow>, (Ih)_n und (Dr)_n als <msub><mrow>(…)</mrow>n</msub>, sin/cos/tanh mit Argumentklammer -- gemessen im Bild, nicht im Quelltext;
 //   P1c der frühere Name des Verfahrens kommt nicht mehr vor (Verfahren_HR überall); P19c jede Reihe als Gleichung mit Koeffiziententafel (tanh K Zeilen, Fourier M+1, Potenzreihe P, vier MathML);
@@ -66,19 +67,19 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.24/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.25/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const altname = "Rup" + "pert";   // der frühere Name des Verfahrens darf nirgends mehr stehen (sein Wort: Verfahren_HR überall) -- auch nicht in dieser Probe
 const rp = await js(`document.documentElement.outerHTML.includes("${altname}") + "|" + document.documentElement.outerHTML.includes("${altname.toLowerCase()}")`);
 P("P1c der frühere Name des Verfahrens kommt auf der Seite nicht mehr vor (überall Verfahren_HR)", rp === "false|false", rp);
-const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
+const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 4, `${n0} Kurven (rlc27 T60, T100, T128, T140 mit Strom; 2.25)`);
 // P3 Kennwerte gegen eigene Rechnung aus der Messdatei T140
 const rohT = (await readFile("/workspace/Streckenbestimmung_6b/messungen/rlc27_2026-11-23_113109_T140_F3_B4.txt", "utf8")), spalten = rohT.split("\n").find(l => l.startsWith("# k ")).slice(1).trim().split(/\s+/), iUC = spalten.indexOf("U_C_V");
 const roh = rohT.split("\n").filter(l => l && !l.startsWith("#")).map(l => l.split(" ").map(Number));
 const nach = roh.filter(r => r[0] >= 0), uc = nach.map(r => r[iUC]), imax = uc.indexOf(Math.max(...uc)), tmax = nach[imax][1];
 const uend = uc.slice(-60).reduce((a, b) => a + b, 0) / 60;
-const kw = await js(`(() => { const k = kurven.find(k => k.name.startsWith("rlc27")); const r = kennwerte(k); return {Umax: r.Umax, tmax: r.tmax, Uend: r.Uend, UEend: r.UEend, D: r.D, f0: r.f0, abfall: r.abfall}; })()`);
+const kw = await js(`(() => { const k = kurven.find(k => k.name.includes("T140")); const r = kennwerte(k); return {Umax: r.Umax, tmax: r.tmax, Uend: r.Uend, UEend: r.UEend, D: r.D, f0: r.f0, abfall: r.abfall}; })()`);
 P("P3 Kennwerte T140 (rlc27, Shunt) gegen Datei", Math.abs(kw.Umax - Math.max(...uc)) < 1e-9 && Math.abs(kw.tmax - tmax) < 1e-9 && Math.abs(kw.Uend - uend) < 1e-6,
   `Seite Umax ${kw.Umax.toFixed(4)} V @ ${(kw.tmax * 1000).toFixed(1)} ms, Uend ${kw.Uend.toFixed(4)}; Datei ${Math.max(...uc).toFixed(4)} @ ${(tmax * 1000).toFixed(1)}, ${uend.toFixed(4)}; D ${kw.D?.toFixed(3)}, f0 ${kw.f0?.toFixed(2)} Hz, U_E,end ${kw.UEend?.toFixed(4)} V, Abfall ${kw.abfall?.toFixed(0)} mV`);
 P("P3b U_C unter 5 V und nie negativ (alle eingebetteten)", await js("kurven.every(k => k.u.every(u => u >= 0 && u <= 5))"), "alle Werte 0 … 5 V");
@@ -101,10 +102,10 @@ for (const [t, n] of [[simul, "RLC_Glied.txt"], [alt10, "rlc_2026-11-22_161403_T
   console.log("  lade", n); await js(`neueKurve(${JSON.stringify(n)}, lesen(${JSON.stringify(t)}, ${JSON.stringify(n)}), "Datei " + ${JSON.stringify(n)}); kurven.length`); }
 // P6a: siehe rlc_seite_dateiprobe_1.0.mjs
 await warte(500);
-const n1 = await js("kurven.length"), k4 = await js(`kurven.slice(2).map(k => k.name + ":" + k.t.length + ":" + Math.max(...k.u).toFixed(3)).join(" | ")`);
-P("P6 drei Dateien geladen (ADC-Zählwerte, 1.0, 2.0)", n1 === 5 && /RLC_Glied.txt:676:3\.6\d\d/.test(k4) && /rlc_2026.*:600:3\.851/.test(k4) && /rlc2_.*:620:3\.86/.test(k4), k4);
+const n1 = await js("kurven.length"), k4 = await js(`kurven.slice(4).map(k => k.name + ":" + k.t.length + ":" + Math.max(...k.u).toFixed(3)).join(" | ")`);
+P("P6 drei Dateien geladen (ADC-Zählwerte, 1.0, 2.0)", n1 === 7 && /RLC_Glied.txt:676:3\.6\d\d/.test(k4) && /rlc_2026.*:600:3\.851/.test(k4) && /rlc2_.*:620:3\.86/.test(k4), k4);
 P("P6c Format-2.0-Kurve zeichnet keine Anregung (roher PWM-Mittel)", (await js(`ue(kurven.find(k => k.name.startsWith("rlc2_"))) === null`)) === true, "ue() = null");
-P("P6b Tafel hat 5 Zeilen, Liste 5 Einträge", (await js(`$("tab").tBodies[0].rows.length`)) === 5 && (await js(`$("kurven").children.length`)) === 5, "");
+P("P6b Tafel hat 7 Zeilen, Liste 7 Einträge", (await js(`$("tab").tBodies[0].rows.length`)) === 7 && (await js(`$("kurven").children.length`)) === 7, "");
 await bild("p6_sechs_kurven");
 // P7 Differenz: Bezug T128 (rlc25) gegen rlc2 T128 -> klein; Werte am Zeiger
 await js(`$("bezug").value = kurven.find(k => k.name.includes("T128")).id; $("bezug").dispatchEvent(new Event("change"));`);
@@ -114,17 +115,17 @@ P("P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt
 // P8c Strom im unteren Bild (Vorgabe, weil die eingebetteten Kurven Strom haben)
 const v8 = await js(`$("unten").value`); await js(`$("unten").value = "i"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
 const s8 = await js(`(() => { const r = ansicht2.reihen; const mess = r.filter(x => !x.s.length), mx = Math.max(...mess.flatMap(x => x.y.filter(Number.isFinite))); return [ansicht2.art, ansicht2.einheit, r.length, mx.toFixed(2), r.filter(x => x.s.length).length].join("|"); })()`);
-P("P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel nach Median 2,6 … 3,0 mA", v8 === "i" && /^i\|mA\|4\|2\.[6-9]\d\|2$/.test(s8), v8 + " · " + s8);
+P("P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 8 Reihen (4 gemessen, 4 C·dU/dt), Scheitel nach Median 2,6 … 3,0 mA", v8 === "i" && /^i\|mA\|8\|2\.[6-9]\d\|4$/.test(s8), v8 + " · " + s8);
 const b2 = await js(`(() => { const b = $("c2").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
 await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b2[0] + 58 + (b2[2] - 72) * 0.04, y: b2[1] + b2[3] * 0.5}); await warte(150);
 const tip2 = await js(`$("tip2").hidden ? "versteckt" : $("tip2").textContent`); P("P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“", /gemessen: -?\d+,\d{3} mA/.test(tip2) && /C·dU\/dt: -?\d+,\d{3} mA/.test(tip2), tip2.slice(0, 160));
 await bild("p8c_strom_auswertung");
 // P8 unteres Bild umschalten: Port-Abfall und U_E − ideal
 await js(`$("unten").value = "p"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
-const reihenP = await js("ansicht2.reihen.length"); P("P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung)", reihenP === 4 + 0, `${reihenP} Reihen (erwartet 4: beide rlc27 je U_H und U_L)`);
+const reihenP = await js("ansicht2.reihen.length"); P("P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung)", reihenP === 8, `${reihenP} Reihen (erwartet 8: vier rlc27 je U_H und U_L)`);
 await bild("p8_port_abfall");
 await js(`$("unten").value = "e"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
-const reihenE = await js("ansicht2.reihen.length"); P("P8b U_E − ideal gezeichnet", reihenE === 2, `${reihenE} Reihen`);
+const reihenE = await js("ansicht2.reihen.length"); P("P8b U_E − ideal gezeichnet", reihenE === 4, `${reihenE} Reihen`);
 await js(`$("unten").value = "d"; $("unten").dispatchEvent(new Event("change"));`);
 // P9 Mauszeiger
 const b1 = await js(`(() => { const b = $("c1").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
@@ -250,5 +251,71 @@ await bild("p17_leer");
 P("P12 keine Skriptfehler", fehler.length === 0, fehler.join(" || ").slice(0, 300) || "keine");
 P("P13 kein Netzabruf", netz.length === 0, netz.join(", ") || "keiner");
 await bild("p13_ende");
+
+{ const zahl2 = x => String(Math.round(x * 100) / 100);
+// ---------- Reiter Verfahren_HR (2.25, verschmolzen; Prüfungen H3 … H22 aus verfahren_hr_probe_1.1.mjs übernommen, Zustand über HR.E)
+await js(`for (const e of JSON.parse($("d_messungen").textContent)) neueKurve(e.name, lesen(e.text, e.name), e.quelle); gewaehlt = kurven.find(k => k.name.includes("T140")).id; liste();`);   // die Hauptprobe hat zuvor alle Kurven entfernt
+await js(`$("rt_hr").click()`); await warte(600);
+const h0 = await js(`[$("r_hr").hidden, $("r_aus").hidden, $("r_fit").hidden, HR.kurvenHR().length, HR.kurveHR().name.includes("T140")].join("|")`);
+P("H1 Reiter Verfahren_HR geöffnet, andere Reiter verborgen, eingebettete Messungen mit Strom übernommen, T140 gewählt", /^false\|true\|true\|[2-9]\|true$/.test(h0), h0);
+const massWert = async () => { await js(`$("hr_schritte").querySelector('button[data-s="1"]').click()`); await warte(300); return await js(`[...document.querySelectorAll("#hr_s1 .bild, #hr_s8 .bild")].map(b => Math.round(b.getBoundingClientRect().height)).join(",")`); };
+// P3 Rechnung läuft beim Laden an; warten
+for (let i = 0; i < 240 && !/Gerechnet|Fehler/.test(await js(`$("hr_stand").textContent`)); i++) await warte(500);
+const st = await js(`$("hr_stand").textContent`); P("H3 alle Schritte gerechnet (Standzeile)", /^Gerechnet/.test(st), st);
+const masse0 = await massWert();
+const z = JSON.parse(await js(`JSON.stringify({RCu: HR.E.RCu, RFe: HR.E.RFe, Cm: HR.E.q[HR.E.k.n - 1] / HR.E.dU * 1e6, ePsi: HR.E.fPsi.rmse / (Math.max(...HR.E.psi) - Math.min(...HR.E.psi)) * 100, eQ: HR.E.fQ.rmse / Math.max(...HR.E.q) * 100, dgl: HR.E.sim.map(s => [s.k.name.includes("T140") ? "T140" : "T128", +s.rmse.toFixed(2), +s.max.toFixed(2)]), A0: HR.E.A0 * 1e6, A1: HR.E.A1 * 1e6, w: HR.E.w, Ld0: HR.E.fPsi.df(0), LdS: HR.E.fPsi.df(Math.max(...HR.E.im.slice(0, HR.E.w))), Cd0: HR.E.fQ.df(0) * 1e6, dir: HR.E.vgl.direkt.map(x => +x.rmse.toFixed(3)), weg: HR.E.vgl.weg.map(x => [+x.rmse.toFixed(2), +x.vorher.toFixed(2)])})`));
+P("H4 Kupferwiderstand aus ψ(∞) = 0 zwischen 85 und 100 Ω (Angabe 92 Ω, Vorrechnung 93,1 Ω)", z.RCu > 85 && z.RCu < 100, zahl2(z.RCu));
+P("H5 Eisenverlust R_Fe aus der Schleifenfläche zwischen 2 und 8 kΩ (Vorrechnung 4 … 5 kΩ), Schleife vorher negativ, nachher kleiner", z.RFe > 2000 && z.RFe < 8000 && z.A0 < 0 && Math.abs(z.A1) < Math.abs(z.A0), JSON.stringify([z.RFe, z.A0, z.A1]));
+P("H6 mittlere Kapazität q(t_end)/ΔU zwischen 24 und 30 µF (Vorrechnung 27,1 µF)", z.Cm > 24 && z.Cm < 30, zahl2(z.Cm));
+const t7 = JSON.parse(await js(`JSON.stringify(HR.E.tafelRFe.filter(e => isFinite(e.RFe)).reduce((a, e) => Math.abs(Math.log(e.RFe / HR.E.RFeSchleife)) < Math.abs(Math.log(a.RFe / HR.E.RFeSchleife)) ? e : a))`));
+P("H7 Verfahren_HR-Fits: ψ(i_m) beim Schleifen-Kriterium Rest ≤ 3,5 % des Hubs (Vorrechnung 2,3 … 2,6 % bei 4 … 5 kΩ), q(u_C) Rest ≤ 2 % (0,9 %)", t7.rest <= 3.5 && z.eQ <= 2, JSON.stringify([t7.RFe, t7.rest, z.eQ]));
+P("H7b ψ(i_m) beim gewählten R_Fe (kleinster DGL-Fehler, Schleife überkorrigiert): Rest ≤ 6 % des Hubs, in der Tafel ausgewiesen", z.ePsi <= 6 && t7.dglFehler > 0, JSON.stringify([z.RFe, z.ePsi]));
+P("H8 L_d(0) zwischen 2 und 20 H (schlecht bestimmt: 3,8 … 11 H je nach Fenster, siehe Schritt 7), L_d am Stromscheitel 5 … 25 H, C_d(0) zwischen 15 und 40 µF", z.Ld0 > 2 && z.Ld0 < 20 && z.LdS > 5 && z.LdS < 25 && z.Cd0 > 15 && z.Cd0 < 40, JSON.stringify([z.Ld0, z.LdS, z.Cd0]));
+const d9 = JSON.parse(await js(`JSON.stringify(HR.E.sim.map(x => [x.k.name.replace(/.*_(T\\d+)_.*/, "$1"), +x.rmse.toFixed(2), +x.max.toFixed(2)]))`)), n9 = JSON.parse(await js(`JSON.stringify(HR.E.suche ? HR.E.suche.sim.map(x => [x.k.name.replace(/.*_(T\\d+)_.*/, "$1"), +x.rmse.toFixed(2), +x.max.toFixed(2), +x.scheitel.toFixed(3), +x.scheitelMess.toFixed(3)]) : null)`));
+const eig = d9.find(d => d[0] === "T140"), and = d9.find(d => d[0] === "T128");
+P("H9 DGL mit den Kennlinien aus T140 (Schritte 2–8): T140 RMSE ≤ 5 % ΔU, T128 ≤ 6 %, beide größter Fehler ≤ 15 %; T60/T100 ohne Nachstellen 5 … 15 % (trägt nicht über die Amplitude)", !!eig && !!and && eig[1] <= 5 && and[1] <= 6 && eig[2] <= 15 && and[2] <= 15 && d9.filter(d => d[0] === "T60" || d[0] === "T100").every(d => d[1] > 5 && d[1] < 15), JSON.stringify(d9));
+P("H9b gemeinsame Suche über alle vier Messungen (Vorgabe): ein Parametersatz, RMSE ≤ 2 % ΔU auf jeder, größter Fehler ≤ 10 %, Scheitel innerhalb 5 %", !!n9 && n9.length === 4 && n9.every(d => d[1] <= 2 && d[2] <= 10 && Math.abs(d[3] - d[4]) / d[4] <= 0.05), JSON.stringify(n9));
+P("H10 Vergleich: direkter Fit fällt monoton mit K (8 Werte), Kennlinienweg drei Werte endlich, Vorhersage endlich", z.dir.length === 8 && z.dir.every((v, i) => i === 0 || v <= z.dir[i - 1] * 1.05) && z.weg.length === 3 && z.weg.every(v => Number.isFinite(v[0]) && Number.isFinite(v[1])), JSON.stringify([z.dir, z.weg]));
+// P11 jeden Schritt anklicken
+const schritte = [];
+for (let s = 0; s <= 12; s++) {
+  await js(`$("hr_schritte").querySelector('button[data-s="${s}"]').click()`); await warte(350);
+  const r = JSON.parse(await js(`(() => { const sec = $("hr_s${s}"), cv = [...sec.querySelectorAll("canvas")], re = document.querySelector("#r_hr"); return JSON.stringify({sichtbar: !sec.hidden, andere: [...document.querySelectorAll("#r_hr .schritt")].filter(x => x !== sec && !x.hidden).length, hoehen: cv.map(c => Math.round(c.getBoundingClientRect().height)), gezeichnet: cv.map(c => !!HR.ansichten[c.id]), tafeln: sec.querySelectorAll("table").length, mathe: sec.querySelectorAll("math").length, rollt: re.scrollWidth > re.clientWidth + 1 || sec.scrollWidth > sec.clientWidth + 1}); })()`));
+  schritte.push(r); await bild("hr_s" + s);
+  const ok = r.sichtbar && r.andere === 0 && (s === 0 || (r.hoehen.every(h => h > 100) && (s === 11 || r.gezeichnet.every(Boolean)) && r.tafeln >= 1)) && !r.rollt;   // Schritt 11 zeichnet erst nach der Suche
+  P(`P11.${s} Schritt ${s}: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen`, ok, JSON.stringify(r));
+}
+P("H12 Gleichungen mit Koeffiziententafeln: Schritt 6 ≥ 4 Gleichungen und ≥ 5 Tafeln, Schritt 7 ≥ 5 Gleichungen, Schritt 9 ≥ 3 Gleichungen und ≥ 3 Tafeln", schritte[6].mathe >= 4 && schritte[6].tafeln >= 5 && schritte[7].mathe >= 5 && schritte[9].mathe >= 3 && schritte[9].tafeln >= 3, JSON.stringify([schritte[6].mathe, schritte[6].tafeln, schritte[7].mathe, schritte[9].mathe, schritte[9].tafeln]));
+const t6 = JSON.parse(await js(`(() => { const tb = [...$("hr_z6").querySelectorAll("table")].map(t => t.tBodies[0].rows.length); return JSON.stringify({zeilen: tb, Kpsi: HR.E.fPsi.K, Kq: HR.E.fQ.K, Ppsi: HR.E.fPsi.P}); })()`));
+P("H12b Koeffiziententafeln Schritt 6: tanh-Tafeln haben K Zeilen, Polynomtafeln P Zeilen", t6.zeilen[1] === t6.Kpsi && t6.zeilen[2] === t6.Kq && t6.zeilen[3] === t6.Ppsi, JSON.stringify(t6));
+const v10 = JSON.parse(await js(`(() => { const t = $("hr_z10").querySelector("table"); return JSON.stringify({zeilen: t ? t.tBodies[0].rows.length : 0, befund: $("hr_z10").textContent.includes("Befund"), vorher: $("hr_z10").textContent.includes("sagt die andere Messung")}); })()`));
+P("H13 Vergleichstafel Schritt 10: 12 Zeilen (8 direkt + 3 Kennlinienweg + nach der Suche), Befund und Vorhersage-Satz", v10.zeilen === 12 && v10.befund && v10.vorher, JSON.stringify(v10));
+// P14 Klammern im Bild (alle Schritte sichtbar machen, messen, zurück)
+const k14 = JSON.parse(await js(`(() => { const erg = {fest: 0, festHoch: [], dehn: 0, dehnOhneBruch: []}; const secs = [...document.querySelectorAll("#r_hr .schritt")], war = secs.map(x => x.hidden); secs.forEach(x => x.hidden = false);
+  for (const mo of document.querySelectorAll("math mo")) { const z = mo.textContent.trim(); if (!"()[]|".includes(z) || !z) continue; const fs = parseFloat(getComputedStyle(mo).fontSize), h = mo.getBoundingClientRect().height;
+    if (mo.getAttribute("stretchy") === "false") { erg.fest++; if (h > 1.6 * fs) erg.festHoch.push(z + ":" + Math.round(h) + "/" + Math.round(fs)); } else { erg.dehn++; const r = mo.parentElement; if (!(r && r.tagName.toLowerCase() === "mrow" && r.querySelector("mfrac"))) erg.dehnOhneBruch.push(z + "@" + (r ? r.tagName : "-")); } }
+  secs.forEach((x, i) => x.hidden = war[i]); return JSON.stringify(erg); })()`));
+P("H14 Klammern: ≥ 60 feste Klammern, keine höher als 1,6 Schrifthöhen, jede dehnbare mit Bruch in eigener mrow", k14.fest >= 60 && k14.festHoch.length === 0 && k14.dehnOhneBruch.length === 0, JSON.stringify(k14));
+// P21 Schritt 11: Suche starten (höchstens 25 Schritte), Fehler der gewählten Messung sinkt, Vorhersage ausgewiesen, Tafeln vorher/nachher
+await js(`$("hr_schritte").querySelector('button[data-s="11"]').click(); $("hr_such_it").value = 25; $("hr_suchen").click();`);
+for (let i = 0; i < 600 && !/Fertig|Fehler/.test(await js(`$("hr_such_stand").textContent`)); i++) await warte(500);
+const s21 = JSON.parse(await js(`(() => { const S = HR.E.suche; if (!S) return JSON.stringify({fehlt: $("hr_such_stand").textContent}); const k = HR.E.k, vor = HR.E.sim.find(x => x.k === k), nach = S.sim.find(x => x.k === k), aV = HR.E.sim.find(x => x.k !== k), aN = S.sim.find(x => x.k !== k);
+  return JSON.stringify({stand: $("hr_such_stand").textContent.slice(0, 40), it: S.it, vor: +vor.rmse.toFixed(3), nach: +nach.rmse.toFixed(3), andereVor: +aV.rmse.toFixed(3), andereNach: +aN.rmse.toFixed(3), tafeln: $("hr_z11").querySelectorAll("table").length, befund: $("hr_z11").textContent.includes("Befund"), gezeichnet: !!HR.ansichten["c11a"] && !!HR.ansichten["c11b"], RCu: Math.round(S.m.RCu), RFe: Math.round(S.m.RFe)}); })()`));
+P("H21 Simulation und Suche: läuft durch, Fehler der gewählten Messung sinkt unter den Startwert und unter 1,5 % ΔU, andere Messung mit Zahl ausgewiesen, zwei Bilder, drei Tafeln, Befund", !s21.fehlt && /^Fertig/.test(s21.stand) && s21.it >= 1 && s21.nach < s21.vor && s21.nach < 1.5 && Number.isFinite(s21.andereNach) && s21.tafeln >= 3 && s21.befund && s21.gezeichnet && s21.RCu > 20 && s21.RFe > 200, JSON.stringify(s21));
+await bild("hr_s11_suche");
+// P22 Schritt 12: Faltung g̃ ∗ u_E der anderen Messung gegen Messung und DGL (Vorrechnung: T140→T128 0,56 % mit geglätteter Differenz)
+await js(`$("hr_schritte").querySelector('button[data-s="12"]').click()`); await warte(400);
+const s22 = JSON.parse(await js(`(() => { const t = $("hr_z12").querySelector("table"); const z = [...t.tBodies[0].rows].map(r => [...r.cells].map(c => c.textContent)); const w = (m, art) => { const r = z.find(x => x[0].includes(m) && x[1].startsWith(art)); return r ? parseFloat(r[2].replace(",", ".")) : NaN; }; return JSON.stringify({zeilen: z.length, t128_faltH: w("T128", "Faltung mit g̃"), t128_faltG: w("T128", "Faltung mit g ("), t128_dgl: w("T128", "DGL nach"), t60_faltG: w("T60", "Faltung mit g ("), t60_dgl: w("T60", "DGL nach"), t100_faltG: w("T100", "Faltung mit g ("), t100_dgl: w("T100", "DGL nach"), befund: $("hr_z12").textContent.includes("Befund"), gezeichnet: !!HR.ansichten["c12a"] && !!HR.ansichten["c12b"]}); })()`));
+P("H22 Faltung aus T140: T128 mit g̃ und g je ≤ 1 % ΔU (Vorrechnung 0,56 %); T60 Faltung 3 … 8 % und schlechter als die gemeinsam nachgestellte DGL (≤ 2 %); Tafel ≥ 15 Zeilen, Befund, zwei Bilder", s22.zeilen >= 15 && s22.t128_faltH <= 1 && s22.t128_faltG <= 1 && s22.t60_faltG > 3 && s22.t60_faltG < 8 && s22.t60_dgl <= 2 && s22.t60_dgl < s22.t60_faltG && Number.isFinite(s22.t100_dgl) && s22.befund && s22.gezeichnet, JSON.stringify(s22));
+await bild("hr_s12_faltung");
+// P16 Datei über lesen()+neueKurve() (Dateiumweg wie auf der Messseite), Auswahl wechseln
+await js(`neueKurve("kopie_T140.txt", lesen(kurven[0].text, "kopie_T140.txt"), "Probe");`); await warte(200);
+await js(`$("hr_rechnen").click()`); for (let i = 0; i < 240 && !/Gerechnet|Fehler/.test(await js(`$("hr_stand").textContent`)); i++) await warte(500);
+const k16 = await js(`kurven.length + "|" + HR.E.k.name + "|" + HR.E.sim.length + "|" + Math.round(HR.E.RCu) + "|" + kurven.length`); P("H16 dritte Kurve über die Seite geladen (neueKurve), vom Reiter übernommen und gerechnet (drei DGL-Läufe)", /^5\|kopie_T140\.txt\|5\|\d+\|5$/.test(k16), k16);
+const masse1 = await massWert();
+const mh = (a, b) => { const x = a.split(",").map(Number), y = b.split(",").map(Number); return x.length === y.length && x.every((v, j) => Math.abs(v - y[j]) <= 0.1 * Math.max(v, 1)); };
+P("H18 Leinwandmaße über die Zeit innerhalb 10 % (kein Wachsen; Tafelzeilen dürfen die Bildhöhe leicht ändern)", mh(masse0, masse1), masse0.slice(0, 60) + " → " + masse1.slice(0, 60));
+
+}
 const okn = erg.filter(e => e[1]).length; console.log(`\nERGEBNIS ${okn} von ${erg.length} RICHTIG (Skalierung ${dsf})`);
 await writeFile(`${out}/ergebnis_s${dsf}.json`, JSON.stringify(erg, null, 1)); ws.close(); process.exit(okn === erg.length ? 0 : 1);

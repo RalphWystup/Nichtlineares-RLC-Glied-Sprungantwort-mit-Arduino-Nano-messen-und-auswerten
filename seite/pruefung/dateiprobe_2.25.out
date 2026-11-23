@@ -1,5 +1,5 @@
-RICHTIG D1 kleine Datei über File -> dateienLaden: 2 -> 3 Kurven
+RICHTIG D1 kleine Datei über File -> dateienLaden: 4 -> 5 Kurven
 RICHTIG D2 große Datei (rlc26, 42 kB) über File -> dateienLaden, Kennwerte: rlc26_x.txt 4.4734 2.7442
-RICHTIG D3 unbrauchbare Datei wird mit Meldung abgewiesen: 4 | Laden: leer.txt: keine Messwerte erkannt
+RICHTIG D3 unbrauchbare Datei wird mit Meldung abgewiesen: 6 | Laden: leer.txt: keine Messwerte erkannt
 RICHTIG D4 keine Skriptfehler: keine
 ERGEBNIS Dateiprobe 4 von 4 RICHTIG

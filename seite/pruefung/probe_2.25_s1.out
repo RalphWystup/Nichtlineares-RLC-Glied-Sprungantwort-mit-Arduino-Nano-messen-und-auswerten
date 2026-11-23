@@ -1,0 +1,84 @@
+Browser: Skalierung/Fenster 1x1600x708
+RICHTIG P1 Seite geladen: RLC-Sprung 2.25 · Messen und Auswerten
+RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|40
+RICHTIG P1c der frühere Name des Verfahrens kommt auf der Seite nicht mehr vor (überall Verfahren_HR): false|false
+RICHTIG P2 eingebettete Kurven: 4 Kurven (rlc27 T60, T100, T128, T140 mit Strom; 2.25)
+RICHTIG P3 Kennwerte T140 (rlc27, Shunt) gegen Datei: Seite Umax 4.3842 V @ 57.5 ms, Uend 2.7436; Datei 4.3842 @ 57.5, 2.7436; D 0.296, f0 10.07 Hz, U_E,end 2.7428 V, Abfall 125 mV
+RICHTIG P3b U_C unter 5 V und nie negativ (alle eingebetteten): alle Werte 0 … 5 V
+RICHTIG P4 Knöpfe ohne Nano gesperrt mit Begründung: true:Erst mit dem Nano verbinden | true:Erst mit dem Nano verbinden | true:Erst mit dem Nano verbinden | false:„rlc27_2026-11-23_113109_T140_F3_B4.txt“ speichern
+RICHTIG P5 T = 141 gesperrt: T > 140 gesperrt: U_C schwingt über (Faktor 1,54 … 1,63, steigt mit der Anregung; bei T = 150 schon 4,77 V). A0 verträgt
+RICHTIG P5b T = 140 erlaubt, Satz vollständig (mit R): ok {"T":140,"N":600,"V":3000,"F":3,"B":4,"P":20,"W":1,"R":2000,"Rs":47}
+RICHTIG P5c Tastgradanzeige: 2,75 V d 0,5490
+  lade RLC_Glied.txt
+  lade rlc_2026-11-22_161403_T128.txt
+  lade rlc2_2026-11-22_162318_T128_F3_B4.txt
+RICHTIG P6 drei Dateien geladen (ADC-Zählwerte, 1.0, 2.0): RLC_Glied.txt:676:3.607 | rlc_2026-11-22_161403_T128.txt:600:3.851 | rlc2_2026-11-22_162318_T128_F3_B4.txt:620:3.861
+RICHTIG P6c Format-2.0-Kurve zeichnet keine Anregung (roher PWM-Mittel): ue() = null
+RICHTIG P6b Tafel hat 7 Zeilen, Liste 7 Einträge: 
+RICHTIG P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt 47 Ω) kleiner 500 mV (Strecke geändert, Scheitel 3,866 → 3,947 V): größte |Δ| 360.5 mV
+RICHTIG P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 8 Reihen (4 gemessen, 4 C·dU/dt), Scheitel nach Median 2,6 … 3,0 mA: i · i|mA|8|2.81|4
+RICHTIG P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“: t = 21,0 ms■ rlc27_2026-11-23_195855_T60_F3_B4.txt gemessen: 1,248 mA┄ rlc27_2026-11-23_195855_T60_F3_B4.txt C·dU/dt: 1,351 mA■ rlc27_2026-11-23_195906_T100_F3_
+RICHTIG P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung): 8 Reihen (erwartet 8: vier rlc27 je U_H und U_L)
+RICHTIG P8b U_E − ideal gezeichnet: 4 Reihen
+RICHTIG P9 Zeigertipp zeigt t und Werte aller Kurven: t = 102,0 ms■ rlc27_2026-11-23_195855_T60_F3_B4.txt: UC 0,9238 V · UE 1,1765 V■ rlc27_2026-11-23_195906_T100_F3_B4.txt: UC 1,5714 V · UE 1,9608 V■ rlc27_2026-11
+RICHTIG P10 Maße stabil, kein Wachsen, kein Scrollen (Höhe und Breite): 1224x282x1600x761 -> 1224x282x1600x761, Fenster 1600x761
+RICHTIG P10b Prüfreiter im Auswertungsreiter ausgeblendet, Bild 1 über 250 px hoch: none|285
+RICHTIG P11 Speichern ohne Ordner meldet Download: Als Download gespeichert: rlc27_2026-11-23_195855_T60_F3_B4.txt (für den Tagesordner erst „Ordner wählen“).
+RICHTIG P14 Reiter Prüfen sichtbar (Leinwand 3 über 200 px hoch, Leinwand 4 über 80 px, Auswertung ausgeblendet = 0 px): false|true|true|444|147|0|1|0
+RICHTIG P15a Knopf Sprung ±20 ms: -20.0..20.0 v=1
+RICHTIG P15b Zeigertipp im Prüfreiter mit k, U_H, nH: t = 0,00 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt: k -1 · t -0,50 ms · UC 0,0000 V · UE 0,0000 V · UH 5,000 · UL 0,000 V · nH 0 nL 4 nF 0
+RICHTIG P15c Rad zoomt die Zeit (40 ms -> 32 ms): 32.00 ms Ausschnitt
+RICHTIG P15c2 Zeitachse im Zoom eindeutig beschriftet (keine doppelten Werte): -15 -10 -5 0 5 10 15|true
+RICHTIG P15d Rahmen ziehen (120 × 80 px) zoomt auf den gerechneten Ausschnitt, Verlauf 2: 3.33|1.108|2 (Soll 3.33 ms × 1.108 V)
+RICHTIG P15e Messpunkte im Ausschnitt gezeichnet (unter 600): 4 Punkte
+RICHTIG P15f Zurück = voriger Ausschnitt 32 ms: 32.00
+RICHTIG P15g Scheitel: Mitte = t_max, Spannung 0,2 V: 0.000|0.200
+RICHTIG P15h Alles = ganze Messung (bis 599,5 ms): true|-20|true
+RICHTIG P16 Zählwerte je Wert vollständig (nH+nL+nF = 4), nach dem Sprung nH 1…3, Leinwand 4 zeigt die Kurve: 4|true|0|4|rlc27_2026-11-23_113109_T140_F3_B4.txt
+RICHTIG P18 Aufbau und Theorie: drei Fotos 2048×944 als data: (das dritte mit Shunt), Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen: false|true|2048x944|2048x944/2048x944|data:image/jpeg;base64|940|11|36|true|392
+RICHTIG P18c Klammern: ≥ 90 feste Klammern, keine höher als 1,6 Schrifthöhen, jede dehnbare mit Bruch in eigener mrow, (Ih)_n und (Dr)_n zusammengehörig, sin/cos/tanh mit Argumentklammer: {"fest":166,"festHoch":[],"dehn":10,"dehnOhneBruch":[],"ih":2,"fkt":7}
+RICHTIG P18c Schaltplan ohne R_ext, R_Cu = 92 Ω, A2 am Spulenende: false|true|true
+RICHTIG P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite): 1600x761 Fenster 1600x761
+RICHTIG P19 Anfitten T140: tanh-Netz erreicht RMSE ≤ 0,1 % ΔU bei K ≤ 12, größter Fehler ≤ 0,5 %, Fortsetzung tanh unter 0,3 % und besser als Fourier und Potenzreihe: {"K":11,"P":34,"rms":0.091,"max":0.265,"fort":0.082,"fortF":269.451,"fortP":48463.91,"zeilen":11,"stand":"91 % ΔU – Ziel 0,1 % erreicht."}
+RICHTIG P19b Treppen-Tafel hat mindestens 9 Zeilen (K = 1 … erreicht): 11 Zeilen, K = 11
+RICHTIG P19c Reihen als Gleichungen mit Koeffiziententafeln: drei Tafeln (tanh K Zeilen, Fourier M+1, Potenzreihe P), vier MathML-Gleichungen, kein waagerechtes Rollen: {"tafeln":3,"zeilen":[11,17,34],"mathe":4,"breit":true,"text":"Zeit normiert τ = t / tend, tend = 600 ms; Fit auf"}
+RICHTIG P19d Impulsantwort: Ableitung der Verfahren_HR-Summe gezeichnet, Effektivabweichung zur iterativen Lösung unter 20 % von g_max, Scheitel innerhalb 20 %: {"rel":1.49,"gmax":41.36,"hmax":40.988,"reihen":3}
+RICHTIG P17a Gewählte entfernen nimmt genau die gewählte Kurve: 6|false|„rlc2_2026-11-22_162318_T128_F3_B4.txt“ entfernt; die Datei bleibt.
+RICHTIG P17b Alle entfernen: erster Klick entfernt nichts, fragt nach: 6|Wirklich alle 6 entfernen? (nochmal klicken)|true
+RICHTIG P17c zweiter Klick entfernt alle, Knöpfe danach gesperrt: 0|Alle entfernen|true|true|0
+RICHTIG P12 keine Skriptfehler: keine
+RICHTIG P13 kein Netzabruf: keiner
+RICHTIG H1 Reiter Verfahren_HR geöffnet, andere Reiter verborgen, eingebettete Messungen mit Strom übernommen, T140 gewählt: false|true|true|4|true
+RICHTIG H3 alle Schritte gerechnet (Standzeile): Gerechnet: R_Cu = 92,0 Ω, R_Fe = 2.426 Ω, DGL gegen Messung 2,03 % ΔU, nach der Suche 1,41 %.
+RICHTIG H4 Kupferwiderstand aus ψ(∞) = 0 zwischen 85 und 100 Ω (Angabe 92 Ω, Vorrechnung 93,1 Ω): 92
+RICHTIG H5 Eisenverlust R_Fe aus der Schleifenfläche zwischen 2 und 8 kΩ (Vorrechnung 4 … 5 kΩ), Schleife vorher negativ, nachher kleiner: [2425.966927004465,-39.29043665873835,32.112214404010736]
+RICHTIG H6 mittlere Kapazität q(t_end)/ΔU zwischen 24 und 30 µF (Vorrechnung 27,1 µF): 28.34
+RICHTIG H7 Verfahren_HR-Fits: ψ(i_m) beim Schleifen-Kriterium Rest ≤ 3,5 % des Hubs (Vorrechnung 2,3 … 2,6 % bei 4 … 5 kΩ), q(u_C) Rest ≤ 2 % (0,9 %): [4000,1.8999249523768462,1.1484327136447154]
+RICHTIG H7b ψ(i_m) beim gewählten R_Fe (kleinster DGL-Fehler, Schleife überkorrigiert): Rest ≤ 6 % des Hubs, in der Tafel ausgewiesen: [2425.966927004465,3.1029453624853613]
+RICHTIG H8 L_d(0) zwischen 2 und 20 H (schlecht bestimmt: 3,8 … 11 H je nach Fenster, siehe Schritt 7), L_d am Stromscheitel 5 … 25 H, C_d(0) zwischen 15 und 40 µF: [8.35884113671079,12.204868874481901,18.24318967819045]
+RICHTIG H9 DGL mit den Kennlinien aus T140 (Schritte 2–8): T140 RMSE ≤ 5 % ΔU, T128 ≤ 6 %, beide größter Fehler ≤ 15 %; T60/T100 ohne Nachstellen 5 … 15 % (trägt nicht über die Amplitude): [["T60",11.24,40.99],["T100",8.82,25.82],["T128",3.47,10.8],["T140",2.03,7.72]]
+RICHTIG H9b gemeinsame Suche über alle vier Messungen (Vorgabe): ein Parametersatz, RMSE ≤ 2 % ΔU auf jeder, größter Fehler ≤ 10 %, Scheitel innerhalb 5 %: [["T60",1.18,6.41,1.809,1.735],["T100",1.2,5.01,3.066,2.994],["T128",1.22,4.11,3.951,3.947],["T140",1.41,7.15,4.299,4.384]]
+RICHTIG H10 Vergleich: direkter Fit fällt monoton mit K (8 Werte), Kennlinienweg drei Werte endlich, Vorhersage endlich: [[13.261,3.543,2.773,0.868,0.321,0.308,0.196,0.137],[[3.24,9.79],[3.26,6.77],[2.03,11.24]]]
+RICHTIG P11.0 Schritt 0: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[],"gezeichnet":[],"tafeln":0,"mathe":1,"rollt":false}
+RICHTIG P11.1 Schritt 1: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[264,264],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P11.2 Schritt 2: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[264,264],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P11.3 Schritt 3: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[315,315],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P11.4 Schritt 4: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[376,376],"gezeichnet":[true,true],"tafeln":1,"mathe":0,"rollt":false}
+RICHTIG P11.5 Schritt 5: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[218,218],"gezeichnet":[true,true],"tafeln":2,"mathe":1,"rollt":false}
+RICHTIG P11.6 Schritt 6: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[218,218],"gezeichnet":[true,true],"tafeln":5,"mathe":4,"rollt":false}
+RICHTIG P11.7 Schritt 7: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[218,218],"gezeichnet":[true,true],"tafeln":3,"mathe":5,"rollt":false}
+RICHTIG P11.8 Schritt 8: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[218,218],"gezeichnet":[true,true],"tafeln":2,"mathe":1,"rollt":false}
+RICHTIG P11.9 Schritt 9: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[221,221],"gezeichnet":[true,true],"tafeln":3,"mathe":3,"rollt":false}
+RICHTIG P11.10 Schritt 10: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[218,218],"gezeichnet":[true,true],"tafeln":1,"mathe":0,"rollt":false}
+RICHTIG P11.11 Schritt 11: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[218,218],"gezeichnet":[true,true],"tafeln":4,"mathe":1,"rollt":false}
+RICHTIG P11.12 Schritt 12: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[218,218],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG H12 Gleichungen mit Koeffiziententafeln: Schritt 6 ≥ 4 Gleichungen und ≥ 5 Tafeln, Schritt 7 ≥ 5 Gleichungen, Schritt 9 ≥ 3 Gleichungen und ≥ 3 Tafeln: [4,5,5,3,3]
+RICHTIG H12b Koeffiziententafeln Schritt 6: tanh-Tafeln haben K Zeilen, Polynomtafeln P Zeilen: {"zeilen":[4,3,3,10,10],"Kpsi":3,"Kq":3,"Ppsi":10}
+RICHTIG H13 Vergleichstafel Schritt 10: 12 Zeilen (8 direkt + 3 Kennlinienweg + nach der Suche), Befund und Vorhersage-Satz: {"zeilen":12,"befund":true,"vorher":true}
+RICHTIG H14 Klammern: ≥ 60 feste Klammern, keine höher als 1,6 Schrifthöhen, jede dehnbare mit Bruch in eigener mrow: {"fest":248,"festHoch":[],"dehn":10,"dehnOhneBruch":[]}
+RICHTIG H21 Simulation und Suche: läuft durch, Fehler der gewählten Messung sinkt unter den Startwert und unter 1,5 % ΔU, andere Messung mit Zahl ausgewiesen, zwei Bilder, drei Tafeln, Befund: {"stand":"Fertig nach 25 Schritten (621 DGL-Läufe,","it":25,"vor":2.026,"nach":1.407,"andereVor":11.238,"andereNach":1.179,"tafeln":4,"befund":true,"gezeichnet":true,"RCu":92,"RFe":2097}
+RICHTIG H22 Faltung aus T140: T128 mit g̃ und g je ≤ 1 % ΔU (Vorrechnung 0,56 %); T60 Faltung 3 … 8 % und schlechter als die gemeinsam nachgestellte DGL (≤ 2 %); Tafel ≥ 15 Zeilen, Befund, zwei Bilder: {"zeilen":15,"t128_faltH":0.68,"t128_faltG":0.57,"t128_dgl":1.21,"t60_faltG":5.39,"t60_dgl":1.18,"t100_faltG":1.58,"t100_dgl":1.2,"befund":true,"gezeichnet":true}
+RICHTIG H16 dritte Kurve über die Seite geladen (neueKurve), vom Reiter übernommen und gerechnet (drei DGL-Läufe): 5|kopie_T140.txt|5|92|5
+RICHTIG H18 Leinwandmaße über die Zeit innerhalb 10 % (kein Wachsen; Tafelzeilen dürfen die Bildhöhe leicht ändern): 266,266,0,0 → 283,283,0,0
+
+ERGEBNIS 78 von 78 RICHTIG (Skalierung 1)
