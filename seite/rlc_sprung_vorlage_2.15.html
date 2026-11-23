@@ -3,9 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLC-Sprung 2.14 · Messen und Auswerten</title>
+<title>RLC-Sprung 2.15 · Messen und Auswerten</title>
 <!--
-RLC_Sprung_2.14.html (23.11.2026) -- 2.14: Schaltplan 1.3 (Beschriftungen frei von Linien). 2.13: Strommessung mit Messwiderstand R_s ZWISCHEN Spule und Kondensator, A2 = Spulenende (Firmware
+RLC_Sprung_2.15.html (23.11.2026) -- 2.15: Impulsantwort berichtigt (sein Wort: „die rekonstruierte impulsantwort passt nicht, bitte beobachte selbst“ --
+bei den Simulink-Kurven lief die Iteration davon, Rest 10^19: das gleitende Mittel hat negative Frequenzanteile, dort wächst die Korrektur je Schritt um
+(1 + α·0,2); die Nano-Kurven brachen nach 8 Schritten ab, bevor es sichtbar wurde). Jetzt: Dreieckskern (Frequenzgang sinc² >= 0, Schrumpffaktor
+1 − α·λ in (0, 1]: Konvergenz garantiert), Integration und Differenz auf der echten Zeitachse (Simulink: ungleiche Schritte), Abbruch, sobald der Rest
+nicht mehr fällt, bestes Ergebnis behalten; Hinweistext, wenn ε nicht erreicht wird (Welligkeit der Messung ist nicht Teil einer glatten Impulsantwort).
+Beobachtbarkeit (sein Wort: „mache die html für dich beobachtbar wenn ich messe!“): Protokoll rlc_protokoll.txt im Tagesordner (Zeile je Verbindung,
+Messung mit Kennwerten und Strom, Kalibrierpunkt, Impulsantwort, Fehler, geladene Dateien), nach jeder Messung ein PNG der beiden Bilder
+(<Messname>_bild.png), Knopf „Bild für die Beobachtung speichern“ (aktueller Reiter als PNG); gelesen über die Brücke mit rlc_beobachten_1.0.py. 2.14: Schaltplan 1.3 (Beschriftungen frei von Linien). 2.13: Strommessung mit Messwiderstand R_s ZWISCHEN Spule und Kondensator, A2 = Spulenende (Firmware
 rlc_sprung_2_7, Zeile „k s0 s2 sH nH sL nL nF“, A0/A2 je B/2 Wandlungen nebeneinander, A1 B Wandlungen); i = (U_2 − U_C)/R_s; Eingabe R_s (0 = kein
 Shunt, Firmware 2.6 wie bisher); Kennung 2.6 oder 2.7 angenommen, Zeilenformat nach Kennung; Dateien rlc213_* mit Spalten
 k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA; lesen() erkennt U_2_V/i_mA; Prüfreiter Stromansicht zeichnet i gemessen (Shunt)
@@ -49,7 +56,7 @@ U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U
 d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
 Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
 Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
-Gebaut mit bau_rlc_seite_2.14.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Gebaut mit bau_rlc_seite_2.15.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 -->
 <style>
@@ -140,7 +147,7 @@ select { font: inherit; padding: 2px 4px; }
 </head>
 <body>
 <header>
-  <h1>RLC-Sprung 2.14</h1>
+  <h1>RLC-Sprung 2.15</h1>
   <span class="neben">Nichtlineares RLC-Glied · Arduino Nano mit rlc_sprung_2_6/2_7 · Pin 11 PWM → U<sub>C</sub> an A0, Pinspannung an A1, Spulenende an A2 (Shunt) · Eingangssignal = Mittelwert U<sub>E</sub></span>
   <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
 </header>
@@ -172,9 +179,9 @@ select { font: inherit; padding: 2px 4px; }
     </fieldset>
     <fieldset>
       <legend>3 · Ablage</legend>
-      <div class="knoepfe"><button id="ordner">Ordner C:\6b_Streckenbestimmung wählen …</button></div>
+      <div class="knoepfe"><button id="ordner">Ordner C:\6b_Streckenbestimmung wählen …</button><button id="bild" title="Die Bilder des aktuellen Reiters als PNG in den Tagesordner legen (für die Beobachtung über die Brücke)">Bild für die Beobachtung speichern</button></div>
       <div id="stand_o" class="stand ablage">Kein Ordner gewählt: Messungen werden als Download gespeichert.</div>
-      <div class="hinweis">Jede Messung kommt in den Tagesordner Messungen_TT.MM.JJJJ (wird angelegt, wenn er fehlt).</div>
+      <div class="hinweis">Jede Messung kommt in den Tagesordner Messungen_TT.MM.JJJJ (wird angelegt, wenn er fehlt), dazu ein Bild (_bild.png) und eine Zeile im Protokoll rlc_protokoll.txt.</div>
     </fieldset>
     <fieldset id="zone">
       <legend>4 · Kurven</legend>
@@ -188,7 +195,7 @@ select { font: inherit; padding: 2px 4px; }
         <button id="alle_weg" disabled title="Keine Kurven geladen">Alle entfernen</button>
         <span class="hinweis" id="stand_k">Entfernen nimmt die Kurve nur aus der Seite; die Datei im Ordner bleibt.</span>
       </div>
-      <div class="hinweis">Dateien auch hierher ziehen (Kalibrierdateien .json ebenfalls). Liest rlc214/213/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
+      <div class="hinweis">Dateien auch hierher ziehen (Kalibrierdateien .json ebenfalls). Liest rlc215/214/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
       <label class="hinweis" style="display:flex;gap:6px;margin-top:6px"><input id="UE" type="checkbox" checked> Anregung U<sub>E</sub> (Mittelwert) gestrichelt mitzeichnen</label>
       <label class="hinweis" style="display:flex;gap:6px"><input id="glatt" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> glätten (gleitender Median über 5 Werte; einzelne Flankentreffer)</label>
     </fieldset>
@@ -550,20 +557,27 @@ for (const n of ["aus", "pruef", "theorie", "fit", "kal", "imp"]) $("rt_" + n).o
 // ---------- Impulsantwort (2.12): g = s'/ΔU, iterativ ableiten – integrieren – vergleichen, bis der Rest unter ε liegt
 let imp = null, ansicht6 = null, ansicht7 = null;
 function mittel(a, w) { const h = w >> 1, r = new Array(a.length); for (let n = 0; n < a.length; n++) { let s = 0, m = 0; for (let j = Math.max(0, n - h); j <= Math.min(a.length - 1, n + h); j++) { s += a[j]; m++; } r[n] = s / m; } return r; }
-function kumul(h, dt) { const s = new Array(h.length); let a = 0; for (let n = 0; n < h.length; n++) { s[n] = a; a += h[n] * dt; } return s; }
-function differenz1(r, dt) { const d = new Array(r.length); for (let n = 0; n < r.length - 1; n++) d[n] = (r[n + 1] - r[n]) / dt; d[r.length - 1] = 0; return d; }
+function dreieck(a, w) { return mittel(mittel(a, w), w); }   // 2.15: Dreieckskern = zweimal gleitendes Mittel; Frequenzgang sinc² >= 0, damit die Iteration nie wächst
+function kumul(h, t) { const s = new Array(h.length); let a = 0; for (let n = 0; n < h.length; n++) { s[n] = a; a += h[n] * (n + 1 < t.length ? t[n + 1] - t[n] : t[n] - t[n - 1]); } return s; }   // 2.15: echte Zeitachse
+function differenz1(r, t) { const d = new Array(r.length); for (let n = 0; n < r.length - 1; n++) d[n] = (r[n + 1] - r[n]) / (t[n + 1] - t[n]); d[r.length - 1] = 0; return d; }
 function impRechnen(k, w, eps, maxIt, alpha) {
-  const d = fitDaten(k), dt = d.dt, N = d.n, s0 = k.kk ? (() => { const v = k.u.filter((_, j) => k.kk[j] < 0); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; })() : 0;
+  const d = fitDaten(k), N = d.n, t = d.t, s0 = k.kk ? (() => { const v = k.u.filter((_, j) => k.kk[j] < 0); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; })() : 0;
   const s = d.u.map(x => x - s0), dU = Number.isFinite(d.UEend) ? d.UEend : d.Uend;
-  let h = new Array(N).fill(0), it = 0, rms = Infinity, rest = s.slice();
+  let h = new Array(N).fill(0), it = 0, rms = Infinity, rest = s.slice(), best = {h, rms: Infinity, it: 0}, grund = "";
   const rmsVon = r => Math.sqrt(r.reduce((a, b) => a + b * b, 0) / r.length);
-  while (it < maxIt) { rest = s.map((x, n) => x - kumul(h, dt)[n]); rms = rmsVon(rest); if (rms <= eps) break; const dr = mittel(differenz1(rest, dt), w); h = h.map((x, n) => x + alpha * dr[n]); it++; }
-  const sI = kumul(h, dt); rest = s.map((x, n) => x - sI[n]); rms = rmsVon(rest);
-  const g = h.map(x => x / dU), roh = differenz1(s, dt).map(x => x / dU), rohRest = s.map((x, n) => x - kumul(differenz1(s, dt), dt)[n]);
+  while (it < maxIt) {
+    const sI = kumul(h, t); rest = s.map((x, n) => x - sI[n]); rms = rmsVon(rest);
+    if (rms < best.rms - 1e-12) best = {h, rms, it}; else if (it > 0) { grund = "Rest fällt nicht mehr"; break; }   // 2.15: bestes Ergebnis behalten
+    if (rms <= eps) { grund = "ε erreicht"; break; }
+    const dr = dreieck(differenz1(rest, t), w); h = h.map((x, n) => x + alpha * dr[n]); it++;
+  }
+  if (!grund) grund = "höchste Iterationszahl";
+  h = best.h; const sI = kumul(h, t); rest = s.map((x, n) => x - sI[n]); rms = rmsVon(rest);
+  const g = h.map(x => x / dU), rohH = differenz1(s, t), roh = rohH.map(x => x / dU), rohRest = s.map((x, n) => x - kumul(rohH, t)[n]);
   let im = 0; for (let n = 1; n < N; n++) if (g[n] > g[im]) im = n; let n0 = -1; for (let n = im + 1; n < N; n++) if (g[n] < 0) { n0 = n; break; }
   const kw = kennwerte(k); let lin = null;
   if (Number.isFinite(kw.D) && Number.isFinite(kw.f0)) { const w0 = 2 * Math.PI * kw.f0, al = kw.D * w0, wd = Math.sqrt(Math.max(0, w0 * w0 - al * al)); lin = d.t.map(t => wd > 0 ? w0 * w0 / wd * Math.exp(-al * t) * Math.sin(wd * t) : NaN); }
-  return {k, t: d.t, s, sI, rest, g, roh, rohRest, lin, dU, it, rms, max: Math.max(...rest.map(Math.abs)), erreicht: rms <= eps, integral: sI[N - 1] / dU, gmax: g[im], tgmax: d.t[im], tnull: n0 >= 0 ? d.t[n0] : NaN, rohRms: rmsVon(rohRest), rohSpitze: Math.max(...roh.map(Math.abs)), w, eps, maxIt, alpha};
+  return {k, t: d.t, s, sI, rest, g, roh, rohRest, lin, dU, it: best.it, rms, grund, max: Math.max(...rest.map(Math.abs)), erreicht: rms <= eps, integral: sI[N - 1] / dU, gmax: g[im], tgmax: d.t[im], tnull: n0 >= 0 ? d.t[n0] : NaN, rohRms: rmsVon(rohRest), rohSpitze: Math.max(...roh.map(Math.abs)), w, eps, maxIt, alpha};
 }
 function impListe() { const sel = $("ik"), alt = sel.value; sel.innerHTML = ""; for (const k of kurven) { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; sel.append(o); } sel.value = kurven.some(k => String(k.id) === alt) ? alt : (gewaehlt !== null ? String(gewaehlt) : (kurven[0] ? String(kurven[0].id) : "")); }
 $("i_rechnen").onclick = () => {
@@ -571,7 +585,8 @@ $("i_rechnen").onclick = () => {
   const w = Math.max(1, Number($("i_w").value) | 1), eps = Number($("i_eps").value) / 1000, maxIt = Number($("i_max").value), alpha = Number($("i_alpha").value);
   if (!(w >= 1 && w <= 99) || !(eps > 0) || !(maxIt >= 1) || !(alpha > 0 && alpha <= 1)) { $("i_stand").textContent = "Eingaben: w 1 … 99 ms (ungerade), ε > 0, Iterationen ≥ 1, α 0,05 … 1."; return; }
   imp = impRechnen(k, w, eps, maxIt, alpha); impTafel(); zeichneImp();
-  $("i_stand").textContent = `${imp.it} Iterationen, Rest RMS ${zahl(imp.rms * 1000, 2)} mV (ε = ${zahl(eps * 1000, 1)} mV${imp.erreicht ? ", erreicht" : ", NICHT erreicht: mehr Iterationen oder w kleiner"}), ∫g = ${zahl(imp.integral, 4)}.`;
+  protokoll("Impulsantwort", `${k.name}: w ${w} eps ${eps * 1000} mV: ${imp.it} It (${imp.grund}), Rest ${(imp.rms * 1000).toFixed(2)} mV, Integral ${imp.integral.toFixed(4)}, g_max ${imp.gmax.toFixed(2)} bei ${(imp.tgmax * 1000).toFixed(1)} ms`);
+  $("i_stand").textContent = `${imp.it} Iterationen (${imp.grund}), Rest RMS ${zahl(imp.rms * 1000, 2)} mV (ε = ${zahl(eps * 1000, 1)} mV${imp.erreicht ? ", erreicht" : ", nicht erreicht: der Rest ist die Welligkeit der Messung, die eine glatte Impulsantwort nicht wiedergibt; w kleiner wählen, um mehr davon mitzunehmen"}), ∫g = ${zahl(imp.integral, 4)}.`;
 };
 function impTafel() {
   const tb = $("i_tafel").tBodies[0]; tb.innerHTML = ""; if (!imp) return; const tr = document.createElement("tr");
@@ -650,6 +665,7 @@ async function kalMessung(E) {
   if (roh.length !== E.N) throw new Error(`${roh.length} statt ${E.N} Werte empfangen`);
   const p = kalRechnen(roh, E.Rcal, E.art, E.F); p.datum = new Date().toLocaleString("de-DE"); kalPunkte.push(p); kalTafel(); zeichneKal();
   kalStand(`Punkt ${kalPunkte.length}: U_H ${zahl(p.UH, 4)} V, U_L ${zahl(p.UL, 4)} V → i ${zahl(p.i * 1000, 2)} mA, Abfall ${zahl(p.abfall * 1000, 1)} mV, R_out ${zahl(p.Rout, 1)} Ω (Treffer ${p.nH}/${p.nL}, Flanken ${p.nF}).`, "gut");
+  protokoll("Kalibrierpunkt", `${p.art} Rcal ${p.Rcal} F ${p.F}: U_H ${p.UH.toFixed(4)} U_L ${p.UL.toFixed(4)} i ${(p.i * 1000).toFixed(3)} mA Abfall ${(p.abfall * 1000).toFixed(1)} mV R_out ${p.Rout.toFixed(2)} Ω`);
 }
 $("k_messen").onclick = async () => {
   let E; try { E = pruefeKal(); } catch (e) { kalStand(e.message, "fehler"); return; }
@@ -894,6 +910,7 @@ $("verbinden").onclick = async () => {
     const mf = /RLC_SPRUNG (2\.[67])/.exec(k); nanoFassung = mf ? mf[1] : null;
     if (!mf) standV("Verbunden, aber falsche Fassung: " + k + "\nDiese Seite braucht rlc_sprung_2_6 oder 2_7.", "fehler");
     else standV("Verbunden: " + k + (nanoFassung === "2.7" ? "\nFirmware 2.7: Strom über Shunt R_s an A2." : "\nFirmware 2.6: ohne Strommessung (R_s wird nicht verwendet)."), "gut");
+    protokoll("Verbunden", k);
   } catch (e) {
     const t = /already open|Failed to open/i.test(e.message) ? "Anschluss belegt – läuft gerade eine Messung über die Brücke oder ein anderes Programm (Arduino IDE, Thonny)?" : e.name === "NotFoundError" ? "Kein Anschluss gewählt." : e.message;
     standV("Nicht verbunden: " + t + (port ? "\nAntwortet der Nano nicht, ist vielleicht ein anderes Programm darauf (rlc_sprung_2_6 nötig)." : ""), "fehler");
@@ -905,7 +922,7 @@ async function trennen(still) {
   const p = port; port = null;
   try { if (leser) await leser.cancel(); } catch (e) {}
   try { await p.close(); } catch (e) {}
-  if (!still) standV("Getrennt.");
+  if (!still) { standV("Getrennt."); protokoll("Getrennt", "COM frei"); }
   knoepfe();
 }
 $("trennen").onclick = () => trennen(false);
@@ -953,29 +970,31 @@ async function eineMessung(E, nr) {
     const roh6 = roh.map(z => [z[0], z[1], z[3], z[4], z[5], z[6], z[7]]), a = anregung(roh6, E.T, E.F, E.B); d = a.d;
     const hb = E.B / 2, u = roh.map(z => z[1] / hb * LSB), u2 = roh.map(z => z[2] / hb * LSB), im = u2.map((x, i) => E.Rs > 0 ? (x - u[i]) / E.Rs : NaN);
     anschlag = roh.filter(z => z[2] === 0 || z[2] >= 1023 * hb).length;
-    text = `# RLC_Sprung_2.14.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
+    text = `# RLC_Sprung_2.15.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
     roh.forEach(([kq, s0, s2, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${s2} ${sH} ${nH} ${sL} ${nL} ${nF} ${u[i].toFixed(6)} ${u2[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)} ${(im[i] * 1000).toFixed(4)}\n`; });
-    name = `rlc214_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc215_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, u2, im, Rs: E.Rs, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   } else {
     const a = anregung(roh, E.T, E.F, E.B); d = a.d;
-    text = `# RLC_Sprung_2.14.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+    text = `# RLC_Sprung_2.15.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
     roh.forEach(([kq, s0, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
-    name = `rlc214_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc215_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   }
   kw = kennwerte(k);
   const imax = k.im ? Math.max(...k.im.filter(Number.isFinite)) : NaN;
   standM(`Messung ${nr}/${E.W}: ${roh.length} Werte in ${zahl(dauer / 1000, 1)} ms, keine Lücke. U_C max ${zahl(kw.Umax, 4)} V bei ${zahl(kw.tmax * 1000, 1)} ms, U_E Ende ${zahl(kw.UEend, 4)} V (ideal ${zahl(d * 5, 4)} V).` + (k.im ? ` Strom max ${zahl(imax * 1000, 2)} mA (Shunt ${E.Rs} Ω)` + (anschlag ? `, A2 ${anschlag}-mal am Anschlag!` : ", A2 nie am Anschlag.") : ""), anschlag ? "fehler" : "gut");
   await ablegen(k);
+  await protokoll("Messung", `${name}; Satz ${satz}; Rs ${E.Rs}; Werte ${roh.length}; U_C max ${kw.Umax.toFixed(4)} V bei ${(kw.tmax * 1000).toFixed(1)} ms; U_end ${kw.Uend.toFixed(4)}; U_E,end ${(kw.UEend || 0).toFixed(4)}; Überschw. ${(kw.ueber || 0).toFixed(1)} %; f0 ${(kw.f0 || 0).toFixed(2)} Hz; D ${(kw.D || 0).toFixed(3)}` + (k.im ? `; i max ${(imax * 1000).toFixed(3)} mA; i min ${(Math.min(...k.im.filter(Number.isFinite)) * 1000).toFixed(3)} mA; A2 Anschlag ${anschlag}` : "; ohne Strom (Firmware 2.6)"));
+  if (reiter === "aus" || reiter === "pruef") await bildSpeichern(name.replace(/\.txt$/, "_bild.png"));
 }
 $("messen").onclick = async () => {
   let E; try { E = pruefeEingabe(); } catch (e) { standM(e.message, "fehler"); return; }
   beschaeftigt = true; abbrechen = false; knoepfe();
   try { for (let i = 1; i <= E.W && !abbrechen; i++) await eineMessung(E, i); if (abbrechen) standM("Abgebrochen nach der laufenden Messung.", "fehler"); }
-  catch (e) { standM("Messung fehlgeschlagen: " + e.message, "fehler"); }
+  catch (e) { standM("Messung fehlgeschlagen: " + e.message, "fehler"); protokoll("Fehler", "Messung: " + e.message); }
   beschaeftigt = false; knoepfe();
 };
 $("abbruch").onclick = () => { abbrechen = true; $("abbruch").disabled = true; setTimeout(() => $("abbruch").disabled = false, 500); };
@@ -1002,13 +1021,43 @@ async function ablegen(k) {
   if (!ordner) { $("stand_o").textContent = `Als Download gespeichert: ${k.name} (für den Tagesordner erst „Ordner wählen“).`; $("stand_o").className = "stand ablage"; }
 }
 $("speichern").onclick = () => { const k = kurven.find(q => q.id === gewaehlt); if (k) ablegen(k); };
+// ---------- Beobachtung (2.15): Protokollzeilen und Bilder im Tagesordner
+function protokollZeile(ereignis, text) { return `${new Date().toISOString().slice(0, 19).replace("T", " ")} | ${ereignis} | ${text.replace(/\s+/g, " ").trim()}`; }
+async function protokoll(ereignis, text) {
+  const z = protokollZeile(ereignis, text); protokollPuffer.push(z); if (protokollPuffer.length > 500) protokollPuffer.shift();
+  if (!ordner) return z;
+  try { const t = await ordner.getDirectoryHandle(tagesordnerName(new Date()), {create: true}), f = await t.getFileHandle("rlc_protokoll.txt", {create: true});
+    let alt = ""; try { alt = await (await f.getFile()).text(); } catch (e) {}
+    const w = await f.createWritable(); await w.write(alt + z + "\n"); await w.close(); } catch (e) { console.warn("Protokoll:", e.message); }
+  return z;
+}
+const protokollPuffer = [];
+function bildZusammen() {   // die Leinwände des aktuellen Reiters untereinander in ein Bild
+  const ids = {aus: ["c1", "c2"], pruef: ["c3", "c4"], theorie: [], fit: [], kal: ["c5"], imp: ["c6", "c7"]}[reiter] || [];
+  const cs = ids.map(i => $(i)).filter(c => c.width > 10 && c.height > 10); if (!cs.length) return null;
+  const w = Math.max(...cs.map(c => c.width)), kopf = 28 * (window.devicePixelRatio || 1), h = cs.reduce((a, c) => a + c.height, 0) + kopf;
+  const o = document.createElement("canvas"); o.width = w; o.height = h; const g = o.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#111"; g.font = `${12 * (window.devicePixelRatio || 1)}px system-ui, Segoe UI, Arial`;
+  g.fillText(`RLC-Sprung 2.15 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
+  let y = kopf; for (const c of cs) { g.drawImage(c, 0, y); y += c.height; }
+  return o;
+}
+async function bildBlob() { const o = bildZusammen(); if (!o) return null; return new Promise(res => o.toBlob(res, "image/png")); }
+async function bildSpeichern(name) {
+  const b = await bildBlob(); if (!b) { $("stand_o").textContent = "Kein Bild: dieser Reiter hat keine Leinwand."; return null; }
+  if (ordner) { try { const t = await ordner.getDirectoryHandle(tagesordnerName(new Date()), {create: true}); try { await t.getFileHandle(name); name = name.replace(/\.png$/, "_" + Date.now() % 100000 + ".png"); } catch (e) {}
+    const f = await t.getFileHandle(name, {create: true}), w = await f.createWritable(); await w.write(b); await w.close(); $("stand_o").textContent = `Bild gespeichert: ${name} (${Math.round(b.size / 1024)} kB)`; $("stand_o").className = "stand ablage gut"; await protokoll("Bild", name); return name; }
+    catch (e) { $("stand_o").textContent = "Bild speichern fehlgeschlagen: " + e.message; $("stand_o").className = "stand ablage fehler"; return null; } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.append(a); a.click(); a.remove(); $("stand_o").textContent = `Bild als Download: ${name}`; return name;
+}
+$("bild").onclick = () => bildSpeichern(`rlc_bild_${zeitname(new Date())}_${reiter}.png`);
 
 // ---------- Dateien laden
 async function dateienLaden(fs) {
   for (const f of fs) {
     if (/\.json$/i.test(f.name)) { try { kalLadenText(await f.text(), f.name); reiterWahl("kal"); } catch (e) { standM("Laden: " + e.message, "fehler"); } continue; }
-    try { neueKurve(f.name, lesen(await f.text(), f.name), "Datei " + f.name); }
-    catch (e) { standM("Laden: " + e.message, "fehler"); }
+    try { neueKurve(f.name, lesen(await f.text(), f.name), "Datei " + f.name); protokoll("Datei geladen", f.name); }
+    catch (e) { standM("Laden: " + e.message, "fehler"); protokoll("Fehler", "Laden " + f.name + ": " + e.message); }
   }
 }
 $("laden").onclick = () => $("datei").click();

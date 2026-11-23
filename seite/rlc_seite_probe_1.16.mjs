@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.16.mjs -- (1.16: für Seite 2.15; P23 Beobachtbarkeit (Protokollzeile, PNG-Blob je Reiter); P21d Impulsantwort der Simulink-Kurve konvergiert (Rest endlich, unter 60 mV, ∫g ≈ 1) -- in 2.14 lief sie davon;
 // rlc_seite_probe_1.15.mjs -- (1.15: für Seite 2.14 (Schaltplan 1.3);
 // rlc_seite_probe_1.14.mjs -- (1.14: für Seite 2.13; P22 Format 2.7 lesen (U_2_V, i_mA, Rs), Stromansicht mit gemessenem Strom, R_s-Eingabe geprüft, Kennung 2.7 angenommen;
 // rlc_seite_probe_1.13.mjs -- (1.13: für Seite 2.12; P21 Impulsantwort: Rest unter 1 ADC-Stufe, ∫g ≈ 1, rohe Differenz exakt aber mit Spitzen über 4 s⁻¹, lineares Modell vorhanden;
@@ -51,7 +52,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.14/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.15/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 3, `${n0} Kurven (Simulink, T140, T128)`);
@@ -214,6 +215,11 @@ await bild("p21_impulsantwort");
 const b6 = await js(`(() => { const b = $("c6").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
 await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b6[0] + 58 + (b6[2] - 72) * 0.05, y: b6[1] + b6[3] * 0.5}); await warte(150);
 const t6 = await js(`$("tip6").hidden ? "versteckt" : $("tip6").textContent`); P("P21b Zeigertipp der Impulsantwort", /g iterativ .* s⁻¹/.test(t6) && /Rest/.test(t6), t6.slice(0, 120));
+await js(`$("ik").value = String(kurven[0].id); $("i_w").value = 7; $("i_rechnen").click()`); await warte(300);
+const i21s = await js(`[imp.k.name.slice(0, 11), imp.it, (imp.rms * 1000).toFixed(2), imp.integral.toFixed(3), imp.gmax.toFixed(1), (imp.tgmax * 1000).toFixed(0), imp.grund].join("|")`);
+P("P21d Simulink-Kurve: Iteration konvergiert (Rest endlich und unter 60 mV, ∫g = 0,95 … 1,05, Scheitel 20 … 60 ms)", /^RLC_Glied_2\|\d+\|/.test(i21s) && Number(i21s.split("|")[2]) < 60 && Math.abs(Number(i21s.split("|")[3]) - 1) < 0.05 && Number(i21s.split("|")[5]) > 20 && Number(i21s.split("|")[5]) < 60, i21s);
+await bild("p21_simulink");
+await js(`$("ik").value = String(kurven.find(k => k.name.startsWith("rlc26")).id); $("i_rechnen").click()`); await warte(200);
 await js(`$("i_w").value = 3; $("i_rechnen").click()`); await warte(200);
 const i21b = await js(`[imp.it, (imp.rms * 1000).toFixed(2), imp.erreicht].join("|")`); P("P21c kleinere Glättung w = 3: Rest ebenfalls erreicht", /\|true$/.test(i21b), i21b);
 // P22 Format 2.7 (Shunt): Datei mit U_2_V und i_mA lesen, Strom in der Stromansicht
@@ -228,6 +234,12 @@ await bild("p22_strom_shunt");
 await js(`$("unten4").value = "n"; $("unten4").dispatchEvent(new Event("change")); entfernen(kurven[kurven.length - 1]); $("rt_aus").click();`); await warte(200);
 await js(`$("Rs").value = 2000`); let e22 = await js(`(() => { try { pruefeEingabe(); return "keine Sperre"; } catch (x) { return x.message; } })()`); P("P22c R_s = 2000 Ω abgewiesen", /Shunt R_s: 0 … 1000/.test(e22), e22);
 await js(`$("Rs").value = 47`);
+// P23 Beobachtbarkeit: Protokollzeile, Bild als PNG-Blob für jeden Reiter mit Leinwand
+await js(`$("rt_aus").click()`); await warte(300);
+const b23 = await js(`(async () => { const z = protokollZeile("Probe", "eine   Zeile"); const r = {}; for (const t of ["aus", "pruef", "kal", "imp"]) { reiterWahl(t); await new Promise(r => setTimeout(r, 150)); const b = await bildBlob(); r[t] = b ? b.size + ":" + b.type : "kein Bild"; } reiterWahl("aus"); return JSON.stringify({z, r, puffer: protokollPuffer.length}); })()`);
+const m23 = JSON.parse(b23);
+P("P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller vier Leinwand-Reiter über 5 kB", /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d \| Probe \| eine Zeile$/.test(m23.z) && ["aus", "pruef", "kal", "imp"].every(t => /^\d+:image\/png$/.test(m23.r[t]) && Number(m23.r[t].split(":")[0]) > 5000) && m23.puffer >= 1, b23.slice(0, 200));
+await warte(300);
 // P17 Löschknöpfe
 await js(`$("rt_aus").click()`); await warte(200);
 const n17 = await js("kurven.length");
