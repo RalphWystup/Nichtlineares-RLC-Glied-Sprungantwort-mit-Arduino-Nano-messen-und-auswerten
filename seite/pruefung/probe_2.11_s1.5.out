@@ -1,10 +1,10 @@
-Browser: Skalierung/Fenster 1x1600x708
-RICHTIG P1 Seite geladen: RLC-Sprung 2.10 · Messen und Auswerten
-RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|40
+Browser: Skalierung/Fenster 1.5x1600x708
+RICHTIG P1 Seite geladen: RLC-Sprung 2.11 · Messen und Auswerten
+RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|39
 RICHTIG P2 eingebettete Kurven: 3 Kurven (Simulink, T140, T128)
 RICHTIG P3 Kennwerte T140 gegen Datei: Seite Umax 4.4734 V @ 58.5 ms, Uend 2.7423; Datei 4.4734 @ 58.5, 2.7423; D 0.287, f0 10.04 Hz, U_E,end 2.7442 V, Abfall 68 mV
 RICHTIG P3b U_C unter 5 V und nie negativ (alle eingebetteten): alle Werte 0 … 5 V
-RICHTIG P4 Knöpfe ohne Nano gesperrt mit Begründung: true:Erst mit dem Nano verbinden | true:Erst mit dem Nano verbinden | true:Erst mit dem Nano verbinden | false:„rlc25_2026-11-22_163851_T128_F3_B4.txt“ speichern
+RICHTIG P4 Knöpfe ohne Nano gesperrt mit Begründung: true:Erst mit dem Nano verbinden | true:Erst mit dem Nano verbinden | true:Erst mit dem Nano verbinden | true:Erst mit dem Nano verbinden | false:„rlc25_2026-11-22_163851_T128_F3_B4.txt“ speichern
 RICHTIG P5 T = 141 gesperrt: T > 140 gesperrt: U_C schwingt über (Faktor 1,54 … 1,63, steigt mit der Anregung; bei T = 150 schon 4,77 V). A0 verträgt
 RICHTIG P5b T = 140 erlaubt, Satz vollständig (mit R): ok {"T":140,"N":600,"V":3000,"F":3,"B":4,"P":20,"W":1,"R":2000}
 RICHTIG P5c Tastgradanzeige: 2,75 V d 0,5490
@@ -17,29 +17,34 @@ RICHTIG P6b Tafel hat 6 Zeilen, Liste 6 Einträge:
 RICHTIG P7 Differenz rlc2 T128 − rlc25 T128 kleiner 120 mV: größte |Δ| 18.3 mV
 RICHTIG P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung): 4 Reihen (erwartet 4: rlc26, rlc25 je U_H und U_L)
 RICHTIG P8b U_E − ideal gezeichnet: 2 Reihen
-RICHTIG P9 Zeigertipp zeigt t und Werte aller Kurven: t = 102,0 ms■ RLC_Glied_2.txt (Simulink 03.03.2026): UC 2,1652 V■ rlc26_2026-11-22_164113_T140_F3_B4.txt: UC 2,1872 V · UE 2,7473 V■ rlc25_2026-11-22_163851_T12
-RICHTIG P10 Maße stabil, kein Wachsen, kein Scrollen (Höhe und Breite): 1224x298x1600x760 -> 1224x298x1600x760, Fenster 1600x760
-RICHTIG P10b Prüfreiter im Auswertungsreiter ausgeblendet, Bild 1 über 250 px hoch: none|300
+RICHTIG P9 Zeigertipp zeigt t und Werte aller Kurven: t = 101,4 ms■ RLC_Glied_2.txt (Simulink 03.03.2026): UC 2,1994 V■ rlc26_2026-11-22_164113_T140_F3_B4.txt: UC 2,2141 V · UE 2,7473 V■ rlc25_2026-11-22_163851_T12
+RICHTIG P10 Maße stabil, kein Wachsen, kein Scrollen (Höhe und Breite): 1836x456x1600x760 -> 1836x456x1600x760, Fenster 1600x760
+RICHTIG P10b Prüfreiter im Auswertungsreiter ausgeblendet, Bild 1 über 250 px hoch: none|307
 RICHTIG P11 Speichern ohne Ordner meldet Download: Als Download gespeichert: RLC_Glied_2.txt (Simulink 03.03.2026) (für den Tagesordner erst „Ordner wählen“).
-RICHTIG P14 Reiter Prüfen sichtbar (Leinwand 3 über 200 px hoch, Leinwand 4 über 80 px, Auswertung ausgeblendet = 0 px): false|true|true|443|146|0|1|0
+RICHTIG P14 Reiter Prüfen sichtbar (Leinwand 3 über 200 px hoch, Leinwand 4 über 80 px, Auswertung ausgeblendet = 0 px): false|true|true|442|146|0|1|0
 RICHTIG P15a Knopf Sprung ±20 ms: -20.0..20.0 v=1
-RICHTIG P15b Zeigertipp im Prüfreiter mit k, U_H, nH: t = 0,00 ms■ rlc26_2026-11-22_164113_T140_F3_B4.txt: k -1 · t -0,50 ms · UC 0,0000 V · UE 0,0000 V · UH 5,000 · UL 0,000 V · nH 0 nL 4 nF 0
+RICHTIG P15b Zeigertipp im Prüfreiter mit k, U_H, nH: t = 0,01 ms■ rlc26_2026-11-22_164113_T140_F3_B4.txt: k 0 · t 0,50 ms · UC 0,0000 V · UE 2,7424 V · UH 4,995 · UL 0,000 V · nH 1 nL 3 nF 0
 RICHTIG P15c Rad zoomt die Zeit (40 ms -> 32 ms): 32.00 ms Ausschnitt
 RICHTIG P15c2 Zeitachse im Zoom eindeutig beschriftet (keine doppelten Werte): -15 -10 -5 0 5 10 15|true
-RICHTIG P15d Rahmen ziehen (120 × 80 px) zoomt auf den gerechneten Ausschnitt, Verlauf 2: 3.33|1.108|2 (Soll 3.33 ms × 1.108 V)
+RICHTIG P15d Rahmen ziehen (120 × 80 px) zoomt auf den gerechneten Ausschnitt, Verlauf 2: 3.33|1.114|2 (Soll 3.33 ms × 1.114 V)
 RICHTIG P15e Messpunkte im Ausschnitt gezeichnet (unter 600): 4 Punkte
 RICHTIG P15f Zurück = voriger Ausschnitt 32 ms: 32.00
 RICHTIG P15g Scheitel: Mitte = t_max, Spannung 0,2 V: 0.000|0.200
 RICHTIG P15h Alles = ganze Messung (bis 599,5 ms): true|-20|true
 RICHTIG P16 Zählwerte je Wert vollständig (nH+nL+nF = 4), nach dem Sprung nH 1…3, Leinwand 4 zeigt die Kurve: 4|true|0|4|rlc26_2026-11-22_164113_T140_F3_B4.txt
-RICHTIG P18 Aufbau und Theorie: zwei Fotos 2048×944 als data:, Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen: false|true|2048x944|2048x944|data:image/jpeg;base64|940|11|36|true|594
+RICHTIG P18 Aufbau und Theorie: zwei Fotos 2048×944 als data:, Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen: false|true|2048x944|2048x944|data:image/jpeg;base64|940|11|36|true|593
 RICHTIG P18c Schaltplan ohne R_ext, R_Cu = 92 Ω beschriftet: false|true
 RICHTIG P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite): 1600x760 Fenster 1600x760
 RICHTIG P19 Reiter Anfitten: 600 Werte ab t = 0,5 ms, U_C und U_E gleich lang, Δt = 1 ms, Registratur leer, Tafel 1 Zeile, Abschnittsgrenze Schwingen 5·T_d: false|true|600|0.0005|true|true|0|1|Daten von „rlc26_2026-11-22_164113_T140_|579
+RICHTIG P20a R_cal = 200 Ω abgewiesen (über 20 mA): R_cal muss 250 … 100000 Ω sein: unter 250 Ω flössen über 20 mA durch den Treiber (Datenblatt §28.2)
+RICHTIG P20b Rechnung: GND-Punkt i = 10,21 mA, Abfall 200,4 mV, R_out 19,6 Ω, Nullpunkt Low 29,3 mV; 5-V-Punkt ebenso, Nullpunkt High 24,4 mV; Gerade High (0; 24,4) – (10,21; 200,4) = 17,2 Ω, Low 16,7 Ω: 0.01021|200.4|19.62|29.3|0.01021|200.4|19.62|2|17.23|24.44|2|16.75|2|4
+RICHTIG P20c Übernehmen setzt RH/RL, JSON-Text enthält 2 Punkte: 17.23|16.75|High-Treiber: R_out = 17,2 Ω, U0 = 24,4 mV (2 Punkte). Low-T|2
+RICHTIG P20d Kalibrierdatei laden stellt Punkte und Kalibrierung wieder her: 2|17.23|probe.json: 2 Punkte geladen, Kalibrieru
+RICHTIG P20e Stromansicht: i_H über 100 Werte, i_L über 10 (nur wo U_L über 1 LSB), C·dU/dt 620 Werte mit Scheitel 2,5 … 3,5 mA bei 28,2 µF: true|289|78|620|3.18|2.7
 RICHTIG P17a Gewählte entfernen nimmt genau die gewählte Kurve: 5|false|„rlc2_2026-11-22_162318_T128_F3_B4.txt“ entfernt; die Datei bleibt.
 RICHTIG P17b Alle entfernen: erster Klick entfernt nichts, fragt nach: 5|Wirklich alle 5 entfernen? (nochmal klicken)|true
 RICHTIG P17c zweiter Klick entfernt alle, Knöpfe danach gesperrt: 0|Alle entfernen|true|true|0
 RICHTIG P12 keine Skriptfehler: keine
 RICHTIG P13 kein Netzabruf: keiner
 
-ERGEBNIS 39 von 39 RICHTIG (Skalierung 1)
+ERGEBNIS 44 von 44 RICHTIG (Skalierung 1.5)

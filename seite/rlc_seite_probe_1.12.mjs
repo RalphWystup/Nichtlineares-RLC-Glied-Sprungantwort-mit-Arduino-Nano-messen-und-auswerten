@@ -1,3 +1,5 @@
+// rlc_seite_probe_1.12.mjs -- (1.12: für Seite 2.11; P20 Kalibrierreiter: R_cal < 250 abgewiesen, Rechnung aus synthetischen Rohzeilen, Gerade aus zwei Punkten,
+//   JSON-Text, Laden, Stromansicht im Prüfreiter zeichnet drei Reihen; P4 prüft auch k_messen gesperrt;
 // rlc_seite_probe_1.11.mjs -- (1.11: für Seite 2.10; P18 prüft, dass kein R_ext mehr im Schaltplan steht;
 // rlc_seite_probe_1.10.mjs -- (1.10: für Seite 2.9; P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil beginnt unter der Kopfzeile;
 // rlc_seite_probe_1.9.mjs -- (1.9: für Seite 2.8; P18 Reiter Aufbau und Theorie (Fotos data:, SVG, MathML); neu P14 Reiter Prüfen (Leinwand c3/c4 gezeichnet, Messpunkte-Hinweis), P15 Zoom (Rad, Rahmen, Knöpfe Sprung/Scheitel/Zurück/Alles),
@@ -46,7 +48,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.10/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.11/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 3, `${n0} Kurven (Simulink, T140, T128)`);
@@ -59,8 +61,8 @@ P("P3 Kennwerte T140 gegen Datei", Math.abs(kw.Umax - Math.max(...uc)) < 1e-9 &&
   `Seite Umax ${kw.Umax.toFixed(4)} V @ ${(kw.tmax * 1000).toFixed(1)} ms, Uend ${kw.Uend.toFixed(4)}; Datei ${Math.max(...uc).toFixed(4)} @ ${(tmax * 1000).toFixed(1)}, ${uend.toFixed(4)}; D ${kw.D?.toFixed(3)}, f0 ${kw.f0?.toFixed(2)} Hz, U_E,end ${kw.UEend?.toFixed(4)} V, Abfall ${kw.abfall?.toFixed(0)} mV`);
 P("P3b U_C unter 5 V und nie negativ (alle eingebetteten)", await js("kurven.every(k => k.u.every(u => u >= 0 && u <= 5))"), "alle Werte 0 … 5 V");
 // P4 Sperren ohne Verbindung
-const sperr = await js(`["messen","trennen","kennung","speichern"].map(i => $(i).disabled + ":" + $(i).title).join(" | ")`);
-P("P4 Knöpfe ohne Nano gesperrt mit Begründung", /^true:Erst mit dem Nano/.test(sperr) && !/false:/.test(sperr.split(" | ").slice(0, 3).join(" | ")), sperr);
+const sperr = await js(`["messen","trennen","kennung","k_messen","speichern"].map(i => $(i).disabled + ":" + $(i).title).join(" | ")`);
+P("P4 Knöpfe ohne Nano gesperrt mit Begründung", /^true:Erst mit dem Nano/.test(sperr) && !/false:/.test(sperr.split(" | ").slice(0, 4).join(" | ")), sperr);
 // P5 Eingabeprüfung T > 140 (Seite) und T-Feldgrenze
 await js(`$("T").value = 141; $("T").dispatchEvent(new Event("input"));`);
 let e = await js(`(() => { try { pruefeEingabe(); return "keine Sperre"; } catch (x) { return x.message; } })()`);
@@ -175,6 +177,29 @@ const f19 = await js(`(() => { const k = kurven.find(k => k.name.startsWith("rlc
 const f = f19.split("|");
 P("P19 Reiter Anfitten: 600 Werte ab t = 0,5 ms, U_C und U_E gleich lang, Δt = 1 ms, Registratur leer, Tafel 1 Zeile, Abschnittsgrenze Schwingen 5·T_d", f[0] === "false" && f[1] === "true" && f[2] === "600" && f[3] === "0.0005" && f[4] === "true" && f[5] === "true" && f[6] === "0" && f[7] === "1" && /^Daten von/.test(f[8]) && Number(f[9]) > 500 && Number(f[9]) < 650, f19);
 await bild("p19_anfitten");
+// P20 Kalibrierreiter
+await js(`$("rt_kal").click()`); await warte(300);
+await js(`$("k_R").value = 200`); let k20 = await js(`(() => { try { pruefeKal(); return "keine Sperre"; } catch (e) { return e.message; } })()`);
+P("P20a R_cal = 200 Ω abgewiesen (über 20 mA)", /250 … 100000 Ω/.test(k20) && /20 mA/.test(k20), k20.slice(0, 100));
+// synthetische Rohzeilen: High-Pegel 4,80 V (ADC 982), Low 0,03 V (ADC 6); R_cal 470 -> i = 10,21 mA, Abfall 200 mV, R_out 19,6 Ω
+k20 = await js(`(() => { const roh = []; for (let k = 0; k < 50; k++) roh.push([k, 0, 982 * 2, 2, 6 * 2, 2, 0]); const p = kalRechnen(roh, 470, "gnd", 4); kalPunkte = [p];
+  const q = kalRechnen(roh.map(z => [z[0], 0, 1018 * 2, 2, 41 * 2, 2, 0]), 470, "5v", 4); kalPunkte.push(q); kalTafel(); zeichneKal(); const g = kalFit();
+  return [p.i.toFixed(5), (p.abfall * 1000).toFixed(1), p.Rout.toFixed(2), (p.null * 1000).toFixed(1), q.i.toFixed(5), (q.abfall * 1000).toFixed(1), q.Rout.toFixed(2), g.H.n, g.H.R.toFixed(2), (g.H.U0 * 1000).toFixed(2), g.L.n, g.L.R.toFixed(2), $("k_tafel").tBodies[0].rows.length, ansicht5.pts.length].join("|"); })()`);
+P("P20b Rechnung: GND-Punkt i = 10,21 mA, Abfall 200,4 mV, R_out 19,6 Ω, Nullpunkt Low 29,3 mV; 5-V-Punkt ebenso, Nullpunkt High 24,4 mV; Gerade High (0; 24,4) – (10,21; 200,4) = 17,2 Ω, Low 16,7 Ω",
+  /^0\.01021\|200\.4\|19\.6\d\|29\.3\|0\.01021\|200\.4\|19\.6\d\|2\|17\.2\d\|24\.4\d\|2\|16\.7\d\|2\|4$/.test(k20), k20);
+await js(`$("k_fit").click()`); await warte(100);
+k20 = await js(`[kal ? kal.RH.toFixed(2) : "-", kal ? kal.RL.toFixed(2) : "-", $("k_ergebnis").textContent.slice(0, 60), JSON.parse(kalText()).punkte.length].join("|")`);
+P("P20c Übernehmen setzt RH/RL, JSON-Text enthält 2 Punkte", /^17\.2\d\|16\.7\d\|High-Treiber: R_out = 17,2 Ω, U0 = 24,4 mV \(2 Punkte\)/.test(k20) && k20.endsWith("|2"), k20);
+await bild("p20_kalibrieren");
+const kt = await js("kalText()"); await js(`kalPunkte = []; kal = null; kalLadenText(${JSON.stringify(kt)}, "probe.json")`);
+k20 = await js(`[kalPunkte.length, kal ? kal.RH.toFixed(2) : "-", $("k_stand").textContent.slice(0, 40)].join("|")`);
+P("P20d Kalibrierdatei laden stellt Punkte und Kalibrierung wieder her", /^2\|17\.2\d\|probe\.json: 2 Punkte geladen/.test(k20), k20);
+// Stromansicht im Prüfreiter
+await js(`$("rt_pruef").click()`); await warte(300); await js(`$("pk").value = String(kurven.find(k => k.name.startsWith("rlc26")).id); $("unten4").value = "i"; $("unten4").dispatchEvent(new Event("change")); $("z_sprung").click();`); await warte(200);
+k20 = await js(`(() => { const s = ansicht4.strom, n = a => a.filter(Number.isFinite).length, mx = a => Math.max(...a.filter(Number.isFinite)); return [!!s, n(s.iH), n(s.iL), n(s.iC), (mx(s.iC) * 1000).toFixed(2), (mx(s.iH) * 1000).toFixed(1)].join("|"); })()`);
+P("P20e Stromansicht: i_H über 100 Werte, i_L über 10 (nur wo U_L über 1 LSB), C·dU/dt 620 Werte mit Scheitel 2,5 … 3,5 mA bei 28,2 µF", /^true\|[1-9]\d\d\|[1-9]\d\|6[12]\d\|/.test(k20) && Number(k20.split("|")[4]) > 2.5 && Number(k20.split("|")[4]) < 3.5, k20);
+await bild("p20_strom");
+await js(`$("unten4").value = "n"; $("unten4").dispatchEvent(new Event("change")); $("z_alles").click();`);
 // P17 Löschknöpfe
 await js(`$("rt_aus").click()`); await warte(200);
 const n17 = await js("kurven.length");

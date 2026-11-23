@@ -3,9 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLC-Sprung 2.10 · Messen und Auswerten</title>
+<title>RLC-Sprung 2.11 · Messen und Auswerten</title>
 <!--
-RLC_Sprung_2.10.html (23.11.2026) -- 2.10: kein Vorwiderstand R_ext (sein Wort: „Rext gibt es nicht, das ist der kupferwiderstand der Spule“): Schaltplan 1.1,
+RLC_Sprung_2.11.html (23.11.2026) -- 2.11: Reiter „Kalibrieren“ (sein Wort: „ich baue zum kalibrieren einen messwiderstand ein dann brauch ich noch ein
+kalibriermenü“): Spule abgeklemmt, Messwiderstand R_cal von D11 nach GND (High-Treiber) oder nach 5 V (Low-Treiber), R_cal >= 250 Ω (höchstens 20 mA,
+Datenblatt §28.2); Messung mit dem vorhandenen Befehl M 128 N 0 F 4 0 0, Pegel unter Last aus den Bändern, i = U/R_cal, Abfall = R_out·i + U0;
+Punkte sammeln, Gerade je Treiber (kleinste Quadrate, ein Punkt = Ursprungsgerade), als JSON im Tagesordner speichern/laden, übernehmen.
+Prüfreiter: unteres Bild wahlweise Zählwerte oder Strom aus dem Port-Abfall (i_H aus 5 V − U_H, i_L aus U_L) gegen C·dU_C/dt (C wählbar);
+Werte am Anschlag (ADC kann nicht über VCC oder unter GND lesen: negative Ströme sind unsichtbar) werden ausgelassen. 2.10: kein Vorwiderstand R_ext (sein Wort: „Rext gibt es nicht, das ist der kupferwiderstand der Spule“): Schaltplan 1.1,
 Bauteiltafel und Text angepasst; Theorie vertieft (sein Wort: „ich will auch die theorie zum nichtlinearen modell mit L und c als nichtlineare
 funktionen, deren Verläufe später aus dem anfitt berechnet werden sollen“): ψ(i), L_d(i), q(u), C_d(u), Zustandsgleichungen, Ansätze (tanh-Sättigung,
 Jiles-Atherton Gl. 4.1–4.7, C(U) Gl. 5.1, Vollmodell Gl. 5.7), Kennlinienformen und Netzstruktur von der Ruppert-Theorieseite 1.2 übernommen (sein Wort: „wir haben ja bei ruppert schon ein theorie dazu erstellt“);
@@ -35,7 +40,7 @@ U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U
 d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
 Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
 Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
-Gebaut mit bau_rlc_seite_2.10.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Gebaut mit bau_rlc_seite_2.11.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 -->
 <style>
@@ -61,6 +66,14 @@ main { display: grid; grid-template-columns: 330px 1fr; gap: 12px; padding: 10px
 #r_fit p { max-width: 1000px; margin: 4px 0; }
 #r_fit table.werte { width: auto; margin: 4px 0 8px; }
 #r_fit table.werte th, #r_fit table.werte td { border: 1px solid #ddd; }
+#r_kal { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; overflow: auto; padding: 4px 10px 10px 2px; }
+#r_kal[hidden] { display: none; }
+#r_kal h2 { font-size: 15px; margin: 4px 0 2px; }
+#r_kal table.werte { width: auto; }
+#r_kal table.werte th, #r_kal table.werte td { border: 1px solid #ddd; }
+#r_kal .bild { min-height: 220px; }
+.kalraster { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+@media (max-width: 1100px) { .kalraster { grid-template-columns: 1fr; } }
 #r_theorie h2 { font-size: 15px; margin: 14px 0 6px; }
 #r_theorie h3 { font-size: 13.5px; margin: 10px 0 4px; }
 #r_theorie p { max-width: 1000px; margin: 4px 0; }
@@ -114,7 +127,7 @@ select { font: inherit; padding: 2px 4px; }
 </head>
 <body>
 <header>
-  <h1>RLC-Sprung 2.10</h1>
+  <h1>RLC-Sprung 2.11</h1>
   <span class="neben">Nichtlineares RLC-Glied · Arduino Nano mit rlc_sprung_2_6 · Pin 11 PWM → U<sub>C</sub> an A0, Pinspannung an A1 · Eingangssignal = Mittelwert U<sub>E</sub></span>
   <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
 </header>
@@ -161,13 +174,13 @@ select { font: inherit; padding: 2px 4px; }
         <button id="alle_weg" disabled title="Keine Kurven geladen">Alle entfernen</button>
         <span class="hinweis" id="stand_k">Entfernen nimmt die Kurve nur aus der Seite; die Datei im Ordner bleibt.</span>
       </div>
-      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc210/29/28/27/26/25/24/23/22_*.txt, rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
+      <div class="hinweis">Dateien auch hierher ziehen (Kalibrierdateien .json ebenfalls). Liest rlc211/210/29/28/27/26/25/24/23/22_*.txt, rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
       <label class="hinweis" style="display:flex;gap:6px;margin-top:6px"><input id="UE" type="checkbox" checked> Anregung U<sub>E</sub> (Mittelwert) gestrichelt mitzeichnen</label>
       <label class="hinweis" style="display:flex;gap:6px"><input id="glatt" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> glätten (gleitender Median über 5 Werte; einzelne Flankentreffer)</label>
     </fieldset>
   </div>
   <div class="rechts">
-    <div class="reiterleiste"><button id="rt_aus" class="aktiv" data-r="aus">Auswertung</button><button id="rt_pruef" data-r="pruef" title="Nur zur Überprüfung: eine Kurve mit Messpunkten, Zoom in Sprung und Sprungantwort, Zählwerte des PWM-Sprungs">Prüfen · Zoom</button><button id="rt_theorie" data-r="theorie" title="Fotos des Aufbaus, Schaltplan, Bauteilwerte, Gleichungen">Aufbau und Theorie</button><button id="rt_fit" data-r="fit" title="Vorbereitet: Ansätze zum Anfitten der Sprungantwort (nächster Schritt)">Anfitten · vorbereitet</button></div>
+    <div class="reiterleiste"><button id="rt_aus" class="aktiv" data-r="aus">Auswertung</button><button id="rt_pruef" data-r="pruef" title="Nur zur Überprüfung: eine Kurve mit Messpunkten, Zoom in Sprung und Sprungantwort, Zählwerte des PWM-Sprungs">Prüfen · Zoom</button><button id="rt_theorie" data-r="theorie" title="Fotos des Aufbaus, Schaltplan, Bauteilwerte, Gleichungen">Aufbau und Theorie</button><button id="rt_fit" data-r="fit" title="Vorbereitet: Ansätze zum Anfitten der Sprungantwort (nächster Schritt)">Anfitten · vorbereitet</button><button id="rt_kal" data-r="kal" title="Innenwiderstand der Port-Treiber mit einem Messwiderstand bestimmen; daraus der Strom aus dem Port-Abfall">Kalibrieren</button></div>
     <div class="inhalt" id="r_aus">
     <div class="bild" id="b1"><canvas id="c1" aria-label="Sprungantwort U_C über t"></canvas><div class="tip" id="tip1" hidden></div></div>
     <div class="bild" id="b2"><canvas id="c2" aria-label="Differenz zur Bezugskurve"></canvas><div class="tip" id="tip2" hidden></div></div>
@@ -193,6 +206,7 @@ select { font: inherit; padding: 2px 4px; }
         <button id="z_zurueck" disabled title="Noch nicht gezoomt">Zurück</button>
         <label class="hinweis" style="display:flex;gap:4px"><input id="z_punkte" type="checkbox" checked> Messpunkte</label>
         <label class="hinweis" style="display:flex;gap:4px"><input id="z_pegel" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> roh</label>
+        <span class="hinweis">unten: <select id="unten4"><option value="n">Zählwerte nH, nL, nF</option><option value="i">Strom aus dem Port-Abfall gegen C·dU_C/dt</option></select> C <input id="z_C" type="number" min="1" max="500" step="0.1" value="28.2" style="width:60px;padding:1px 3px;font:inherit"> µF</span>
         <span class="hinweis" id="z_stand">Rad: Zeit zoomen am Zeiger · Strg+Rad: Spannung · Rahmen ziehen: Ausschnitt · Doppelklick: alles</span>
       </div>
     </div>
@@ -247,6 +261,29 @@ select { font: inherit; padding: 2px 4px; }
       <h3>Schutz des ADC-Eingangs (Datenblatt ATmega328P 7810D)</h3>
       <p>Zulässig an jedem Pin −0,5 V … V<sub>CC</sub> + 0,5 V, Injektionsstrom in die Schutzdioden ±1 mA (§28.1), ADC-Eingang GND … V<sub>REF</sub> (§28.9). Der Überschwingfaktor steigt mit der Anregung (1,54 → 1,63); bei T = 150 lag der Scheitel schon bei 4,77 V. Deshalb ist T ≤ 140 fest im Nano und in dieser Seite (Scheitel 4,39 … 4,47 V), und nach jeder Messung fährt die Anregung als Rampe (R ms) auf 0: Ein Sprung auf 0 schwänge mit −0,55·U<sub>end</sub> ins Negative. Der größte Pinstrom ist C·dU<sub>C</sub>/dt ≈ 4 mA (92 V/s gemessen).</p>
       <p class="hinweis">Quellen: rlc_manuskript.docx (Streckenausmessung, 04.03.2026), Simulink-Messung RLC_Glied_2.txt (03.03.2026), Messungen rlc25/rlc26 (22.11.2026), Datenblatt ATmega328P 7810D–AVR–01/15, RUPPERT_Theorie_1.2.html (Reiter „Reihenschwingkreis mit sättigbarer Spule und spannungsabhängigem Kondensator“, 10.11.2026; Würth Elektronik ANP062a, Abb. 5), H. Ruppert, A. Krug, Y. A. W. Shardt: IFAC-PapersOnLine 55(7), 2022, S. 568–573. Diese Seite: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code), gemeinsam erstellt.</p>
+    </div>
+    <div class="inhalt" id="r_kal" hidden>
+      <div>
+        <h2>Kalibrieren: Innenwiderstand der Port-Treiber mit einem Messwiderstand</h2>
+        <p class="hinweis" style="max-width:1100px">Aufbau: Spule abklemmen. Messwiderstand R<sub>cal</sub> von <b>D11 nach GND</b> → der High-Treiber liefert i = U<sub>H</sub>/R<sub>cal</sub>, sein Abfall ist 5 V − U<sub>H</sub>; der Low-Treiber führt dabei keinen Strom (Nullpunkt U<sub>L</sub>). Messwiderstand von <b>D11 nach 5 V</b> → der Low-Treiber nimmt i = (5 V − U<sub>L</sub>)/R<sub>cal</sub> auf, sein Abfall ist U<sub>L</sub>; der High-Treiber liefert den Nullpunkt. R<sub>cal</sub> ≥ 250 Ω, damit höchstens 20 mA fließen (Datenblatt §28.2: V<sub>OH</sub> bei −20 mA, V<sub>OL</sub> bei 20 mA). Mehrere Widerstände geben mehrere Stromwerte für die Gerade Abfall = R<sub>out</sub>·i + U<sub>0</sub>. Die Nano-Messung ist dieselbe wie beim Sprung (T = 128, kein Entladen, keine Rampe); die Pegel kommen aus den Bändern. Mit F = 4 (7,81 kHz) sind die Phasen 70/58 µs lang, länger als die Abtastzeit des ADC (≈ 12 µs); bei 31,4 kHz sind es 18/14 µs – beide messen und vergleichen.</p>
+        <div class="knoepfe" style="align-items:center">
+          <span class="hinweis">R<sub>cal</sub> <input id="k_R" type="number" min="250" max="100000" step="1" value="470" style="width:80px;padding:2px 4px;font:inherit"> Ω</span>
+          <span class="hinweis">Anschluss <select id="k_art"><option value="gnd">D11 → R → GND (High-Treiber)</option><option value="5v">D11 → R → 5 V (Low-Treiber)</option></select></span>
+          <span class="hinweis">PWM <select id="k_F"><option value="4" selected>7,81 kHz</option><option value="3">31,4 kHz</option><option value="2">3,92 kHz</option><option value="1">980,4 Hz</option></select></span>
+          <span class="hinweis">Werte <input id="k_N" type="number" min="20" max="5000" step="10" value="300" style="width:60px;padding:2px 4px;font:inherit"></span>
+          <button id="k_messen" class="haupt" disabled title="Erst mit dem Nano verbinden">Kalibrierpunkt messen</button>
+          <button id="k_fit" disabled title="Erst Punkte messen oder laden">Gerade rechnen und übernehmen</button>
+          <button id="k_speichern" disabled title="Erst Punkte messen">Kalibrierung speichern</button>
+          <button id="k_laden">Kalibrierung laden …</button><input id="k_datei" type="file" accept=".json" hidden>
+          <button id="k_leeren" disabled title="Keine Punkte">Punkte verwerfen</button>
+        </div>
+        <div id="k_stand" class="stand">Keine Kalibrierung. Ohne Nano: eine gespeicherte Kalibrierung laden.</div>
+      </div>
+      <div class="kalraster">
+        <div class="tafel" style="max-height:none"><table class="werte" id="k_tafel"><thead><tr><th>Nr</th><th>Anschluss</th><th>R<sub>cal</sub> / Ω</th><th>PWM</th><th>U<sub>H</sub> / V</th><th>U<sub>L</sub> / V</th><th>i / mA</th><th>Abfall / mV</th><th>R<sub>out</sub> / Ω</th><th>Werte</th><th></th></tr></thead><tbody></tbody></table>
+          <div class="hinweis" id="k_ergebnis" style="margin-top:6px">Noch keine Gerade.</div></div>
+        <div class="bild" id="b5"><canvas id="c5" aria-label="Abfall über Strom, Kalibrierpunkte und Geraden"></canvas><div class="tip" id="tip5" hidden></div></div>
+      </div>
     </div>
     <div class="inhalt" id="r_fit" hidden>
       <h2>Anfitten der Sprungantwort – vorbereitet, noch ohne Ansätze</h2>
@@ -469,10 +506,103 @@ new ResizeObserver(() => { zeichne3(); zeichne4(); }).observe($("b3"));
 for (const id of ["UE", "glatt", "unten", "bezug"]) $(id).onchange = alles;
 let reiter = "aus";
 function reiterWahl(r) {
-  reiter = r; for (const n of ["aus", "pruef", "theorie", "fit"]) { $("r_" + n).hidden = r !== n; $("rt_" + n).classList.toggle("aktiv", r === n); }
-  if (r === "aus" || r === "pruef") requestAnimationFrame(alles); if (r === "fit") fitTafel();
+  reiter = r; for (const n of ["aus", "pruef", "theorie", "fit", "kal"]) { $("r_" + n).hidden = r !== n; $("rt_" + n).classList.toggle("aktiv", r === n); }
+  if (r === "aus" || r === "pruef") requestAnimationFrame(alles); if (r === "fit") fitTafel(); if (r === "kal") requestAnimationFrame(() => { kalTafel(); zeichneKal(); });
 }
-for (const n of ["aus", "pruef", "theorie", "fit"]) $("rt_" + n).onclick = () => reiterWahl(n);
+for (const n of ["aus", "pruef", "theorie", "fit", "kal"]) $("rt_" + n).onclick = () => reiterWahl(n);
+
+// ---------- Kalibrieren (2.11): Innenwiderstand der Treiber aus Messwiderstand; Strom aus dem Port-Abfall
+let kalPunkte = [], kal = null;   // kal = {RH, U0H, nH, RL, U0L, nL, datum}
+function kalRechnen(roh, Rcal, art, F) {   // roh: Zeilen [k, s0, sH, nH, sL, nL, nF] ab k >= 0
+  let sH = 0, nH = 0, sL = 0, nL = 0, nF = 0;
+  for (const z of roh) if (z[0] >= 0) { sH += z[2]; nH += z[3]; sL += z[4]; nL += z[5]; nF += z[6]; }
+  if (!nH || !nL) throw new Error("Pegel nicht getroffen (nH " + nH + ", nL " + nL + "): PWM läuft nicht oder A1 nicht am Pin");
+  const UH = sH / nH * LSB, UL = sL / nL * LSB;
+  const p = {art, Rcal, F, UH, UL, nH, nL, nF};
+  if (art === "gnd") { p.i = UH / Rcal; p.abfall = 5 - UH; p.null = UL; } else { p.i = (5 - UL) / Rcal; p.abfall = UL; p.null = 5 - UH; }
+  p.Rout = p.i > 0 ? p.abfall / p.i : NaN; return p;
+}
+function kalGerade(punkte) {   // (i, abfall) -> {R, U0, n}; ein Punkt: Ursprungsgerade; Nullpunkte (i = 0) aus den Messungen des anderen Anschlusses kommen mit
+  const n = punkte.length; if (!n) return null;
+  if (n === 1) return {R: punkte[0].abfall / punkte[0].i, U0: 0, n};
+  let sx = 0, sy = 0, sxx = 0, sxy = 0; for (const {i, abfall} of punkte) { sx += i; sy += abfall; sxx += i * i; sxy += i * abfall; }
+  const d = n * sxx - sx * sx; if (Math.abs(d) < 1e-18) return {R: sy / sx, U0: 0, n};
+  const R = (n * sxy - sx * sy) / d; return {R, U0: (sy - R * sx) / n, n};
+}
+function kalFit() {
+  const H = [], L = [];
+  for (const p of kalPunkte) { if (p.art === "gnd") { H.push({i: p.i, abfall: p.abfall}); L.push({i: 0, abfall: p.null}); } else { L.push({i: p.i, abfall: p.abfall}); H.push({i: 0, abfall: p.null}); } }
+  const gH = kalGerade(H.filter(q => q.i > 0).length ? H : []), gL = kalGerade(L.filter(q => q.i > 0).length ? L : []);
+  return {H: gH, L: gL};
+}
+function kalTafel() {
+  const tb = $("k_tafel").tBodies[0]; tb.innerHTML = "";
+  kalPunkte.forEach((p, n) => { const tr = document.createElement("tr");
+    for (const x of [n + 1, p.art === "gnd" ? "→ GND (High)" : "→ 5 V (Low)", p.Rcal, FNAME[p.F], zahl(p.UH, 4), zahl(p.UL, 4), zahl(p.i * 1000, 2), zahl(p.abfall * 1000, 1), zahl(p.Rout, 1), p.nH + "/" + p.nL + "/" + p.nF]) { const td = document.createElement("td"); td.textContent = x; tr.append(td); }
+    const td = document.createElement("td"), b = document.createElement("button"); b.textContent = "×"; b.title = "Punkt entfernen"; b.onclick = () => { kalPunkte.splice(n, 1); kalTafel(); zeichneKal(); }; td.append(b); tr.append(td); tb.append(tr); });
+  const g = kalFit(), f = (x, n) => zahl(x, n);
+  $("k_ergebnis").textContent = (g.H ? `High-Treiber: R_out = ${f(g.H.R, 1)} Ω, U0 = ${f(g.H.U0 * 1000, 1)} mV (${g.H.n} Punkte). ` : "High-Treiber: kein Punkt. ") + (g.L ? `Low-Treiber: R_out = ${f(g.L.R, 1)} Ω, U0 = ${f(g.L.U0 * 1000, 1)} mV (${g.L.n} Punkte).` : "Low-Treiber: kein Punkt.") + (kal ? ` Übernommen: RH ${f(kal.RH, 1)} Ω, RL ${f(kal.RL, 1)} Ω (${kal.datum}).` : " Noch nichts übernommen.");
+  $("k_fit").disabled = !(g.H || g.L); $("k_fit").title = g.H || g.L ? "Geraden aus den Punkten rechnen und für die Stromansicht übernehmen" : "Erst Punkte messen oder laden";
+  $("k_speichern").disabled = !kalPunkte.length; $("k_speichern").title = kalPunkte.length ? "Punkte und Geraden als JSON im Tagesordner speichern" : "Erst Punkte messen";
+  $("k_leeren").disabled = !kalPunkte.length; $("k_leeren").title = kalPunkte.length ? "alle Punkte aus der Tafel nehmen (gespeicherte Dateien bleiben)" : "Keine Punkte";
+}
+function kalStand(t, art) { const e = $("k_stand"); e.textContent = t; e.className = "stand" + (art ? " " + art : ""); }
+function pruefeKal() {
+  const Rcal = Number($("k_R").value), N = Number($("k_N").value), F = Number($("k_F").value), art = $("k_art").value;
+  if (!Number.isFinite(Rcal) || Rcal < 250 || Rcal > 100000) throw new Error("R_cal muss 250 … 100000 Ω sein: unter 250 Ω flössen über 20 mA durch den Treiber (Datenblatt §28.2)");
+  if (!Number.isInteger(N) || N < 20 || N > 5000) throw new Error("Werte N: 20 … 5000");
+  return {Rcal, N, F, art};
+}
+async function kalMessung(E) {
+  zeilen = []; await senden(`M 128 ${E.N} 0 ${E.F} 4 0 0`);
+  kalStand(`Kalibrierpunkt: R_cal ${E.Rcal} Ω ${E.art === "gnd" ? "nach GND" : "nach 5 V"}, ${FNAME[E.F]}, ${E.N} Werte …`);
+  const start = await warteAuf(() => zeilen.find(l => l.startsWith("START") || l.startsWith("FEHLER")), 5000); if (start.startsWith("FEHLER")) throw new Error(start);
+  const ende = await warteAuf(() => zeilen.find(l => l.startsWith("ENDE") || l.startsWith("FEHLER")), E.N + 15000); if (ende.startsWith("FEHLER")) throw new Error(ende);
+  const roh = zeilen.filter(l => /^-?\d+( \d+){6}$/.test(l)).map(l => l.split(" ").map(Number));
+  if (roh.length !== E.N) throw new Error(`${roh.length} statt ${E.N} Werte empfangen`);
+  const p = kalRechnen(roh, E.Rcal, E.art, E.F); p.datum = new Date().toLocaleString("de-DE"); kalPunkte.push(p); kalTafel(); zeichneKal();
+  kalStand(`Punkt ${kalPunkte.length}: U_H ${zahl(p.UH, 4)} V, U_L ${zahl(p.UL, 4)} V → i ${zahl(p.i * 1000, 2)} mA, Abfall ${zahl(p.abfall * 1000, 1)} mV, R_out ${zahl(p.Rout, 1)} Ω (Treffer ${p.nH}/${p.nL}, Flanken ${p.nF}).`, "gut");
+}
+$("k_messen").onclick = async () => {
+  let E; try { E = pruefeKal(); } catch (e) { kalStand(e.message, "fehler"); return; }
+  beschaeftigt = true; knoepfe(); try { await kalMessung(E); } catch (e) { kalStand("Kalibrierpunkt fehlgeschlagen: " + e.message, "fehler"); } beschaeftigt = false; knoepfe();
+};
+$("k_fit").onclick = () => { const g = kalFit(); kal = {RH: g.H ? g.H.R : NaN, U0H: g.H ? g.H.U0 : 0, nH: g.H ? g.H.n : 0, RL: g.L ? g.L.R : NaN, U0L: g.L ? g.L.U0 : 0, nL: g.L ? g.L.n : 0, datum: new Date().toLocaleString("de-DE")}; kalTafel(); zeichneKal(); kalStand("Kalibrierung übernommen; der Prüfreiter kann jetzt den Strom aus dem Port-Abfall zeichnen (unten: „Strom“).", "gut"); };
+$("k_leeren").onclick = () => { kalPunkte = []; kalTafel(); zeichneKal(); kalStand("Punkte verworfen (übernommene Kalibrierung bleibt)."); };
+function kalText() { return JSON.stringify({art: "rlc_kalibrierung", fassung: "2.11", datum: new Date().toISOString(), punkte: kalPunkte, gerade: kalFit(), uebernommen: kal}, null, 1); }
+$("k_speichern").onclick = async () => {
+  const name = `rlc_kalibrierung_${zeitname(new Date())}.json`, text = kalText();
+  if (ordner) { try { const tn = tagesordnerName(new Date()), t = await ordner.getDirectoryHandle(tn, {create: true}), f = await t.getFileHandle(name, {create: true}), w = await f.createWritable(); await w.write(text); await w.close(); kalStand(`Gespeichert: ${ordner.name}\\${tn}\\${name}`, "gut"); return; } catch (e) { kalStand("Speichern im Ordner fehlgeschlagen (" + e.message + "), deshalb als Download.", "fehler"); } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type: "application/json"})); a.download = name; document.body.append(a); a.click(); a.remove(); if (!ordner) kalStand(`Als Download gespeichert: ${name}`);
+};
+function kalLadenText(text, name) {
+  const j = JSON.parse(text); if (j.art !== "rlc_kalibrierung" || !Array.isArray(j.punkte)) throw new Error(name + ": keine Kalibrierdatei");
+  for (const p of j.punkte) kalPunkte.push(p); if (j.uebernommen) kal = j.uebernommen; kalTafel(); zeichneKal(); kalStand(`${name}: ${j.punkte.length} Punkte geladen` + (j.uebernommen ? ", Kalibrierung übernommen" : "") + ".", "gut");
+}
+$("k_laden").onclick = () => $("k_datei").click();
+$("k_datei").onchange = async e => { for (const f of e.target.files) { try { kalLadenText(await f.text(), f.name); } catch (x) { kalStand("Laden: " + x.message, "fehler"); } } e.target.value = ""; };
+let ansicht5 = null;
+function zeichneKal() {
+  const c = $("c5"); if ($("r_kal").hidden) return; const {g, w, h} = leinwand(c), pts = [];
+  for (const p of kalPunkte) { if (p.art === "gnd") { pts.push({x: p.i * 1000, y: p.abfall * 1000, t: "H"}); pts.push({x: 0, y: p.null * 1000, t: "L"}); } else { pts.push({x: p.i * 1000, y: p.abfall * 1000, t: "L"}); pts.push({x: 0, y: p.null * 1000, t: "H"}); } }
+  let x1 = 1, y1 = 10; for (const p of pts) { x1 = Math.max(x1, p.x * 1.1); y1 = Math.max(y1, p.y * 1.15); }
+  const {X, Y} = achsen(g, w, h, 0, x1, 0, y1, "Abfall / mV", "Strom / mA   ·   ● High-Treiber (5 V − U_H)   ■ Low-Treiber (U_L)   ·   Geraden aus kleinsten Quadraten");
+  ansicht5 = {X, Y, w, h, x0: 0, x1, y0: 0, y1, pts}; klipp(g, w, h);
+  const gg = kalFit();
+  for (const [G, farbe] of [[gg.H, "#1b8a3a"], [gg.L, "#2a78d6"]]) if (G) { g.strokeStyle = farbe; g.lineWidth = 1.4; g.setLineDash([5, 3]); g.beginPath(); g.moveTo(X(0), Y(G.U0 * 1000)); g.lineTo(X(x1), Y((G.U0 + G.R * x1 / 1000) * 1000)); g.stroke(); g.setLineDash([]); }
+  for (const p of pts) { g.fillStyle = p.t === "H" ? "#1b8a3a" : "#2a78d6"; if (p.t === "H") { g.beginPath(); g.arc(X(p.x), Y(p.y), 4, 0, 2 * Math.PI); g.fill(); } else g.fillRect(X(p.x) - 3.5, Y(p.y) - 3.5, 7, 7); }
+  g.restore();
+  if (!pts.length) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText("Keine Kalibrierpunkte: messen oder laden", w / 2, h / 2); }
+}
+new ResizeObserver(() => zeichneKal()).observe($("b5"));
+function stromAusAbfall(k) {   // {iH, iL, iC}: Strom aus den Pegeln (NaN, wo kein Treffer oder am Anschlag), Bezug C·dU_C/dt geglättet
+  if (!k.uh || !kal) return null; const n = k.t.length, iH = new Array(n).fill(NaN), iL = new Array(n).fill(NaN);
+  for (let j = 0; j < n; j++) { if (k.nh && k.nh[j] >= 1 && Number.isFinite(kal.RH) && k.uh[j] < 5 - LSB / 2) iH[j] = (5 - k.uh[j] - kal.U0H) / kal.RH; if (k.nl && k.nl[j] >= 1 && Number.isFinite(kal.RL) && k.ul[j] > LSB / 2) iL[j] = (k.ul[j] - kal.U0L) / kal.RL; }
+  const C = Number($("z_C").value) * 1e-6, du = new Array(n).fill(0);
+  for (let j = 1; j < n - 1; j++) du[j] = (k.u[j + 1] - k.u[j - 1]) / (k.t[j + 1] - k.t[j - 1]);
+  const iC = du.map((_, j) => { let s = 0, m = 0; for (let q = Math.max(1, j - 2); q <= Math.min(n - 2, j + 2); q++) { s += du[q]; m++; } return m ? C * s / m : NaN; });
+  return {iH, iL, iC};
+}
 
 // ---------- Anfitten: Vorbereitung (nächster Schritt hängt Ansätze in fitModelle ein)
 const fitModelle = [];   // {name, parameter, anpassen(t, u) -> {y: Array, rmse: {gesamt, anstieg, schwingen, eingeschwungen}}}
@@ -533,6 +663,7 @@ function zeichne3() {
 }
 function zeichne4() {
   const c = $("c4"); if ($("r_pruef").hidden) return; const {g, w, h} = leinwand(c), B = bereich3(), k = pruefEine();
+  if ($("unten4").value === "i") { zeichne4Strom(g, w, h, B, k); return; }
   const hat = k && k.nh; let Bk = 4; if (hat) for (let i = 0; i < k.nh.length; i++) Bk = Math.max(Bk, k.nh[i] + k.nl[i] + k.nf[i]);
   const {X, Y} = achsen(g, w, h, B.x0, B.x1, -0.3, Bk + 0.3, "Anzahl", hat ? "Zählwerte je Abtastwert auf A1 (" + Bk + " Wandlungen je Wert): nH High ≥ 4,5 V grün · nL Low ≤ 0,5 V blau · nF Flanke dazwischen rot   ·   Kurve „" + k.name + "“" : "Zählwerte des PWM-Sprungs");
   ansicht4 = {X, w, h, x0: B.x0, x1: B.x1, k: hat ? k : null};
@@ -545,6 +676,18 @@ function zeichne4() {
   }
   g.restore();
   if (!hat) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(k ? "„" + k.name + "“ hat keine Zählwerte (Format ohne getrennte Pegel, vor rlc_sprung_2_2)" : "Keine Kurve gewählt", w / 2, h / 2); }
+}
+function zeichne4Strom(g, w, h, B, k) {
+  const s = k ? stromAusAbfall(k) : null; let lo = -1, hi = 1;
+  if (s) for (const a of [s.iH, s.iL, s.iC]) for (let j = 0; j < k.t.length; j++) { const tm = k.t[j] * 1000; if (tm < B.x0 || tm > B.x1 || !Number.isFinite(a[j])) continue; lo = Math.min(lo, a[j] * 1000); hi = Math.max(hi, a[j] * 1000); }
+  const p = (hi - lo) * 0.08, {X, Y} = achsen(g, w, h, B.x0, B.x1, lo - p, hi + p, "i / mA", "Strom: grün i_H aus 5 V − U_H (High-Treiber), blau i_L aus U_L (Low-Treiber), orange C·dU_C/dt (C = " + $("z_C").value + " µF) · Lücken: kein Treffer oder am Anschlag (ADC liest nicht über VCC / unter GND)" + (k ? " · „" + k.name + "“" : ""));
+  ansicht4 = {X, w, h, x0: B.x0, x1: B.x1, k: s ? k : null, strom: s};
+  klipp(g, w, h);
+  if (s) { g.strokeStyle = "#ccc"; g.beginPath(); g.moveTo(RAND.l, Y(0)); g.lineTo(w - RAND.r, Y(0)); g.stroke();
+    linie(g, X, Y, k.t, s.iC.map(x => x * 1000), "#eb6834", 1.4, []); linie(g, X, Y, k.t, s.iH.map(x => x * 1000), "#1b8a3a", 1.4, []); linie(g, X, Y, k.t, s.iL.map(x => x * 1000), "#2a78d6", 1.4, [5, 3]);
+    if (k.t.filter(t => t * 1000 >= B.x0 && t * 1000 <= B.x1).length <= 600) { punkte(g, X, Y, k.t, s.iH.map(x => x * 1000), "#1b8a3a", "o", B.x0, B.x1); punkte(g, X, Y, k.t, s.iL.map(x => x * 1000), "#2a78d6", "q", B.x0, B.x1); } }
+  g.restore();
+  if (!s) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(!kal ? "Keine Kalibrierung: Reiter „Kalibrieren“ (messen oder laden), dann „Gerade rechnen und übernehmen“" : "Kurve ohne getrennte Pegel (vor rlc_sprung_2_2)", w / 2, h / 2); }
 }
 function zoomMaus(c, ev) { const b = c.getBoundingClientRect(); return {mx: ev.clientX - b.left, my: ev.clientY - b.top}; }
 function xVon(A, mx) { return A.x0 + (mx - RAND.l) / (A.w - RAND.l - RAND.r) * (A.x1 - A.x0); }
@@ -569,7 +712,7 @@ $("z_alles").onclick = () => zoomSetzen(null);
 $("z_sprung").onclick = () => { const B = bereich3(); zoomSetzen({x0: -20, x1: 20, y0: Z ? B.y0 : B.y0, y1: B.y1}); };
 $("z_scheitel").onclick = () => { const k = pruefEine(); if (!k) return; const r = kennwerte(k); if (!Number.isFinite(r.tmax)) return; zoomSetzen({x0: r.tmax * 1000 - 15, x1: r.tmax * 1000 + 15, y0: r.Umax - 0.1, y1: r.Umax + 0.1}); };
 $("z_zurueck").onclick = () => { Z = Zalt.pop() || null; $("z_zurueck").disabled = !Zalt.length && !Z; zeichne3(); zeichne4(); };
-for (const id of ["pk", "z_punkte", "z_pegel"]) $(id).onchange = () => { zeichne3(); zeichne4(); };
+for (const id of ["pk", "z_punkte", "z_pegel", "unten4", "z_C"]) $(id).onchange = () => { zeichne3(); zeichne4(); };
 function zeiger3(cid, tid, nr) {
   const c = $(cid), tip = $(tid);
   c.addEventListener("mousemove", ev => {
@@ -578,7 +721,7 @@ function zeiger3(cid, tid, nr) {
     if (mx < RAND.l || mx > A.w - RAND.r) { tip.hidden = true; return; }
     const tms = xVon(A, mx), ks = nr === 3 ? A.v : (A.k ? [A.k] : []);
     const zl = ks.map(k => { const i = naechster(k.t, tms), e = ue(k); let s = `<span style="color:${k.farbe}">■</span> ${k.name}: k ${k.kk ? k.kk[i] : i} · t ${zahl(k.t[i] * 1000, 2)} ms · U<sub>C</sub> <b>${zahl(k.u[i], 4)} V</b>`;
-      if (e) s += ` · U<sub>E</sub> <b>${zahl(e[i], 4)} V</b>`; if (k.uh) s += ` · U<sub>H</sub> ${zahl(k.uh[i], 3)} · U<sub>L</sub> ${zahl(k.ul[i], 3)} V`; if (k.nh) s += ` · nH ${k.nh[i]} nL ${k.nl[i]} nF ${k.nf[i]}`; return s; });
+      if (e) s += ` · U<sub>E</sub> <b>${zahl(e[i], 4)} V</b>`; if (k.uh) s += ` · U<sub>H</sub> ${zahl(k.uh[i], 3)} · U<sub>L</sub> ${zahl(k.ul[i], 3)} V`; if (k.nh) s += ` · nH ${k.nh[i]} nL ${k.nl[i]} nF ${k.nf[i]}`; if (nr === 4 && A.strom) s += ` · i_H <b>${zahl(A.strom.iH[i] * 1000, 2)}</b> · i_L <b>${zahl(A.strom.iL[i] * 1000, 2)}</b> · C·dU/dt <b>${zahl(A.strom.iC[i] * 1000, 2)} mA</b>`; return s; });
     if (!zl.length) { tip.hidden = true; return; }
     tip.innerHTML = `t = ${zahl(tms, 2)} ms<br>` + zl.join("<br>"); tip.hidden = false;
     const b = c.getBoundingClientRect(), bw = tip.offsetWidth; tip.style.left = (mx + 14 + bw > b.width ? Math.max(0, mx - 14 - bw) : mx + 14) + "px"; tip.style.top = "10px";
@@ -618,6 +761,7 @@ function knoepfe() {
   $("verbinden").disabled = v; $("verbinden").title = v ? "Schon verbunden" : "Anschluss wählen (COM5)";
   for (const id of ["trennen", "kennung"]) { $(id).disabled = !v || beschaeftigt; $(id).title = sperr || (id === "trennen" ? "Verbindung lösen (z. B. damit die Brücke messen kann)" : "Kennung des Nano abfragen"); }
   $("messen").disabled = !v || beschaeftigt; $("messen").title = sperr || "Sprung auslösen und aufnehmen";
+  $("k_messen").disabled = !v || beschaeftigt; $("k_messen").title = sperr || "Kalibrierpunkt mit dem Messwiderstand aufnehmen";
   $("abbruch").hidden = !beschaeftigt;
   if (!v && !beschaeftigt) standM("Gesperrt: erst mit dem Nano verbinden.");
 }
@@ -708,10 +852,10 @@ async function eineMessung(E, nr) {
   if (verloren) throw new Error(`${verloren} Werte im Nano verloren (Ausgabe zu langsam für diesen Takt)`);
   const a = anregung(roh, E.T, E.F, E.B), d = a.d;
   const kopf = zeilen.filter(l => !/^-?\d/.test(l));
-  let text = `# RLC_Sprung_2.10.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+  let text = `# RLC_Sprung_2.11.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
   roh.forEach(([k, s0, sH, nH, sL, nL, nF], i) => { const dd = k >= 0 ? d : 0;
     text += `${k} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
-  const name = `rlc210_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+  const name = `rlc211_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
   const k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   const kw = kennwerte(k);
   standM(`Messung ${nr}/${E.W}: ${roh.length} Werte in ${zahl(dauer / 1000, 1)} ms, keine Lücke. U_C max ${zahl(kw.Umax, 4)} V bei ${zahl(kw.tmax * 1000, 1)} ms, U_E Ende ${zahl(kw.UEend, 4)} V (ideal ${zahl(d * 5, 4)} V).`, "gut");
@@ -752,6 +896,7 @@ $("speichern").onclick = () => { const k = kurven.find(q => q.id === gewaehlt); 
 // ---------- Dateien laden
 async function dateienLaden(fs) {
   for (const f of fs) {
+    if (/\.json$/i.test(f.name)) { try { kalLadenText(await f.text(), f.name); reiterWahl("kal"); } catch (e) { standM("Laden: " + e.message, "fehler"); } continue; }
     try { neueKurve(f.name, lesen(await f.text(), f.name), "Datei " + f.name); }
     catch (e) { standM("Laden: " + e.message, "fehler"); }
   }
