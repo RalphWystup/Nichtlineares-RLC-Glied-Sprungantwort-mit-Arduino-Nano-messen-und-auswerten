@@ -1,3 +1,7 @@
+// rlc_seite_probe_1.25.mjs -- (1.25: für Seite 2.24: P1 erwartet 2.24; neu P18c Klammern: jede nicht dehnbare Klammer ( ) [ ] | ist höchstens 1,6 Schrifthöhen hoch,
+//   jede dehnbare Klammer steht mit einem Bruch in einer eigenen <mrow>, (Ih)_n und (Dr)_n als <msub><mrow>(…)</mrow>n</msub>, sin/cos/tanh mit Argumentklammer -- gemessen im Bild, nicht im Quelltext;
+//   P1c der frühere Name des Verfahrens kommt nicht mehr vor (Verfahren_HR überall); P19c jede Reihe als Gleichung mit Koeffiziententafel (tanh K Zeilen, Fourier M+1, Potenzreihe P, vier MathML);
+//   P19d Impulsantwort aus der Ableitung der Verfahren_HR-Summe gezeichnet und nahe der iterativen Lösung;
 // rlc_seite_probe_1.24.mjs -- (1.24: für Seite 2.23: P19 fährt „K steigern bis 0,1 %“ und verlangt das Ziel bei K ≤ 12, größter Fehler ≤ 0,5 %, tanh in der Fortsetzung
 //   besser als Fourier und Potenzreihe; P19b Treppen-Tafel ≥ 9 Zeilen;
 // rlc_seite_probe_1.23.mjs -- (1.23: für Seite 2.22: P18 prüft drei Fotos (das dritte mit Shunt);
@@ -62,9 +66,12 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.23/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.24/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
+const altname = "Rup" + "pert";   // der frühere Name des Verfahrens darf nirgends mehr stehen (sein Wort: Verfahren_HR überall) -- auch nicht in dieser Probe
+const rp = await js(`document.documentElement.outerHTML.includes("${altname}") + "|" + document.documentElement.outerHTML.includes("${altname.toLowerCase()}")`);
+P("P1c der frühere Name des Verfahrens kommt auf der Seite nicht mehr vor (überall Verfahren_HR)", rp === "false|false", rp);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
 // P3 Kennwerte gegen eigene Rechnung aus der Messdatei T140
 const rohT = (await readFile("/workspace/Streckenbestimmung_6b/messungen/rlc27_2026-11-23_113109_T140_F3_B4.txt", "utf8")), spalten = rohT.split("\n").find(l => l.startsWith("# k ")).slice(1).trim().split(/\s+/), iUC = spalten.indexOf("U_C_V");
@@ -185,6 +192,17 @@ const t18 = await js(`(() => { const f1 = $("foto1"), f2 = $("foto2"), f3 = $("f
   return [$("r_theorie").hidden, $("r_pruef").hidden, f1.naturalWidth + "x" + f1.naturalHeight, f2.naturalWidth + "x" + f2.naturalHeight + "/" + f3.naturalWidth + "x" + f3.naturalHeight, f1.src.slice(0, 22), sv ? Math.round(sv.getBoundingClientRect().width) : 0, mm.length, fr ? Math.round(fr.getBoundingClientRect().height) : 0, $("r_theorie").scrollWidth <= $("r_theorie").clientWidth, Math.round(f1.getBoundingClientRect().width)].join("|"); })()`);
 const t = t18.split("|");
 P("P18 Aufbau und Theorie: drei Fotos 2048×944 als data: (das dritte mit Shunt), Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen", t[0] === "false" && t[1] === "true" && t[2] === "2048x944" && t[3] === "2048x944/2048x944" && t[4] === "data:image/jpeg;base64" && Number(t[5]) > 300 && Number(t[6]) === 11 && Number(t[7]) > 20 && t[8] === "true" && Number(t[9]) > 200, t18);
+// P18c Klammern (sein Wort: „die gleichung fehlen die klamern“): im Bild gemessen, auf allen Reitern mit Formeln
+const k18 = await js(`(() => { const erg = {fest: 0, festHoch: [], dehn: 0, dehnOhneBruch: [], ih: 0, fkt: 0}; const sichtbar = (e) => { let p = e; while (p) { if (p.hidden) return false; p = p.parentElement; } return true; };
+  for (const mo of document.querySelectorAll("math mo")) { const z = mo.textContent.trim(); if (!"()[]|".includes(z) || !z) continue;
+    const fs = parseFloat(getComputedStyle(mo).fontSize); const h = mo.getBoundingClientRect().height;
+    if (mo.getAttribute("stretchy") === "false") { erg.fest++; if (sichtbar(mo) && h > 1.6 * fs) erg.festHoch.push(z + ":" + Math.round(h) + "/" + Math.round(fs)); }
+    else { erg.dehn++; const r = mo.parentElement; if (!(r && r.tagName.toLowerCase() === "mrow" && r.querySelector("mfrac"))) erg.dehnOhneBruch.push(z + "@" + (r ? r.tagName : "-")); } }
+  for (const ms of document.querySelectorAll("#r_imp math msub")) { const r = ms.firstElementChild; if (r && r.tagName.toLowerCase() === "mrow" && /^\\((Ih|Dr)\\)$/.test(r.textContent.replace(/\\s/g, ""))) erg.ih++; }
+  for (const mi of document.querySelectorAll("math mi")) { if (/^(sin|cos|tanh)$/.test(mi.textContent)) { let n = mi.nextElementSibling; if (n && n.textContent.trim() === "\u2061") n = n.nextElementSibling; if (n && n.textContent.trim().startsWith("(")) erg.fkt++; } }
+  return JSON.stringify(erg); })()`);
+const k = JSON.parse(k18);
+P("P18c Klammern: ≥ 90 feste Klammern, keine höher als 1,6 Schrifthöhen, jede dehnbare mit Bruch in eigener mrow, (Ih)_n und (Dr)_n zusammengehörig, sin/cos/tanh mit Argumentklammer", k.fest >= 90 && k.festHoch.length === 0 && k.dehn >= 6 && k.dehnOhneBruch.length === 0 && k.ih === 2 && k.fkt >= 5, k18);
 const rx = await js(`document.querySelector("#schaltplan svg").textContent.includes("ext") + "|" + document.querySelector("#schaltplan svg").textContent.includes("= 92 Ω") + "|" + document.querySelector("#schaltplan svg").textContent.includes("A2 (ADC)")`);
 P("P18c Schaltplan ohne R_ext, R_Cu = 92 Ω, A2 am Spulenende", rx === "false|true|true", rx);
 await bild("p18_theorie_oben");
@@ -193,7 +211,7 @@ await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight * 0.5`); await 
 await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight * 0.68`); await warte(200); await bild("p18_theorie_mitte3");
 await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight`); await warte(200); await bild("p18_theorie_unten");
 P("P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite)", await js("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight"), await js(`document.documentElement.scrollWidth + "x" + document.documentElement.scrollHeight + " Fenster " + innerWidth + "x" + innerHeight`));
-// P19 Reiter Anfitten: K steigern bis 0,1 % (tanh nach Ruppert), Fourier und Potenzreihe bei gleicher Parameterzahl
+// P19 Reiter Anfitten: K steigern bis 0,1 % (tanh nach dem Verfahren_HR), Fourier und Potenzreihe bei gleicher Parameterzahl
 await js(`$("rt_fit").click()`); await warte(300);
 await js(`$("fk").value = String(kurven.find(k => k.name.includes("T140")).id); $("fk").dispatchEvent(new Event("change")); $("f_starts").value = 6; $("f_treppe").click();`);
 for (let i = 0; i < 240 && (await js(`$("f_treppe").disabled`)); i++) await warte(1000);
@@ -203,6 +221,17 @@ const m19 = f19.startsWith("{") ? JSON.parse(f19) : null;
 P("P19 Anfitten T140: tanh-Netz erreicht RMSE ≤ 0,1 % ΔU bei K ≤ 12, größter Fehler ≤ 0,5 %, Fortsetzung tanh unter 0,3 % und besser als Fourier und Potenzreihe", !!m19 && m19.K <= 12 && m19.rms <= 0.1 && m19.max <= 0.5 && m19.fort < 0.3 && m19.fort < m19.fortF && m19.fort < m19.fortP && /erreicht\.$/.test(m19.stand), f19);
 await bild("p19_anfitten");
 P("P19b Treppen-Tafel hat mindestens 9 Zeilen (K = 1 … erreicht)", !!m19 && m19.zeilen >= 9 && m19.zeilen === m19.K, m19 ? m19.zeilen + " Zeilen, K = " + m19.K : "–");
+const s19 = await js(`(() => { const b = $("f_summe"), tb = [...b.querySelectorAll("table")]; return JSON.stringify({tafeln: tb.length, zeilen: tb.map(t => t.tBodies[0].rows.length), mathe: b.querySelectorAll("math").length, breit: b.scrollWidth <= b.clientWidth + 1, text: b.textContent.slice(0, 50)}); })()`);
+const j19 = JSON.parse(s19);
+P("P19c Reihen als Gleichungen mit Koeffiziententafeln: drei Tafeln (tanh K Zeilen, Fourier M+1, Potenzreihe P), vier MathML-Gleichungen, kein waagerechtes Rollen", !!m19 && j19.tafeln === 3 && j19.zeilen[0] === m19.K && j19.zeilen[1] === Math.floor((m19.P - 1) / 2) + 1 && j19.zeilen[2] === m19.P && j19.mathe === 4 && j19.breit, s19);
+await js(`$("f_summe").scrollTop = 0`); await bild("p19c_reihen");
+// P19d Impulsantwort aus der Verfahren_HR-Summe (analytische Ableitung) gegen die iterative Lösung derselben Kurve
+await js(`$("rt_imp").click()`); await warte(300);
+await js(`$("ik").value = String(kurven.find(k => k.name.includes("T140")).id); $("ik").dispatchEvent(new Event("change")); $("i_rechnen").click();`); await warte(2500);
+const h19 = await js(`(() => { const A = ansicht6; if (!A || !imp) return "kein Bild"; const r = A.reihen.find(x => x[4] === "Verfahren_HR"); if (!r) return "keine HR-Reihe: " + A.reihen.map(x => x[4]).join(","); const g = imp.g, h = r[0]; let s2 = 0, n = 0, gm = 0; for (let i = 0; i < g.length; i++) { if (!Number.isFinite(g[i]) || !Number.isFinite(h[i])) continue; s2 += (g[i] - h[i]) ** 2; n++; gm = Math.max(gm, Math.abs(g[i])); } return JSON.stringify({rel: +(Math.sqrt(s2 / n) / gm * 100).toFixed(2), gmax: +gm.toFixed(3), hmax: +Math.max(...h).toFixed(3), reihen: A.reihen.length}); })()`);
+const i19 = h19.startsWith("{") ? JSON.parse(h19) : null;
+P("P19d Impulsantwort: Ableitung der Verfahren_HR-Summe gezeichnet, Effektivabweichung zur iterativen Lösung unter 20 % von g_max, Scheitel innerhalb 20 %", !!i19 && i19.rel < 20 && Math.abs(i19.hmax - i19.gmax) / i19.gmax < 0.2, h19);
+await bild("p19d_impuls_hr");
 // P17 Löschknöpfe
 await js(`$("rt_aus").click()`); await warte(200);
 const n17 = await js("kurven.length");
