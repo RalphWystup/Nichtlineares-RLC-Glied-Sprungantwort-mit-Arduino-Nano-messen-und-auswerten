@@ -7,7 +7,7 @@ Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, An
 **Seite öffnen:** https://ralphwystup.github.io/Nichtlineares-RLC-Glied-Sprungantwort-mit-Arduino-Nano-messen-und-auswerten/ — eine einzige HTML-Datei: Sprung auslösen und aufzeichnen (Web Serial, Chrome oder Edge),
 Sprungantwort und den **Mittelwert der PWM-Anregung** zeichnen, Kennwerte nach dem logarithmischen Dekrement, Messdateien
 laden und vergleichen, ein Prüfreiter mit Zoom bis auf den einzelnen Abtastwert, Fotos des Aufbaus, Schaltplan und die
-Theorie aus dem Manuskript und von der Ruppert-Theorieseite (L(i) und C(u) als Kennlinien, tanh-Netze nach Ruppert), ein Kalibrierreiter für den Innenwiderstand der Port-Treiber (Messwiderstand) und daraus der Strom aus dem Port-Abfall, ein Reiter „Impulsantwort“ (aus der Sprungantwort: ableiten, integrieren, vergleichen, bis der Rest unter einer ADC-Stufe liegt), Strommessung über einen Messwiderstand zwischen Spule und Kondensator (Firmware 2.7, A2). Ohne Nano läuft die Seite mit drei eingebetteten Messungen.
+Theorie aus dem Manuskript und von der Ruppert-Theorieseite (L(i) und C(u) als Kennlinien, tanh-Netze nach Ruppert), der über den Messwiderstand gemessene Strom gegen C·dU_C/dt, ein Reiter „Impulsantwort“ (aus der Sprungantwort: ableiten, integrieren, vergleichen, bis der Rest unter einer ADC-Stufe liegt), Strommessung über einen Messwiderstand zwischen Spule und Kondensator (Firmware 2.7, A2). Ohne Nano läuft die Seite mit drei eingebetteten Messungen.
 
 ![Messaufbau](bilder/aufbau_foto_1.jpg)
 
@@ -31,10 +31,10 @@ RLC-Schwingkreises“ (04.03.2026), Fassung 2.1 mit dem Schaltplan, Text unverä
 
 | Datei | Inhalt |
 |:--|:--|
-| [`RLC_Sprung_2.15.html`](RLC_Sprung_2.15.html) | die Seite (All-in-one): Messen über Web Serial, Auswertung, Prüfreiter mit Zoom, Aufbau und Theorie, Reiter „Kalibrieren“ (Port-Innenwiderstand, Strom aus dem Port-Abfall), Reiter „Impulsantwort“, Reiter „Anfitten“ vorbereitet |
+| [`RLC_Sprung_2.17.html`](RLC_Sprung_2.17.html) | die Seite (All-in-one): Messen über Web Serial, Auswertung, Prüfreiter mit Zoom, Aufbau und Theorie, Stromansicht (Shunt), Reiter „Impulsantwort“, Reiter „Anfitten“ vorbereitet |
 | [`rlc_manuskript_2.1_mit_Schaltplan.pdf`](rlc_manuskript_2.1_mit_Schaltplan.pdf) / [`.docx`](rlc_manuskript_2.1_mit_Schaltplan.docx) / [`.md`](rlc_manuskript_2.1_mit_Schaltplan.md) | das Manuskript |
 | `nano/` | `rlc_sprung_2_6.ino` (Firmware ohne Shunt) und `rlc_sprung_2_7.ino` (mit A2 = Spulenende, Strom über R_s = 47 Ω zwischen Spule und Kondensator), Befehl `M T N V F B P R`, 1 000 000 Bd; `rlc_bauen_laden_2.6/2.7.py` (arduino-cli, Board `arduino:avr:nano:cpu=atmega328old`), `rlc_messen_2.6/2.7.py` (Messen ohne Browser), `arduino_cli_laden_1.2.py` (arduino-cli portabel holen) |
-| `messungen/` | Messdateien 22.11.2026 (T = 128 und 140, Spalten k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V) und die Simulink-Messung vom 03.03.2026 |
+| `messungen/` | Messdateien 23.11.2026 mit Shunt 47 Ω (rlc27, T = 128 und 140, Spalten … U_C_V U_2_V U_H_V U_L_V U_E_V i_mA), 22.11.2026 ohne Shunt (rlc25/26) und die alte Simulink-Messung vom 03.03.2026 |
 | `seite/` | Vorlage und Erzeuger der Seite, Knopfprobe (kopfloser Chromium über CDP, Skalierung 1 und 1,5) mit Prüfausgaben, Schaltplan als SVG |
 | `bilder/` | Fotos des Aufbaus, Schaltplan (SVG, PNG) |
 | `index.html` | leitet auf die Seite weiter, damit GitHub Pages sie unter der Adresse oben zeigt |
@@ -42,15 +42,15 @@ RLC-Schwingkreises“ (04.03.2026), Fassung 2.1 mit dem Schaltplan, Text unverä
 ## Messen
 
 1. `nano/rlc_sprung_2_6.ino` auf den Nano laden (`python3 nano/rlc_bauen_laden_2.6.py`, arduino-cli vorher mit `arduino_cli_laden_1.2.py` holen; Anschluss im Skript, Vorgabe COM5).
-2. `RLC_Sprung_2.15.html` in Chrome oder Edge öffnen, „Verbinden …“, Anschluss wählen, Tastgrad T (0 … 140), „Sprung messen“. Jede Messung wird im gewählten Ordner unter `Messungen_TT.MM.JJJJ` abgelegt.
+2. `RLC_Sprung_2.17.html` in Chrome oder Edge öffnen, „Verbinden …“, Anschluss wählen, Tastgrad T (0 … 140), „Sprung messen“. Jede Messung wird im gewählten Ordner unter `Messungen_TT.MM.JJJJ` abgelegt.
 3. Ohne Browser: `python3 nano/rlc_messen_2.6.py T:N:V:F:B:P[:R]`, z. B. `128:600:3000:3:4:20:2000`.
 
 ## Prüfen
 
-    cd seite && node rlc_seite_probe_1.16.mjs <cdp-port> <pfad>/RLC_Sprung_2.15.html <ausgabeordner> 1.5
+    cd seite && node rlc_seite_probe_1.18.mjs <cdp-port> <pfad>/RLC_Sprung_2.17.html <ausgabeordner> 1.5
 
 Die Knopfprobe drückt im kopflosen Chromium jeden Knopf (Reiter, Zoom per Rad und Rahmen, Löschknöpfe zweistufig, Laden,
-Kennwerte gegen eigene Rechnung aus der Messdatei): 52 von 52 richtig bei Skalierung 1 und 1,5, Dateiprobe 4 von 4
+Kennwerte gegen eigene Rechnung aus der Messdatei): 46 von 46 richtig bei Skalierung 1 und 1,5, Dateiprobe 4 von 4
 (`seite/pruefung/`). Nur „Verbinden“ (Web Serial) kann kopflos nicht gedrückt werden.
 
 ## Lizenz

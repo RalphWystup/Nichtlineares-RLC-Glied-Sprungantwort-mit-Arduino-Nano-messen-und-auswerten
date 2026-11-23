@@ -1,3 +1,5 @@
+// rlc_seite_probe_1.18.mjs -- (1.18: für Seite 2.17: eingebettet rlc27 T140/T128 mit Strom (Spalte U_C_V aus dem Kopf gelesen); zwei eingebettete Kurven (ohne Simulink), kein Kalibrierreiter (P20, P21d entfallen), Stromansicht nur Shunt;
+// rlc_seite_probe_1.17.mjs -- (1.17: für Seite 2.16; P21d prüft auch, dass der Rest am Ende keine Rampe hat (Mittel der letzten 50 Werte unter 3 mV);
 // rlc_seite_probe_1.16.mjs -- (1.16: für Seite 2.15; P23 Beobachtbarkeit (Protokollzeile, PNG-Blob je Reiter); P21d Impulsantwort der Simulink-Kurve konvergiert (Rest endlich, unter 60 mV, ∫g ≈ 1) -- in 2.14 lief sie davon;
 // rlc_seite_probe_1.15.mjs -- (1.15: für Seite 2.14 (Schaltplan 1.3);
 // rlc_seite_probe_1.14.mjs -- (1.14: für Seite 2.13; P22 Format 2.7 lesen (U_2_V, i_mA, Rs), Stromansicht mit gemessenem Strom, R_s-Eingabe geprüft, Kennung 2.7 angenommen;
@@ -22,7 +24,7 @@
 //   1.1 hing kopflos beim File-Umweg mit großem Inhalt, in Einzelversuchen (diag_p6) lief derselbe Aufruf -- Prüfmittel, nicht Seite. 1.1: jede CDP-Anfrage mit 20-s-Frist statt stillem Hängen; Dateien einzeln laden -- 1.0 hing bei drei Dateien in einer Anfrage)
 // rlc_seite_probe_1.0.mjs -- Knopfprobe der Seite RLC_Sprung_2.6.html als DATEI (file://) im kopflosen Chromium über CDP, Skalierung wählbar.
 // Web Serial gibt es kopflos nicht; geprüft wird alles andere: Laden, eingebettete Kurven, Kennwerte gegen eigene Rechnung aus der Messdatei,
-// Eingabeprüfung (T > 140 gesperrt, Nano-Knöpfe gesperrt ohne Verbindung), Dateiladen (Simulink-txt, rlc_ 1.0, rlc26), Bezug/Differenz,
+// Eingabeprüfung (T > 140 gesperrt, Nano-Knöpfe gesperrt ohne Verbindung), Dateiladen (Simulink-txt, rlc_ 1.0, rlc27), Bezug/Differenz,
 // unteres Bild umschalten, Mauszeiger-Tipp, Größe über die Zeit (kein Wachsen), keine Fehler in der Konsole, kein Netzabruf.
 // Aufruf: node rlc_seite_probe_1.0.mjs <cdp-port> <datei.html> <ausgabeordner> <skalierung>
 // Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
@@ -52,21 +54,22 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.15/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.17/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
-const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 3, `${n0} Kurven (Simulink, T140, T128)`);
+const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
 // P3 Kennwerte gegen eigene Rechnung aus der Messdatei T140
-const roh = (await readFile("/workspace/Streckenbestimmung_6b/messungen/rlc26_2026-11-22_164113_T140_F3_B4.txt", "utf8")).split("\n").filter(l => l && !l.startsWith("#")).map(l => l.split(" ").map(Number));
-const nach = roh.filter(r => r[0] >= 0), uc = nach.map(r => r[8]), imax = uc.indexOf(Math.max(...uc)), tmax = nach[imax][1];
+const rohT = (await readFile("/workspace/Streckenbestimmung_6b/messungen/rlc27_2026-11-23_113109_T140_F3_B4.txt", "utf8")), spalten = rohT.split("\n").find(l => l.startsWith("# k ")).slice(1).trim().split(/\s+/), iUC = spalten.indexOf("U_C_V");
+const roh = rohT.split("\n").filter(l => l && !l.startsWith("#")).map(l => l.split(" ").map(Number));
+const nach = roh.filter(r => r[0] >= 0), uc = nach.map(r => r[iUC]), imax = uc.indexOf(Math.max(...uc)), tmax = nach[imax][1];
 const uend = uc.slice(-60).reduce((a, b) => a + b, 0) / 60;
-const kw = await js(`(() => { const k = kurven.find(k => k.name.startsWith("rlc26")); const r = kennwerte(k); return {Umax: r.Umax, tmax: r.tmax, Uend: r.Uend, UEend: r.UEend, D: r.D, f0: r.f0, abfall: r.abfall}; })()`);
-P("P3 Kennwerte T140 gegen Datei", Math.abs(kw.Umax - Math.max(...uc)) < 1e-9 && Math.abs(kw.tmax - tmax) < 1e-9 && Math.abs(kw.Uend - uend) < 1e-6,
+const kw = await js(`(() => { const k = kurven.find(k => k.name.startsWith("rlc27")); const r = kennwerte(k); return {Umax: r.Umax, tmax: r.tmax, Uend: r.Uend, UEend: r.UEend, D: r.D, f0: r.f0, abfall: r.abfall}; })()`);
+P("P3 Kennwerte T140 (rlc27, Shunt) gegen Datei", Math.abs(kw.Umax - Math.max(...uc)) < 1e-9 && Math.abs(kw.tmax - tmax) < 1e-9 && Math.abs(kw.Uend - uend) < 1e-6,
   `Seite Umax ${kw.Umax.toFixed(4)} V @ ${(kw.tmax * 1000).toFixed(1)} ms, Uend ${kw.Uend.toFixed(4)}; Datei ${Math.max(...uc).toFixed(4)} @ ${(tmax * 1000).toFixed(1)}, ${uend.toFixed(4)}; D ${kw.D?.toFixed(3)}, f0 ${kw.f0?.toFixed(2)} Hz, U_E,end ${kw.UEend?.toFixed(4)} V, Abfall ${kw.abfall?.toFixed(0)} mV`);
 P("P3b U_C unter 5 V und nie negativ (alle eingebetteten)", await js("kurven.every(k => k.u.every(u => u >= 0 && u <= 5))"), "alle Werte 0 … 5 V");
 // P4 Sperren ohne Verbindung
-const sperr = await js(`["messen","trennen","kennung","k_messen","speichern"].map(i => $(i).disabled + ":" + $(i).title).join(" | ")`);
-P("P4 Knöpfe ohne Nano gesperrt mit Begründung", /^true:Erst mit dem Nano/.test(sperr) && !/false:/.test(sperr.split(" | ").slice(0, 4).join(" | ")), sperr);
+const sperr = await js(`["messen","trennen","kennung","speichern"].map(i => $(i).disabled + ":" + $(i).title).join(" | ")`);
+P("P4 Knöpfe ohne Nano gesperrt mit Begründung", /^true:Erst mit dem Nano/.test(sperr) && !/false:/.test(sperr.split(" | ").slice(0, 3).join(" | ")), sperr);
 // P5 Eingabeprüfung T > 140 (Seite) und T-Feldgrenze
 await js(`$("T").value = 141; $("T").dispatchEvent(new Event("input"));`);
 let e = await js(`(() => { try { pruefeEingabe(); return "keine Sperre"; } catch (x) { return x.message; } })()`);
@@ -83,19 +86,19 @@ for (const [t, n] of [[simul, "RLC_Glied.txt"], [alt10, "rlc_2026-11-22_161403_T
   console.log("  lade", n); await js(`neueKurve(${JSON.stringify(n)}, lesen(${JSON.stringify(t)}, ${JSON.stringify(n)}), "Datei " + ${JSON.stringify(n)}); kurven.length`); }
 // P6a: siehe rlc_seite_dateiprobe_1.0.mjs
 await warte(500);
-const n1 = await js("kurven.length"), k4 = await js(`kurven.slice(3).map(k => k.name + ":" + k.t.length + ":" + Math.max(...k.u).toFixed(3)).join(" | ")`);
-P("P6 drei Dateien geladen (ADC-Zählwerte, 1.0, 2.0)", n1 === 6 && /RLC_Glied.txt:676:3\.6\d\d/.test(k4) && /rlc_2026.*:600:3\.851/.test(k4) && /rlc2_.*:620:3\.86/.test(k4), k4);
+const n1 = await js("kurven.length"), k4 = await js(`kurven.slice(2).map(k => k.name + ":" + k.t.length + ":" + Math.max(...k.u).toFixed(3)).join(" | ")`);
+P("P6 drei Dateien geladen (ADC-Zählwerte, 1.0, 2.0)", n1 === 5 && /RLC_Glied.txt:676:3\.6\d\d/.test(k4) && /rlc_2026.*:600:3\.851/.test(k4) && /rlc2_.*:620:3\.86/.test(k4), k4);
 P("P6c Format-2.0-Kurve zeichnet keine Anregung (roher PWM-Mittel)", (await js(`ue(kurven.find(k => k.name.startsWith("rlc2_"))) === null`)) === true, "ue() = null");
-P("P6b Tafel hat 6 Zeilen, Liste 6 Einträge", (await js(`$("tab").tBodies[0].rows.length`)) === 6 && (await js(`$("kurven").children.length`)) === 6, "");
+P("P6b Tafel hat 5 Zeilen, Liste 5 Einträge", (await js(`$("tab").tBodies[0].rows.length`)) === 5 && (await js(`$("kurven").children.length`)) === 5, "");
 await bild("p6_sechs_kurven");
 // P7 Differenz: Bezug T128 (rlc25) gegen rlc2 T128 -> klein; Werte am Zeiger
-await js(`$("bezug").value = kurven.find(k => k.name.startsWith("rlc25")).id; $("bezug").dispatchEvent(new Event("change"));`);
+await js(`$("bezug").value = kurven.find(k => k.name.includes("T128")).id; $("bezug").dispatchEvent(new Event("change"));`);
 await warte(200);
-const dmax = await js(`(() => { const r = kurven.find(k => k.name.startsWith("rlc25")), k = kurven.find(k => k.name.startsWith("rlc2_")); const d = differenz(k, r).filter(Number.isFinite); return Math.max(...d.map(Math.abs)); })()`);
-P("P7 Differenz rlc2 T128 − rlc25 T128 kleiner 120 mV", dmax < 120, `größte |Δ| ${dmax.toFixed(1)} mV`);
+const dmax = await js(`(() => { const r = kurven.find(k => k.name.includes("T128") && k.name.startsWith("rlc27")), k = kurven.find(k => k.name.startsWith("rlc2_")); const d = differenz(k, r).filter(Number.isFinite); return Math.max(...d.map(Math.abs)); })()`);
+P("P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt 47 Ω) kleiner 500 mV (Strecke geändert, Scheitel 3,866 → 3,947 V)", dmax < 500, `größte |Δ| ${dmax.toFixed(1)} mV`);
 // P8 unteres Bild umschalten: Port-Abfall und U_E − ideal
 await js(`$("unten").value = "p"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
-const reihenP = await js("ansicht2.reihen.length"); P("P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung)", reihenP === 4 + 0, `${reihenP} Reihen (erwartet 4: rlc26, rlc25 je U_H und U_L)`);
+const reihenP = await js("ansicht2.reihen.length"); P("P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung)", reihenP === 4 + 0, `${reihenP} Reihen (erwartet 4: beide rlc27 je U_H und U_L)`);
 await bild("p8_port_abfall");
 await js(`$("unten").value = "e"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
 const reihenE = await js("ansicht2.reihen.length"); P("P8b U_E − ideal gezeichnet", reihenE === 2, `${reihenE} Reihen`);
@@ -104,7 +107,7 @@ await js(`$("unten").value = "d"; $("unten").dispatchEvent(new Event("change"));
 const b1 = await js(`(() => { const b = $("c1").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
 await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b1[0] + 58 + (b1[2] - 72) * 0.12, y: b1[1] + 100}); await warte(150);
 const tip = await js(`$("tip1").hidden ? "versteckt" : $("tip1").textContent`);
-P("P9 Zeigertipp zeigt t und Werte aller Kurven", /t = \d+,\d ms/.test(tip) && (tip.match(/U_?C/g) || tip.match(/UC/g) || []).length >= 6, tip.slice(0, 160));
+P("P9 Zeigertipp zeigt t und Werte aller Kurven", /t = \d+,\d ms/.test(tip) && (tip.match(/U_?C/g) || tip.match(/UC/g) || []).length >= 5, tip.slice(0, 160));
 await bild("p9_tipp");
 // P10 Größe über die Zeit und bei Skalierung: Canvas-Maße nach 3 s unverändert, Seite nicht gescrollt
 const m0 = await js(`[$("c1").width, $("c1").height, document.documentElement.scrollWidth, document.documentElement.scrollHeight].join("x")`);
@@ -122,7 +125,7 @@ await js(`$("rt_pruef").click()`); await warte(300);
 const r14 = await js(`[$("r_pruef").hidden, $("r_aus").hidden, $("rt_pruef").classList.contains("aktiv"), Math.round($("c3").getBoundingClientRect().height), Math.round($("c4").getBoundingClientRect().height), Math.round($("b1").getBoundingClientRect().height), ansicht3 ? ansicht3.v.length : -1, $("pk").value].join("|")`);
 const r14t = r14.split("|");
 P("P14 Reiter Prüfen sichtbar (Leinwand 3 über 200 px hoch, Leinwand 4 über 80 px, Auswertung ausgeblendet = 0 px)", r14t[0] === "false" && r14t[1] === "true" && r14t[2] === "true" && Number(r14t[3]) > 200 && Number(r14t[4]) > 80 && r14t[5] === "0" && Number(r14t[6]) > 0, r14);
-await js(`$("pk").value = String(kurven.find(k => k.name.startsWith("rlc26")).id); $("pk").dispatchEvent(new Event("change"));`); await warte(200);
+await js(`$("pk").value = String(kurven.find(k => k.name.startsWith("rlc27") && k.name.includes("T140")).id); $("pk").dispatchEvent(new Event("change"));`); await warte(200);
 await bild("p14_pruefen_alles");
 // P15 Zoom: Knopf Sprung, Rad am Zeiger, Rahmen ziehen, Zurück, Alles
 await js(`$("z_sprung").click()`); await warte(150);
@@ -159,7 +162,7 @@ await js(`$("z_alles").click()`); await warte(100);
 const za = await js(`[Z === null, ansicht3.x0.toFixed(0), ansicht3.x1 > 590].join("|")`); P("P15h Alles = ganze Messung (bis 599,5 ms)", za === "true|-20|true", za);
 // P16 Zählwerte nH+nL+nF = B
 const z16 = await js(`(() => { const k = pruefEine(); const B = Math.max(...k.nh.map((v, i) => v + k.nl[i] + k.nf[i])), alle = k.nh.every((v, i) => v + k.nl[i] + k.nf[i] === B); const nach = k.kk.map((kk, i) => kk >= 0 ? k.nh[i] : -1).filter(v => v >= 0); return [B, alle, Math.min(...nach), Math.max(...nach), ansicht4 && ansicht4.k ? ansicht4.k.name : "-"].join("|"); })()`);
-P("P16 Zählwerte je Wert vollständig (nH+nL+nF = 4), nach dem Sprung nH 1…3, Leinwand 4 zeigt die Kurve", /^4\|true\|[0-4]\|[0-4]\|rlc26/.test(z16), z16);
+P("P16 Zählwerte je Wert vollständig (nH+nL+nF = 4), nach dem Sprung nH 1…3, Leinwand 4 zeigt die Kurve", /^4\|true\|[0-4]\|[0-4]\|rlc27/.test(z16), z16);
 // P18 Reiter Aufbau und Theorie: Fotos eingebettet (data:), Schaltplan als SVG, Formeln als MathML gesetzt, kein waagerechtes Rollen
 await js(`$("rt_theorie").click()`); await warte(400);
 const t18 = await js(`(() => { const f1 = $("foto1"), f2 = $("foto2"), sv = document.querySelector("#schaltplan svg"), mm = [...document.querySelectorAll("#r_theorie math")], fr = document.querySelector("#r_theorie mfrac");
@@ -176,50 +179,22 @@ await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight`); await warte(
 P("P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite)", await js("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight"), await js(`document.documentElement.scrollWidth + "x" + document.documentElement.scrollHeight + " Fenster " + innerWidth + "x" + innerHeight`));
 // P19 Reiter Anfitten (vorbereitet): Schnittstelle liefert Daten ab dem Sprung, Registratur leer, Tafel gefüllt
 await js(`$("rt_fit").click()`); await warte(300);
-const f19 = await js(`(() => { const k = kurven.find(k => k.name.startsWith("rlc26")); $("fk").value = String(k.id); $("fk").dispatchEvent(new Event("change")); $("f_daten").click(); const d = fitDaten(k);
+const f19 = await js(`(() => { const k = kurven.find(k => k.name.startsWith("rlc27")); $("fk").value = String(k.id); $("fk").dispatchEvent(new Event("change")); $("f_daten").click(); const d = fitDaten(k);
   return [$("r_fit").hidden, $("r_theorie").hidden, d.n, d.t[0].toFixed(4), d.u.length === d.n && d.uE.length === d.n, Math.abs(d.dt - 0.001) < 1e-9, fitModelle.length, $("f_tafel").tBodies[0].rows.length, $("f_stand").textContent.slice(0, 40), (d.abschnitte.schwingen[1] * 1000).toFixed(0)].join("|"); })()`);
 const f = f19.split("|");
 P("P19 Reiter Anfitten: 600 Werte ab t = 0,5 ms, U_C und U_E gleich lang, Δt = 1 ms, Registratur leer, Tafel 1 Zeile, Abschnittsgrenze Schwingen 5·T_d", f[0] === "false" && f[1] === "true" && f[2] === "600" && f[3] === "0.0005" && f[4] === "true" && f[5] === "true" && f[6] === "0" && f[7] === "1" && /^Daten von/.test(f[8]) && Number(f[9]) > 500 && Number(f[9]) < 650, f19);
 await bild("p19_anfitten");
-// P20 Kalibrierreiter
-await js(`$("rt_kal").click()`); await warte(300);
-await js(`$("k_R").value = 200`); let k20 = await js(`(() => { try { pruefeKal(); return "keine Sperre"; } catch (e) { return e.message; } })()`);
-P("P20a R_cal = 200 Ω abgewiesen (über 20 mA)", /250 … 100000 Ω/.test(k20) && /20 mA/.test(k20), k20.slice(0, 100));
-// synthetische Rohzeilen: High-Pegel 4,80 V (ADC 982), Low 0,03 V (ADC 6); R_cal 470 -> i = 10,21 mA, Abfall 200 mV, R_out 19,6 Ω
-k20 = await js(`(() => { const roh = []; for (let k = 0; k < 50; k++) roh.push([k, 0, 982 * 2, 2, 6 * 2, 2, 0]); const p = kalRechnen(roh, 470, "gnd", 4); kalPunkte = [p];
-  const q = kalRechnen(roh.map(z => [z[0], 0, 1018 * 2, 2, 41 * 2, 2, 0]), 470, "5v", 4); kalPunkte.push(q); kalTafel(); zeichneKal(); const g = kalFit();
-  return [p.i.toFixed(5), (p.abfall * 1000).toFixed(1), p.Rout.toFixed(2), (p.null * 1000).toFixed(1), q.i.toFixed(5), (q.abfall * 1000).toFixed(1), q.Rout.toFixed(2), g.H.n, g.H.R.toFixed(2), (g.H.U0 * 1000).toFixed(2), g.L.n, g.L.R.toFixed(2), $("k_tafel").tBodies[0].rows.length, ansicht5.pts.length].join("|"); })()`);
-P("P20b Rechnung: GND-Punkt i = 10,21 mA, Abfall 200,4 mV, R_out 19,6 Ω, Nullpunkt Low 29,3 mV; 5-V-Punkt ebenso, Nullpunkt High 24,4 mV; Gerade High (0; 24,4) – (10,21; 200,4) = 17,2 Ω, Low 16,7 Ω",
-  /^0\.01021\|200\.4\|19\.6\d\|29\.3\|0\.01021\|200\.4\|19\.6\d\|2\|17\.2\d\|24\.4\d\|2\|16\.7\d\|2\|4$/.test(k20), k20);
-await js(`$("k_fit").click()`); await warte(100);
-k20 = await js(`[kal ? kal.RH.toFixed(2) : "-", kal ? kal.RL.toFixed(2) : "-", $("k_ergebnis").textContent.slice(0, 60), JSON.parse(kalText()).punkte.length].join("|")`);
-P("P20c Übernehmen setzt RH/RL, JSON-Text enthält 2 Punkte", /^17\.2\d\|16\.7\d\|High-Treiber: R_out = 17,2 Ω, U0 = 24,4 mV \(2 Punkte\)/.test(k20) && k20.endsWith("|2"), k20);
-await bild("p20_kalibrieren");
-const kt = await js("kalText()"); await js(`kalPunkte = []; kal = null; kalLadenText(${JSON.stringify(kt)}, "probe.json")`);
-k20 = await js(`[kalPunkte.length, kal ? kal.RH.toFixed(2) : "-", $("k_stand").textContent.slice(0, 40)].join("|")`);
-P("P20d Kalibrierdatei laden stellt Punkte und Kalibrierung wieder her", /^2\|17\.2\d\|probe\.json: 2 Punkte geladen/.test(k20), k20);
-// Stromansicht im Prüfreiter
-await js(`$("rt_pruef").click()`); await warte(300); await js(`$("pk").value = String(kurven.find(k => k.name.startsWith("rlc26")).id); $("unten4").value = "i"; $("unten4").dispatchEvent(new Event("change")); $("z_sprung").click();`); await warte(200);
-k20 = await js(`(() => { const s = ansicht4.strom, n = a => a.filter(Number.isFinite).length, mx = a => Math.max(...a.filter(Number.isFinite)); return [!!s, n(s.iH), n(s.iL), n(s.iC), (mx(s.iC) * 1000).toFixed(2), (mx(s.iH) * 1000).toFixed(1)].join("|"); })()`);
-P("P20e Stromansicht: i_H über 100 Werte, i_L über 10 (nur wo U_L über 1 LSB), C·dU/dt 620 Werte mit Scheitel 2,5 … 3,5 mA bei 28,2 µF", /^true\|[1-9]\d\d\|[1-9]\d\|6[12]\d\|/.test(k20) && Number(k20.split("|")[4]) > 2.5 && Number(k20.split("|")[4]) < 3.5, k20);
-await bild("p20_strom");
-await js(`$("unten4").value = "n"; $("unten4").dispatchEvent(new Event("change")); $("z_alles").click();`);
 // P21 Impulsantwort
 await js(`$("rt_imp").click()`); await warte(300);
-await js(`$("ik").value = String(kurven.find(k => k.name.startsWith("rlc26")).id); $("i_rechnen").click()`); await warte(300);
+await js(`$("ik").value = String(kurven.find(k => k.name.startsWith("rlc27") && k.name.includes("T140")).id); $("i_rechnen").click()`); await warte(300);
 const i21 = await js(`(() => { const r = imp; const m = {it: r.it, rms: (r.rms * 1000).toFixed(2), erreicht: r.erreicht, integ: r.integral.toFixed(3), gmax: r.gmax.toFixed(1), tgmax: (r.tgmax * 1000).toFixed(1), tnull: (r.tnull * 1000).toFixed(1), rohRms: (r.rohRms * 1000).toFixed(3), rohSpitze: r.rohSpitze.toFixed(1), lin: !!r.lin, linmax: r.lin ? Math.max(...r.lin).toFixed(1) : "-", zeilen: $("i_tafel").tBodies[0].rows.length, reihen: ansicht6.reihen.length, c6h: Math.round($("c6").getBoundingClientRect().height)}; return JSON.stringify(m); })()`);
 const m21 = JSON.parse(i21);
-P("P21 Impulsantwort rlc26: Rest RMS ≤ 4,9 mV erreicht, ∫g = 0,97 … 1,03, g-Scheitel 10 … 60 ms, Nulldurchgang 50 … 70 ms, rohe Differenz exakt (Rest 0) aber Spitze über 4 s⁻¹, lineares Modell da, drei Reihen gezeichnet",
+P("P21 Impulsantwort rlc27: Rest RMS ≤ 4,9 mV erreicht, ∫g = 0,97 … 1,03, g-Scheitel 10 … 60 ms, Nulldurchgang 50 … 70 ms, rohe Differenz exakt (Rest 0) aber Spitze über 4 s⁻¹, lineares Modell da, drei Reihen gezeichnet",
   m21.erreicht === true && Number(m21.rms) <= 4.9 && Math.abs(Number(m21.integ) - 1) < 0.03 && Number(m21.tgmax) > 10 && Number(m21.tgmax) < 60 && Number(m21.tnull) > 50 && Number(m21.tnull) < 70 && Number(m21.rohRms) < 0.001 && Number(m21.rohSpitze) > 4 && m21.lin && m21.zeilen === 1 && m21.reihen === 3 && m21.c6h > 150, i21);
 await bild("p21_impulsantwort");
 const b6 = await js(`(() => { const b = $("c6").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
 await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b6[0] + 58 + (b6[2] - 72) * 0.05, y: b6[1] + b6[3] * 0.5}); await warte(150);
 const t6 = await js(`$("tip6").hidden ? "versteckt" : $("tip6").textContent`); P("P21b Zeigertipp der Impulsantwort", /g iterativ .* s⁻¹/.test(t6) && /Rest/.test(t6), t6.slice(0, 120));
-await js(`$("ik").value = String(kurven[0].id); $("i_w").value = 7; $("i_rechnen").click()`); await warte(300);
-const i21s = await js(`[imp.k.name.slice(0, 11), imp.it, (imp.rms * 1000).toFixed(2), imp.integral.toFixed(3), imp.gmax.toFixed(1), (imp.tgmax * 1000).toFixed(0), imp.grund].join("|")`);
-P("P21d Simulink-Kurve: Iteration konvergiert (Rest endlich und unter 60 mV, ∫g = 0,95 … 1,05, Scheitel 20 … 60 ms)", /^RLC_Glied_2\|\d+\|/.test(i21s) && Number(i21s.split("|")[2]) < 60 && Math.abs(Number(i21s.split("|")[3]) - 1) < 0.05 && Number(i21s.split("|")[5]) > 20 && Number(i21s.split("|")[5]) < 60, i21s);
-await bild("p21_simulink");
-await js(`$("ik").value = String(kurven.find(k => k.name.startsWith("rlc26")).id); $("i_rechnen").click()`); await warte(200);
 await js(`$("i_w").value = 3; $("i_rechnen").click()`); await warte(200);
 const i21b = await js(`[imp.it, (imp.rms * 1000).toFixed(2), imp.erreicht].join("|")`); P("P21c kleinere Glättung w = 3: Rest ebenfalls erreicht", /\|true$/.test(i21b), i21b);
 // P22 Format 2.7 (Shunt): Datei mit U_2_V und i_mA lesen, Strom in der Stromansicht
@@ -229,16 +204,16 @@ const r22 = await js(`(() => { const r = lesen(${JSON.stringify(t27)}, "rlc213_p
 P("P22 Format 2.7 gelesen: U_2 und i je 7 Werte, Rs = 47, i(k=0) = 15 LSB/47 Ω = 1,5599 mA, i(k=4) = −10 LSB/47 Ω = −1,0399 mA", r22 === "7|7|47|1.5599|-1.0399|7", r22);
 await js(`$("rt_pruef").click()`); await warte(300); await js(`$("pk").value = String(kurven[kurven.length - 1].id); $("unten4").value = "i"; $("unten4").dispatchEvent(new Event("change")); $("z_alles").click();`); await warte(200);
 const s22 = await js(`[!!ansicht4.strom, ansicht4.strom && ansicht4.strom.im ? ansicht4.strom.im.length : 0, ansicht4.k ? ansicht4.k.name : "-"].join("|")`);
-P("P22b Stromansicht zeichnet den gemessenen Strom der 2.7-Kurve (auch ohne Kalibrierung)", s22 === "true|7|rlc213_probe.txt", s22);
+P("P22b Stromansicht zeichnet den gemessenen Strom der 2.7-Kurve", s22 === "true|7|rlc213_probe.txt", s22);
 await bild("p22_strom_shunt");
 await js(`$("unten4").value = "n"; $("unten4").dispatchEvent(new Event("change")); entfernen(kurven[kurven.length - 1]); $("rt_aus").click();`); await warte(200);
 await js(`$("Rs").value = 2000`); let e22 = await js(`(() => { try { pruefeEingabe(); return "keine Sperre"; } catch (x) { return x.message; } })()`); P("P22c R_s = 2000 Ω abgewiesen", /Shunt R_s: 0 … 1000/.test(e22), e22);
 await js(`$("Rs").value = 47`);
 // P23 Beobachtbarkeit: Protokollzeile, Bild als PNG-Blob für jeden Reiter mit Leinwand
 await js(`$("rt_aus").click()`); await warte(300);
-const b23 = await js(`(async () => { const z = protokollZeile("Probe", "eine   Zeile"); const r = {}; for (const t of ["aus", "pruef", "kal", "imp"]) { reiterWahl(t); await new Promise(r => setTimeout(r, 150)); const b = await bildBlob(); r[t] = b ? b.size + ":" + b.type : "kein Bild"; } reiterWahl("aus"); return JSON.stringify({z, r, puffer: protokollPuffer.length}); })()`);
+const b23 = await js(`(async () => { const z = protokollZeile("Probe", "eine   Zeile"); const r = {}; for (const t of ["aus", "pruef", "imp"]) { reiterWahl(t); await new Promise(r => setTimeout(r, 150)); const b = await bildBlob(); r[t] = b ? b.size + ":" + b.type : "kein Bild"; } reiterWahl("aus"); return JSON.stringify({z, r, puffer: protokollPuffer.length}); })()`);
 const m23 = JSON.parse(b23);
-P("P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller vier Leinwand-Reiter über 5 kB", /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d \| Probe \| eine Zeile$/.test(m23.z) && ["aus", "pruef", "kal", "imp"].every(t => /^\d+:image\/png$/.test(m23.r[t]) && Number(m23.r[t].split(":")[0]) > 5000) && m23.puffer >= 1, b23.slice(0, 200));
+P("P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller drei Leinwand-Reiter über 5 kB", /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} \| Probe \| eine Zeile$/.test(m23.z) && ["aus", "pruef", "imp"].every(t => /^\d+:image\/png$/.test(m23.r[t]) && Number(m23.r[t].split(":")[0]) > 5000) && m23.puffer >= 1, b23.slice(0, 200));
 await warte(300);
 // P17 Löschknöpfe
 await js(`$("rt_aus").click()`); await warte(200);
