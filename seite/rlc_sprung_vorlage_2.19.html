@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLC-Sprung 2.18 · Messen und Auswerten</title>
+<title>RLC-Sprung 2.19 · Messen und Auswerten</title>
 <!--
-RLC_Sprung_2.18.html (23.11.2026) -- 2.18: Strom in der AUSWERTUNG unter dem Spannungsbild (sein Wort: „ich kann den Stromverlauf nicht sehen, unter dem
+RLC_Sprung_2.19.html (23.11.2026) -- 2.19: Abnahmekriterium der Impulsantwort (sein Wort: „die daraus erzeugte Sprungantwort muss bis auf 0,1 % an den original
+gemessenen Sprung angepasst werden, sonst entfernen wir das wieder“): ε in Prozent der Sprunghöhe ΔU (Vorgabe 0,1 %), Glättung w Vorgabe 3 ms (gerechnet 23.11.:
+T140 0,057 %, T128 0,100 % nach 10 Schritten; größter Einzelfehler 0,2–0,3 % = 1–2 ADC-Stufen), Tafel zeigt Rest in % ΔU und „Kriterium erfüllt“. 2.18: Strom in der AUSWERTUNG unter dem Spannungsbild (sein Wort: „ich kann den Stromverlauf nicht sehen, unter dem
 Spannungsgraphen den Stromgraphen darstellen“): unteres Bild „Strom i (Shunt)“ für alle sichtbaren Kurven mit Strom, gestrichelt C·dU_C/dt zum Vergleich;
 Vorgabe, sobald eine Kurve Strom hat (auch nach jeder Messung mit Firmware 2.7); Zeigertipp mit Einheit mA. Prüfreiter unten ebenfalls Vorgabe Strom. 2.17: Kalibrierreiter und Strom aus dem Port-Abfall AUSGEBAUT (sein Wort: „die kalibrierung brauchen wir ja nicht
 mehr“ -- der Messwiderstand R_s mit Firmware 2.7 ersetzt beides); Stromansicht im Prüfreiter zeigt i gemessen (Shunt) gegen C·dU_C/dt; eingebettet
@@ -63,7 +65,7 @@ U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U
 d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
 Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
 Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
-Gebaut mit bau_rlc_seite_2.18.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Gebaut mit bau_rlc_seite_2.19.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 -->
 <style>
@@ -148,7 +150,7 @@ select { font: inherit; padding: 2px 4px; }
 </head>
 <body>
 <header>
-  <h1>RLC-Sprung 2.18</h1>
+  <h1>RLC-Sprung 2.19</h1>
   <span class="neben">Nichtlineares RLC-Glied · Nano mit rlc_sprung_2_6/2_7 · D11 PWM → A0 = U<sub>C</sub>, A1 = Pin, A2 = Spulenende · Eingang = Mittelwert U<sub>E</sub></span>
   <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
 </header>
@@ -196,7 +198,7 @@ select { font: inherit; padding: 2px 4px; }
         <button id="alle_weg" disabled title="Keine Kurven geladen">Alle entfernen</button>
         <span class="hinweis" id="stand_k">Entfernen nimmt die Kurve nur aus der Seite; die Datei im Ordner bleibt.</span>
       </div>
-      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc218/217/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
+      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc219/218/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
       <label class="hinweis" style="display:flex;gap:6px;margin-top:6px"><input id="UE" type="checkbox" checked> Anregung U<sub>E</sub> (Mittelwert) gestrichelt mitzeichnen</label>
       <label class="hinweis" style="display:flex;gap:6px"><input id="glatt" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> glätten (gleitender Median über 5 Werte; einzelne Flankentreffer)</label>
     </fieldset>
@@ -287,12 +289,12 @@ select { font: inherit; padding: 2px 4px; }
     <div class="inhalt" id="r_imp" hidden>
       <div>
         <h2>Impulsantwort aus der Sprungantwort</h2>
-        <p class="hinweis" style="max-width:1200px;margin:0 0 2px">Für ein lineares Glied ist die Sprungantwort das Integral der Impulsantwort: s(t) = ΔU·∫<sub>0</sub><sup>t</sup> g(τ) dτ, also g = s′/ΔU mit der Sprunghöhe ΔU = U<sub>E,end</sub>. Die rohe Differenz (s<sub>n+1</sub> − s<sub>n</sub>)/Δt verstärkt jede ADC-Stufe von 4,89 mV zu einem Sprung von 4,89 V/s (grau). Stattdessen wird g so gesucht, dass sein Integral die Messung wiedergibt: Schätzung integrieren (I), Rest r = s − I·h bilden, die geglättete Ableitung des Rests zurückaddieren, bis der Rest unter der Schwelle ε liegt (Vorgabe: eine ADC-Stufe). Beim nichtlinearen Glied ist das die Impulsantwort <i>an dieser Anregung</i>; andere Tastgrade geben andere g (vergleichen!).</p>
+        <p class="hinweis" style="max-width:1200px;margin:0 0 2px">Für ein lineares Glied ist die Sprungantwort das Integral der Impulsantwort: s(t) = ΔU·∫<sub>0</sub><sup>t</sup> g(τ) dτ, also g = s′/ΔU mit der Sprunghöhe ΔU = U<sub>E,end</sub>. Die rohe Differenz (s<sub>n+1</sub> − s<sub>n</sub>)/Δt verstärkt jede ADC-Stufe von 4,89 mV zu einem Sprung von 4,89 V/s (grau). Stattdessen wird g so gesucht, dass sein Integral die Messung wiedergibt: Schätzung integrieren (I), Rest r = s − I·h bilden, die geglättete Ableitung des Rests zurückaddieren, bis der Rest (Effektivwert) unter ε liegt. <b>Abnahmekriterium: ε = 0,1 % der Sprunghöhe ΔU</b>; der größte Einzelfehler kann eine ADC-Stufe (0,18 % von 2,74 V) nicht unterschreiten. Beim nichtlinearen Glied ist das die Impulsantwort <i>an dieser Anregung</i>; andere Tastgrade geben andere g (vergleichen!).</p>
         <math display="block"><mrow><msub><mi>h</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>h</mi><mi>k</mi></msub><mo>+</mo><mi>α</mi><mo>·</mo><msub><mi>M</mi><mi>w</mi></msub><mrow><mo>[</mo><mi>D</mi><mo>(</mo><mi>s</mi><mo>−</mo><mi>I</mi><msub><mi>h</mi><mi>k</mi></msub><mo>)</mo><mo>]</mo></mrow><mo>,</mo><mspace width="1em"/><mo>(</mo><mi>I</mi><mi>h</mi><msub><mo>)</mo><mi>n</mi></msub><mo>=</mo><mi>Δ</mi><mi>t</mi><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>h</mi><mi>j</mi></msub><mo>,</mo><mspace width="1em"/><mo>(</mo><mi>D</mi><mi>r</mi><msub><mo>)</mo><mi>n</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>r</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>r</mi><mi>n</mi></msub></mrow><mrow><mi>Δ</mi><mi>t</mi></mrow></mfrac><mo>,</mo><mspace width="1em"/><mtext>Abbruch:</mtext><mspace width="0.5em"/><msqrt><mfrac><mn>1</mn><mi>N</mi></mfrac><mo>∑</mo><msup><mi>r</mi><mn>2</mn></msup></msqrt><mo>≤</mo><mi>ε</mi><mo>,</mo><mspace width="1em"/><mi>g</mi><mo>=</mo><mfrac><mi>h</mi><mrow><mi>Δ</mi><mi>U</mi></mrow></mfrac><mo>,</mo><mspace width="1em"/><mtext>linear:</mtext><mspace width="0.4em"/><mi>g</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mfrac><msubsup><mi>ω</mi><mn>0</mn><mn>2</mn></msubsup><msub><mi>ω</mi><mi>d</mi></msub></mfrac><msup><mi>e</mi><mrow><mo>−</mo><mi>α</mi><mi>t</mi></mrow></msup><mi>sin</mi><mo>⁡</mo><msub><mi>ω</mi><mi>d</mi></msub><mi>t</mi></mrow></math>
         <div class="knoepfe" style="align-items:center">
           <span class="hinweis">Kurve <select id="ik"></select></span>
-          <span class="hinweis">Glättung w <input id="i_w" type="number" min="1" max="99" step="2" value="7" style="width:50px;padding:1px 3px;font:inherit"> ms</span>
-          <span class="hinweis">ε <input id="i_eps" type="number" min="0.1" max="100" step="0.1" value="4.9" style="width:55px;padding:1px 3px;font:inherit"> mV</span>
+          <span class="hinweis">Glättung w <input id="i_w" type="number" min="1" max="99" step="2" value="3" style="width:50px;padding:1px 3px;font:inherit"> ms</span>
+          <span class="hinweis">ε <input id="i_eps" type="number" min="0.01" max="10" step="0.01" value="0.1" style="width:55px;padding:1px 3px;font:inherit"> % von ΔU</span>
           <span class="hinweis">höchstens <input id="i_max" type="number" min="1" max="5000" step="1" value="400" style="width:60px;padding:1px 3px;font:inherit"> Iterationen</span>
           <span class="hinweis">α <input id="i_alpha" type="number" min="0.05" max="1" step="0.05" value="0.5" style="width:55px;padding:1px 3px;font:inherit"></span>
           <button id="i_rechnen" class="haupt">Impulsantwort berechnen</button>
@@ -303,7 +305,7 @@ select { font: inherit; padding: 2px 4px; }
       </div>
       <div class="bild" id="b6"><canvas id="c6" class="zoom" aria-label="Impulsantwort g(t)"></canvas><div class="tip" id="tip6" hidden></div></div>
       <div class="bild" id="b7"><canvas id="c7" aria-label="Sprungantwort gemessen und aus der Impulsantwort integriert, Rest"></canvas><div class="tip" id="tip7" hidden></div></div>
-      <div class="tafel" style="max-height:120px"><table id="i_tafel"><thead><tr><th>Kurve</th><th>ΔU / V</th><th>Iterationen</th><th>Rest RMS / mV</th><th>Rest max / mV</th><th>Abbruch erreicht</th><th>∫g(t<sub>end</sub>)</th><th>g<sub>max</sub> / s<sup>−1</sup></th><th>t(g<sub>max</sub>) / ms</th><th>Nulldurchgang / ms</th><th>rohe Differenz: Rest RMS / mV · Spitze / s<sup>−1</sup></th></tr></thead><tbody></tbody></table></div>
+      <div class="tafel" style="max-height:120px"><table id="i_tafel"><thead><tr><th>Kurve</th><th>ΔU / V</th><th>Iterationen</th><th>Rest RMS / mV</th><th>Rest RMS / % ΔU</th><th>Rest max / % ΔU</th><th>Kriterium 0,1 %</th><th>∫g(t<sub>end</sub>)</th><th>g<sub>max</sub> / s<sup>−1</sup></th><th>t(g<sub>max</sub>) / ms</th><th>Nulldurchgang / ms</th><th>rohe Differenz: Rest RMS / mV · Spitze / s<sup>−1</sup></th></tr></thead><tbody></tbody></table></div>
     </div>
     <div class="inhalt" id="r_fit" hidden>
       <h2>Anfitten der Sprungantwort – vorbereitet, noch ohne Ansätze</h2>
@@ -564,15 +566,16 @@ function impRechnen(k, w, eps, maxIt, alpha) {
 function impListe() { const sel = $("ik"), alt = sel.value; sel.innerHTML = ""; for (const k of kurven) { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; sel.append(o); } sel.value = kurven.some(k => String(k.id) === alt) ? alt : (gewaehlt !== null ? String(gewaehlt) : (kurven[0] ? String(kurven[0].id) : "")); }
 $("i_rechnen").onclick = () => {
   const k = kurven.find(q => String(q.id) === $("ik").value); if (!k) { $("i_stand").textContent = "Keine Kurve."; return; }
-  const w = Math.max(1, Number($("i_w").value) | 1), eps = Number($("i_eps").value) / 1000, maxIt = Number($("i_max").value), alpha = Number($("i_alpha").value);
-  if (!(w >= 1 && w <= 99) || !(eps > 0) || !(maxIt >= 1) || !(alpha > 0 && alpha <= 1)) { $("i_stand").textContent = "Eingaben: w 1 … 99 ms (ungerade), ε > 0, Iterationen ≥ 1, α 0,05 … 1."; return; }
-  imp = impRechnen(k, w, eps, maxIt, alpha); impTafel(); zeichneImp();
-  protokoll("Impulsantwort", `${k.name}: w ${w} eps ${eps * 1000} mV: ${imp.it} It (${imp.grund}), Rest ${(imp.rms * 1000).toFixed(2)} mV, Integral ${imp.integral.toFixed(4)}, g_max ${imp.gmax.toFixed(2)} bei ${(imp.tgmax * 1000).toFixed(1)} ms`);
-  $("i_stand").textContent = `${imp.it} Iterationen (${imp.grund}), Rest RMS ${zahl(imp.rms * 1000, 2)} mV (ε = ${zahl(eps * 1000, 1)} mV${imp.erreicht ? ", erreicht" : ", nicht erreicht: der Rest ist die Welligkeit der Messung, die eine glatte Impulsantwort nicht wiedergibt; w kleiner wählen, um mehr davon mitzunehmen"}), ∫g = ${zahl(imp.integral, 4)}.`;
+  const w = Math.max(1, Number($("i_w").value) | 1), epsProzent = Number($("i_eps").value), maxIt = Number($("i_max").value), alpha = Number($("i_alpha").value);
+  if (!(w >= 1 && w <= 99) || !(epsProzent > 0) || !(maxIt >= 1) || !(alpha > 0 && alpha <= 1)) { $("i_stand").textContent = "Eingaben: w 1 … 99 ms (ungerade), ε > 0 % von ΔU, Iterationen ≥ 1, α 0,05 … 1."; return; }
+  const d0 = fitDaten(k), dU0 = Number.isFinite(d0.UEend) ? d0.UEend : d0.Uend, eps = epsProzent / 100 * dU0;   // 2.19: ε relativ zur Sprunghöhe
+  imp = impRechnen(k, w, eps, maxIt, alpha); imp.epsProzent = epsProzent; imp.restProzent = imp.rms / imp.dU * 100; imp.maxProzent = imp.max / imp.dU * 100; imp.kriterium = imp.restProzent <= 0.1; impTafel(); zeichneImp();
+  protokoll("Impulsantwort", `${k.name}: w ${w} eps ${epsProzent} %: ${imp.it} It (${imp.grund}), Rest ${(imp.rms * 1000).toFixed(2)} mV = ${imp.restProzent.toFixed(3)} % (max ${imp.maxProzent.toFixed(2)} %), Kriterium 0,1 % ${imp.kriterium ? "erfüllt" : "nicht erfüllt"}, Integral ${imp.integral.toFixed(4)}, g_max ${imp.gmax.toFixed(2)} bei ${(imp.tgmax * 1000).toFixed(1)} ms`);
+  $("i_stand").textContent = `${imp.it} Iterationen (${imp.grund}), Rest RMS ${zahl(imp.rms * 1000, 2)} mV = ${zahl(imp.restProzent, 3)} % von ΔU (ε = ${zahl(epsProzent, 2)} %${imp.erreicht ? ", erreicht" : ", nicht erreicht: w kleiner wählen oder mehr Iterationen"}), größter Fehler ${zahl(imp.maxProzent, 2)} %, ∫g = ${zahl(imp.integral, 4)}. Abnahmekriterium 0,1 %: ${imp.kriterium ? "erfüllt" : "NICHT erfüllt"}.`;
 };
 function impTafel() {
   const tb = $("i_tafel").tBodies[0]; tb.innerHTML = ""; if (!imp) return; const tr = document.createElement("tr");
-  for (const x of [imp.k.name, zahl(imp.dU, 4), imp.it, zahl(imp.rms * 1000, 2), zahl(imp.max * 1000, 1), imp.erreicht ? "ja" : "nein", zahl(imp.integral, 4), zahl(imp.gmax, 2), zahl(imp.tgmax * 1000, 1), zahl(imp.tnull * 1000, 1), zahl(imp.rohRms * 1000, 3) + " · " + zahl(imp.rohSpitze, 1)]) { const td = document.createElement("td"); td.textContent = x; tr.append(td); }
+  for (const x of [imp.k.name, zahl(imp.dU, 4), imp.it, zahl(imp.rms * 1000, 2), zahl(imp.restProzent, 3), zahl(imp.maxProzent, 2), imp.kriterium ? "erfüllt" : "nicht erfüllt", zahl(imp.integral, 4), zahl(imp.gmax, 2), zahl(imp.tgmax * 1000, 1), zahl(imp.tnull * 1000, 1), zahl(imp.rohRms * 1000, 3) + " · " + zahl(imp.rohSpitze, 1)]) { const td = document.createElement("td"); td.textContent = x; tr.append(td); }
   tb.append(tr);
 }
 function zeichneImp() {
@@ -855,17 +858,17 @@ async function eineMessung(E, nr) {
     const roh6 = roh.map(z => [z[0], z[1], z[3], z[4], z[5], z[6], z[7]]), a = anregung(roh6, E.T, E.F, E.B); d = a.d;
     const hb = E.B / 2, u = roh.map(z => z[1] / hb * LSB), u2 = roh.map(z => z[2] / hb * LSB), im = u2.map((x, i) => E.Rs > 0 ? (x - u[i]) / E.Rs : NaN);
     anschlag = roh.filter(z => z[0] >= 0 && (z[2] === 0 || z[2] >= 1023 * hb)).length;   // nur ab dem Sprung: vor dem Sprung ist A2 = 0 V richtig
-    text = `# RLC_Sprung_2.18.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
+    text = `# RLC_Sprung_2.19.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
     roh.forEach(([kq, s0, s2, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${s2} ${sH} ${nH} ${sL} ${nL} ${nF} ${u[i].toFixed(6)} ${u2[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)} ${(im[i] * 1000).toFixed(4)}\n`; });
-    name = `rlc218_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc219_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, u2, im, Rs: E.Rs, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   } else {
     const a = anregung(roh, E.T, E.F, E.B); d = a.d;
-    text = `# RLC_Sprung_2.18.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+    text = `# RLC_Sprung_2.19.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
     roh.forEach(([kq, s0, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
-    name = `rlc218_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc219_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   }
   kw = kennwerte(k);
@@ -924,7 +927,7 @@ function bildZusammen() {   // die Leinwände des aktuellen Reiters untereinande
   const w = Math.max(...cs.map(c => c.width)), kopf = 28 * (window.devicePixelRatio || 1), h = cs.reduce((a, c) => a + c.height, 0) + kopf;
   const o = document.createElement("canvas"); o.width = w; o.height = h; const g = o.getContext("2d");
   g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#111"; g.font = `${12 * (window.devicePixelRatio || 1)}px system-ui, Segoe UI, Arial`;
-  g.fillText(`RLC-Sprung 2.18 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
+  g.fillText(`RLC-Sprung 2.19 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
   let y = kopf; for (const c of cs) { g.drawImage(c, 0, y); y += c.height; }
   return o;
 }

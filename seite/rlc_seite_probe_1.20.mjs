@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.20.mjs -- (1.20: für Seite 2.19: P21 prüft das Abnahmekriterium Rest RMS ≤ 0,1 % ΔU für beide eingebetteten Kurven (w = 3);
 // rlc_seite_probe_1.19.mjs -- (1.19: für Seite 2.18: P8c Strom im unteren Bild der Auswertung (Vorgabe, 4 Reihen, Scheitel 3,9 mA, Zeigertipp in mA);
 // rlc_seite_probe_1.18.mjs -- (1.18: für Seite 2.17: eingebettet rlc27 T140/T128 mit Strom (Spalte U_C_V aus dem Kopf gelesen); zwei eingebettete Kurven (ohne Simulink), kein Kalibrierreiter (P20, P21d entfallen), Stromansicht nur Shunt;
 // rlc_seite_probe_1.17.mjs -- (1.17: für Seite 2.16; P21d prüft auch, dass der Rest am Ende keine Rampe hat (Mittel der letzten 50 Werte unter 3 mV);
@@ -55,7 +56,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.18/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.19/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
@@ -196,16 +197,16 @@ await bild("p19_anfitten");
 // P21 Impulsantwort
 await js(`$("rt_imp").click()`); await warte(300);
 await js(`$("ik").value = String(kurven.find(k => k.name.startsWith("rlc27") && k.name.includes("T140")).id); $("i_rechnen").click()`); await warte(300);
-const i21 = await js(`(() => { const r = imp; const m = {it: r.it, rms: (r.rms * 1000).toFixed(2), erreicht: r.erreicht, integ: r.integral.toFixed(3), gmax: r.gmax.toFixed(1), tgmax: (r.tgmax * 1000).toFixed(1), tnull: (r.tnull * 1000).toFixed(1), rohRms: (r.rohRms * 1000).toFixed(3), rohSpitze: r.rohSpitze.toFixed(1), lin: !!r.lin, linmax: r.lin ? Math.max(...r.lin).toFixed(1) : "-", zeilen: $("i_tafel").tBodies[0].rows.length, reihen: ansicht6.reihen.length, c6h: Math.round($("c6").getBoundingClientRect().height)}; return JSON.stringify(m); })()`);
+const i21 = await js(`(() => { const r = imp; const m = {it: r.it, rms: (r.rms * 1000).toFixed(2), erreicht: r.erreicht, prozent: r.restProzent.toFixed(3), maxp: r.maxProzent.toFixed(2), krit: r.kriterium, integ: r.integral.toFixed(3), gmax: r.gmax.toFixed(1), tgmax: (r.tgmax * 1000).toFixed(1), tnull: (r.tnull * 1000).toFixed(1), rohRms: (r.rohRms * 1000).toFixed(3), rohSpitze: r.rohSpitze.toFixed(1), lin: !!r.lin, linmax: r.lin ? Math.max(...r.lin).toFixed(1) : "-", zeilen: $("i_tafel").tBodies[0].rows.length, reihen: ansicht6.reihen.length, c6h: Math.round($("c6").getBoundingClientRect().height)}; return JSON.stringify(m); })()`);
 const m21 = JSON.parse(i21);
-P("P21 Impulsantwort rlc27: Rest RMS ≤ 4,9 mV erreicht, ∫g = 0,97 … 1,03, g-Scheitel 10 … 60 ms, Nulldurchgang 50 … 70 ms, rohe Differenz exakt (Rest 0) aber Spitze über 4 s⁻¹, lineares Modell da, drei Reihen gezeichnet",
-  m21.erreicht === true && Number(m21.rms) <= 4.9 && Math.abs(Number(m21.integ) - 1) < 0.03 && Number(m21.tgmax) > 10 && Number(m21.tgmax) < 60 && Number(m21.tnull) > 50 && Number(m21.tnull) < 70 && Number(m21.rohRms) < 0.001 && Number(m21.rohSpitze) > 4 && m21.lin && m21.zeilen === 1 && m21.reihen === 3 && m21.c6h > 150, i21);
+P("P21 Impulsantwort rlc27 T140: Abnahmekriterium Rest RMS ≤ 0,1 % ΔU erfüllt, größter Fehler unter 0,4 %, ∫g = 0,97 … 1,03, g-Scheitel 10 … 60 ms, Nulldurchgang 50 … 70 ms, rohe Differenz exakt (Rest 0) aber Spitze über 4 s⁻¹, lineares Modell da, drei Reihen gezeichnet",
+  m21.erreicht === true && m21.krit === true && Number(m21.prozent) <= 0.1 && Number(m21.maxp) < 0.4 && Math.abs(Number(m21.integ) - 1) < 0.03 && Number(m21.tgmax) > 10 && Number(m21.tgmax) < 60 && Number(m21.tnull) > 50 && Number(m21.tnull) < 70 && Number(m21.rohRms) < 0.001 && Number(m21.rohSpitze) > 4 && m21.lin && m21.zeilen === 1 && m21.reihen === 3 && m21.c6h > 150, i21);
 await bild("p21_impulsantwort");
 const b6 = await js(`(() => { const b = $("c6").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
 await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b6[0] + 58 + (b6[2] - 72) * 0.05, y: b6[1] + b6[3] * 0.5}); await warte(150);
 const t6 = await js(`$("tip6").hidden ? "versteckt" : $("tip6").textContent`); P("P21b Zeigertipp der Impulsantwort", /g iterativ .* s⁻¹/.test(t6) && /Rest/.test(t6), t6.slice(0, 120));
-await js(`$("i_w").value = 3; $("i_rechnen").click()`); await warte(200);
-const i21b = await js(`[imp.it, (imp.rms * 1000).toFixed(2), imp.erreicht].join("|")`); P("P21c kleinere Glättung w = 3: Rest ebenfalls erreicht", /\|true$/.test(i21b), i21b);
+await js(`$("ik").value = String(kurven.find(k => k.name.includes("T128")).id); $("i_rechnen").click()`); await warte(300);
+const i21b = await js(`[imp.k.name.slice(0, 32), imp.it, imp.restProzent.toFixed(3), imp.maxProzent.toFixed(2), imp.kriterium].join("|")`); P("P21c zweite Kurve T128: Abnahmekriterium 0,1 % ebenfalls erfüllt", /\|true$/.test(i21b) && Number(i21b.split("|")[2]) <= 0.1, i21b);
 // P22 Format 2.7 (Shunt): Datei mit U_2_V und i_mA lesen, Strom in der Stromansicht
 const t27 = "# RLC_Sprung_2.13.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende; Satz T:N:V:F:B:P:R = 128:5:0:3:4:2:0; d = 0.501961; Rs = 47; []\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n" +
   [[-2, 0, 0], [-1, 0, 0], [0, 20, 50], [1, 100, 150], [2, 300, 330], [3, 600, 600], [4, 800, 780]].map(([k, a, b], j) => { const uc = a / 2 * 5 / 1023, u2 = b / 2 * 5 / 1023; return `${k} ${((k + 0.5) * 0.001).toFixed(6)} ${a} ${b} ${k >= 0 ? 2000 : 0} ${k >= 0 ? 2 : 0} 0 ${k >= 0 ? 2 : 4} 0 ${uc.toFixed(6)} ${u2.toFixed(6)} 5.000000 0.000000 ${(k >= 0 ? 2.509804 : 0).toFixed(6)} ${((u2 - uc) / 47 * 1000).toFixed(4)}`; }).join("\n") + "\n";
