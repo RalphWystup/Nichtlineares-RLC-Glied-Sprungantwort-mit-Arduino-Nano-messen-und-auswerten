@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.23.mjs -- (1.23: für Seite 2.22: P18 prüft drei Fotos (das dritte mit Shunt);
 // rlc_seite_probe_1.22.mjs -- (1.22: für Seite 2.21: P19 ersetzt durch Anfitten (drei Ansätze gleicher Parameterzahl, Tafel, Fehler endlich, tanh im eingeschwungenen
 //   Abschnitt besser als Potenzreihe), P19b Treppe-Knopf vorhanden;
 // rlc_seite_probe_1.21.mjs -- (1.21: für Seite 2.20: P21f drittes Bild (Rest in mV) gezeichnet, P24 Median blendet die 51-ms-Ausreißer aus (T140: 46 roh, 0 danach), P8c Scheitel nach Median 2,6 … 3,0 mA;
@@ -59,7 +60,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.21/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.22/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
@@ -178,10 +179,10 @@ const z16 = await js(`(() => { const k = pruefEine(); const B = Math.max(...k.nh
 P("P16 Zählwerte je Wert vollständig (nH+nL+nF = 4), nach dem Sprung nH 1…3, Leinwand 4 zeigt die Kurve", /^4\|true\|[0-4]\|[0-4]\|rlc27/.test(z16), z16);
 // P18 Reiter Aufbau und Theorie: Fotos eingebettet (data:), Schaltplan als SVG, Formeln als MathML gesetzt, kein waagerechtes Rollen
 await js(`$("rt_theorie").click()`); await warte(400);
-const t18 = await js(`(() => { const f1 = $("foto1"), f2 = $("foto2"), sv = document.querySelector("#schaltplan svg"), mm = [...document.querySelectorAll("#r_theorie math")], fr = document.querySelector("#r_theorie mfrac");
-  return [$("r_theorie").hidden, $("r_pruef").hidden, f1.naturalWidth + "x" + f1.naturalHeight, f2.naturalWidth + "x" + f2.naturalHeight, f1.src.slice(0, 22), sv ? Math.round(sv.getBoundingClientRect().width) : 0, mm.length, fr ? Math.round(fr.getBoundingClientRect().height) : 0, $("r_theorie").scrollWidth <= $("r_theorie").clientWidth, Math.round(f1.getBoundingClientRect().width)].join("|"); })()`);
+const t18 = await js(`(() => { const f1 = $("foto1"), f2 = $("foto2"), f3 = $("foto3"), sv = document.querySelector("#schaltplan svg"), mm = [...document.querySelectorAll("#r_theorie math")], fr = document.querySelector("#r_theorie mfrac");
+  return [$("r_theorie").hidden, $("r_pruef").hidden, f1.naturalWidth + "x" + f1.naturalHeight, f2.naturalWidth + "x" + f2.naturalHeight + "/" + f3.naturalWidth + "x" + f3.naturalHeight, f1.src.slice(0, 22), sv ? Math.round(sv.getBoundingClientRect().width) : 0, mm.length, fr ? Math.round(fr.getBoundingClientRect().height) : 0, $("r_theorie").scrollWidth <= $("r_theorie").clientWidth, Math.round(f1.getBoundingClientRect().width)].join("|"); })()`);
 const t = t18.split("|");
-P("P18 Aufbau und Theorie: zwei Fotos 2048×944 als data:, Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen", t[0] === "false" && t[1] === "true" && t[2] === "2048x944" && t[3] === "2048x944" && t[4] === "data:image/jpeg;base64" && Number(t[5]) > 300 && Number(t[6]) === 11 && Number(t[7]) > 20 && t[8] === "true" && Number(t[9]) > 200, t18);
+P("P18 Aufbau und Theorie: drei Fotos 2048×944 als data: (das dritte mit Shunt), Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen", t[0] === "false" && t[1] === "true" && t[2] === "2048x944" && t[3] === "2048x944/2048x944" && t[4] === "data:image/jpeg;base64" && Number(t[5]) > 300 && Number(t[6]) === 11 && Number(t[7]) > 20 && t[8] === "true" && Number(t[9]) > 200, t18);
 const rx = await js(`document.querySelector("#schaltplan svg").textContent.includes("ext") + "|" + document.querySelector("#schaltplan svg").textContent.includes("= 92 Ω") + "|" + document.querySelector("#schaltplan svg").textContent.includes("A2 (ADC)")`);
 P("P18c Schaltplan ohne R_ext, R_Cu = 92 Ω, A2 am Spulenende", rx === "false|true|true", rx);
 await bild("p18_theorie_oben");

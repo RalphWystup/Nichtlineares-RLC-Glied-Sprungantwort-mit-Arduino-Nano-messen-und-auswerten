@@ -1,5 +1,5 @@
 Browser: Skalierung/Fenster 1x1600x708
-RICHTIG P1 Seite geladen: RLC-Sprung 2.21 · Messen und Auswerten
+RICHTIG P1 Seite geladen: RLC-Sprung 2.22 · Messen und Auswerten
 RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|40
 RICHTIG P2 eingebettete Kurven: 2 Kurven (rlc27 T140, T128 mit Strom)
 RICHTIG P3 Kennwerte T140 (rlc27, Shunt) gegen Datei: Seite Umax 4.3842 V @ 57.5 ms, Uend 2.7436; Datei 4.3842 @ 57.5, 2.7436; D 0.296, f0 10.07 Hz, U_E,end 2.7428 V, Abfall 125 mV
@@ -34,10 +34,10 @@ RICHTIG P15f Zurück = voriger Ausschnitt 32 ms: 32.00
 RICHTIG P15g Scheitel: Mitte = t_max, Spannung 0,2 V: 0.000|0.200
 RICHTIG P15h Alles = ganze Messung (bis 599,5 ms): true|-20|true
 RICHTIG P16 Zählwerte je Wert vollständig (nH+nL+nF = 4), nach dem Sprung nH 1…3, Leinwand 4 zeigt die Kurve: 4|true|0|4|rlc27_2026-11-23_113109_T140_F3_B4.txt
-RICHTIG P18 Aufbau und Theorie: zwei Fotos 2048×944 als data:, Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen: false|true|2048x944|2048x944|data:image/jpeg;base64|940|11|36|true|594
+RICHTIG P18 Aufbau und Theorie: drei Fotos 2048×944 als data: (das dritte mit Shunt), Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen: false|true|2048x944|2048x944/2048x944|data:image/jpeg;base64|940|11|36|true|392
 RICHTIG P18c Schaltplan ohne R_ext, R_Cu = 92 Ω, A2 am Spulenende: false|true|true
 RICHTIG P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite): 1600x760 Fenster 1600x760
-RICHTIG P19 Anfitten T140, K = 3: drei Ansätze mit 10 (Fourier 9) Parametern, Tafel 3 Zeilen, Fehler im Fenster endlich und unter 500 mV, tanh im eingeschwungenen Abschnitt besser als die Potenzreihe und in der Fortsetzung besser als beide: {"n":3,"P":[10,9,10],"ges":[61.6,309.2,274.2],"eing":[13.6,252.1,121.1],"fort":[13.7,4414.9,225163],"zeilen":3,"c9":202,"stand":"3 Ansätze mit je 10 Parametern in 202 ms. tanh-Net"}
+RICHTIG P19 Anfitten T140, K = 3: drei Ansätze mit 10 (Fourier 9) Parametern, Tafel 3 Zeilen, Fehler im Fenster endlich und unter 500 mV, tanh im eingeschwungenen Abschnitt besser als die Potenzreihe und in der Fortsetzung besser als beide: {"n":3,"P":[10,9,10],"ges":[61.6,309.2,274.2],"eing":[13.6,252.1,121.1],"fort":[13.7,4414.9,225163],"zeilen":3,"c9":202,"stand":"3 Ansätze mit je 10 Parametern in 205 ms. tanh-Net"}
 RICHTIG P19b Treppen-Knopf vorhanden und frei: 
 RICHTIG P17a Gewählte entfernen nimmt genau die gewählte Kurve: 4|false|„rlc2_2026-11-22_162318_T128_F3_B4.txt“ entfernt; die Datei bleibt.
 RICHTIG P17b Alle entfernen: erster Klick entfernt nichts, fragt nach: 4|Wirklich alle 4 entfernen? (nochmal klicken)|true
