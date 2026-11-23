@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.15.mjs -- (1.15: für Seite 2.14 (Schaltplan 1.3);
 // rlc_seite_probe_1.14.mjs -- (1.14: für Seite 2.13; P22 Format 2.7 lesen (U_2_V, i_mA, Rs), Stromansicht mit gemessenem Strom, R_s-Eingabe geprüft, Kennung 2.7 angenommen;
 // rlc_seite_probe_1.13.mjs -- (1.13: für Seite 2.12; P21 Impulsantwort: Rest unter 1 ADC-Stufe, ∫g ≈ 1, rohe Differenz exakt aber mit Spitzen über 4 s⁻¹, lineares Modell vorhanden;
 // rlc_seite_probe_1.12.mjs -- (1.12: für Seite 2.11; P20 Kalibrierreiter: R_cal < 250 abgewiesen, Rechnung aus synthetischen Rohzeilen, Gerade aus zwei Punkten,
@@ -50,7 +51,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.13/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.14/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 3, `${n0} Kurven (Simulink, T140, T128)`);
