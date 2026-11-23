@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RLC-Sprung 2.10 · Messen und Auswerten</title>
+<!--
+RLC_Sprung_2.10.html (23.11.2026) -- 2.10: kein Vorwiderstand R_ext (sein Wort: „Rext gibt es nicht, das ist der kupferwiderstand der Spule“): Schaltplan 1.1,
+Bauteiltafel und Text angepasst; Theorie vertieft (sein Wort: „ich will auch die theorie zum nichtlinearen modell mit L und c als nichtlineare
+funktionen, deren Verläufe später aus dem anfitt berechnet werden sollen“): ψ(i), L_d(i), q(u), C_d(u), Zustandsgleichungen, Ansätze (tanh-Sättigung,
+Jiles-Atherton Gl. 4.1–4.7, C(U) Gl. 5.1, Vollmodell Gl. 5.7), Kennlinienformen und Netzstruktur von der Ruppert-Theorieseite 1.2 übernommen (sein Wort: „wir haben ja bei ruppert schon ein theorie dazu erstellt“);
+drei Wege der Identifikation (Ruppert wörtlich mit Strommessung -- Shunt an A2 als nächster Schritt; Simulation + DE nach Abschn. 6; Gleichungsfehler aus dem
+glatten Fit mit geschlossenen Ableitungen); das Manuskript (Abschn. 3.1 Gl. 3.9, Abschn. 8) rechnet noch mit R_ext = 92 Ω -- dort unverändert, in der Seite vermerkt. 2.9: Namensnennung sichtbar in der Kopfzeile (sein Wort: „auch meinen namen, mit titel und dich einbauen!“);
+Kopfzeile und Hauptteil als Spalten-Flex (Kopfzeile darf zwei Zeilen hoch werden). 2.8 (23.11.2026, zum Nano rlc_sprung_2_6, sein Wort 23.11.: „löschknopf“ und „reiter mit dem pwm sprung zum reinzoomen … auch bei der
+Sprungantwort … dient nur zur überprüfung daher extra reiter“): Reiter „Auswertung“ (wie 2.7) und „Prüfen“: eine Kurve (oder alle sichtbaren) mit U_C, U_E,
+U_H, U_L ROH und Messpunkten, Zoom mit Rad (Zeit), Strg+Rad (Spannung), Rahmen ziehen, Doppelklick = alles, Knöpfe Alles/Sprung/Scheitel/Zurück;
+darunter die Zählwerte je Abtastwert nH (High), nL (Low), nF (Flanke) -- das ist der aufgezeichnete PWM-Sprung, so wie der Nano ihn sieht (der Nano
+tastet A1 alle 250 µs ab; bei 31,4 kHz PWM sind das keine Einzelimpulse, sondern Pegel-Treffer; bei F = 1 (980 Hz) sieht man die Impulse selbst).
+Knöpfe „Gewählte entfernen“ und „Alle entfernen“ (zweistufig) nehmen Kurven aus der Seite; Dateien bleiben.
+Reiter „Aufbau und Theorie“ (sein Wort: „die Bilder in die HTML einfügen unter Reiter aufbau und Theorie“, „all in one html“): zwei Fotos des Aufbaus
+(Messungen_22.11.2026\Bilder, eingebettet), Schaltplan (schaltplan_rlc_1.0.svg, eingebettet), Bauteilwerte und Gleichungen nach rlc_manuskript.docx
+(Abschn. 2.1, 3.1, 3.2), Messprinzip des Nano, Schutz des ADC. Formeln als MathML.
+Reiter „Anfitten“ (sein Wort 23.11.: „bereite die html darauf vor einen weiteren Reiter zum anfitten einzubauen, das ist dann der nächste schritt“): nur die
+Vorbereitung -- Datenschnittstelle fitDaten(k) (t, U_C, U_E ab dem Sprung), Registratur fitModelle (Name, Parameterzahl, anpassen(t,u) -> {y, rmse}),
+Kurvenwahl, Datenblatt der gewählten Kurve, Tafel der Modelle (leer, solange keines eingehängt ist). Vorgesehene Ansätze: tanh-Neuronen (Ruppert),
+Fourier-Reihe, Taylor-Reihe, gedämpfte Sinus (Prony) -- gleiche Parameterzahl, Fehler über die ganze Aufzeichnung einschließlich eingeschwungenem Zustand. Vorfassung 2.7 (22.11.2026) (zum Nano rlc_sprung_2_6): Dateien im Format 2.0 (rlc2_*, Anregung = roher PWM-Mittel aus 4 Momentwerten)
+zeichnen KEINE Anregung mehr (war unleserlich, Knopfprobe-Bild); Kennwertblock mit min-width:0, damit die breite Tafel innen rollt und die Seite
+keinen waagerechten Rollbalken bekommt (Knopfprobe P10 prüft jetzt auch die Breite). Vorfassung 2.6: zu rlc_sprung_2_6: Tastgrad hart T <= 140 (Seite UND Nano; sein Wort: „die sprungantwort sollte nicht
+höher als 5 Volt sein wegen der ad wandler … das muss sichergestellt sein!“; Überschwingfaktor steigt mit der Anregung, gemessen 1,54 … 1,63,
+Scheitel bei T = 140: 4,39 … 4,47 V), Rampe abwärts R ms nach jeder Messung statt Sprung auf 0 („darf bei keiner anregung negativ sein“),
+Datenblatt ATmega328P 7810D §28.1: −0,5 V … VCC + 0,5 V, Injektionsstrom ±1 mA; §28.9: Vin GND … VREF. Vorfassung: 2.4 -- Messen und Auswerten der Sprungantwort des nichtlinearen RLC-Glieds (C:\6b_Streckenbestimmung).
+Eine Datei, per Doppelklick in Chrome oder Edge: Web Serial (1 000 000 Bd) zum Nano mit rlc_sprung_2_6 (Pin 11 PWM, F 1..5, A0 = U_C,
+A1 = Pinspannung, ADC von Timer1 alle 125 µs, B Wandlungen je Kanal und Wert). Sprung auslösen (mit Wiederholungen gegen die Remanenz),
+U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U_L = Pegel am Pin unter Last, Innenwiderstand des Ports;
+d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
+Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
+Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
+Gebaut mit bau_rlc_seite_2.10.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
+-->
+<style>
+:root { --text: #111; --text2: #444; --text3: #666; --rand: #cfcfcf; --flaeche: #fff; --flaeche2: #f5f5f4; --akzent: #2a78d6; --gut: #006300; --schlecht: #b42318; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--flaeche); color: var(--text); font: 13px/1.35 system-ui, "Segoe UI", Arial, sans-serif; display: flex; flex-direction: column; }
+header { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 14px; padding: 8px 16px; border-bottom: 1px solid var(--rand); flex: none; }
+header .autor { color: var(--text2); font-size: 12px; text-align: right; white-space: nowrap; }
+header h1 { font-size: 16px; margin: 0; }
+header .neben { color: var(--text2); font-size: 12px; }
+main { display: grid; grid-template-columns: 330px 1fr; gap: 12px; padding: 10px 16px; flex: 1 1 auto; min-height: 0; }
+.links { display: flex; flex-direction: column; gap: 10px; overflow: auto; min-height: 0; }
+.rechts { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 6px; min-height: 0; min-width: 0; }
+.rechts > div { min-width: 0; }
+.inhalt { display: grid; gap: 8px; min-height: 0; min-width: 0; }
+.inhalt[hidden] { display: none; }
+#r_theorie { display: block; overflow: auto; padding: 4px 10px 10px 2px; }
+#r_theorie[hidden] { display: none; }
+#r_fit { display: block; overflow: auto; padding: 4px 10px 10px 2px; }
+#r_fit[hidden] { display: none; }
+#r_fit h2 { font-size: 15px; margin: 4px 0 6px; }
+#r_fit p { max-width: 1000px; margin: 4px 0; }
+#r_fit table.werte { width: auto; margin: 4px 0 8px; }
+#r_fit table.werte th, #r_fit table.werte td { border: 1px solid #ddd; }
+#r_theorie h2 { font-size: 15px; margin: 14px 0 6px; }
+#r_theorie h3 { font-size: 13.5px; margin: 10px 0 4px; }
+#r_theorie p { max-width: 1000px; margin: 4px 0; }
+#r_theorie figure { margin: 0; }
+#r_theorie figcaption { color: var(--text2); font-size: 12px; margin-top: 3px; }
+#r_theorie img { width: 100%; height: auto; border: 1px solid var(--rand); border-radius: 4px; }
+.fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 1300px; }
+#r_theorie svg { width: 100%; max-width: 940px; height: auto; border: 1px solid var(--rand); border-radius: 4px; }
+#r_theorie table.werte { width: auto; margin: 4px 0 8px; }
+#r_theorie table.werte th, #r_theorie table.werte td { border: 1px solid #ddd; }
+#r_theorie math { font-size: 15px; }
+#r_theorie math[display=block] { margin: 6px 0 6px 24px; }
+@media (max-width: 1100px) { .fotos { grid-template-columns: 1fr; } }
+#r_aus { grid-template-rows: minmax(0, 3fr) minmax(0, 1.2fr) auto; }
+#r_pruef { grid-template-rows: minmax(0, 3fr) minmax(0, 1fr) auto; }
+.inhalt > div { min-width: 0; }
+.reiterleiste { display: flex; gap: 4px; border-bottom: 1px solid var(--rand); }
+.reiterleiste button { border: 1px solid var(--rand); border-bottom: none; border-radius: 6px 6px 0 0; background: var(--flaeche2); color: var(--text2); padding: 4px 12px; }
+.reiterleiste button.aktiv { background: #fff; color: var(--text); font-weight: 600; border-color: #9a9a9a; margin-bottom: -1px; border-bottom: 1px solid #fff; }
+button.warn { background: #fff3f0; border-color: var(--schlecht); color: var(--schlecht); }
+.bild canvas.zoom { cursor: crosshair; }
+fieldset { border: 1px solid var(--rand); border-radius: 6px; margin: 0; padding: 8px 10px 10px; }
+legend { font-weight: 600; padding: 0 4px; }
+label.zeile { display: grid; grid-template-columns: 1fr 90px 46px; align-items: center; gap: 6px; margin: 4px 0; }
+label.zeile span.einheit { color: var(--text3); }
+input[type=number] { width: 100%; padding: 3px 5px; font: inherit; border: 1px solid var(--rand); border-radius: 4px; }
+button { font: inherit; padding: 5px 10px; border: 1px solid #9a9a9a; border-radius: 5px; background: #fff; color: var(--text); cursor: pointer; }
+button.haupt { background: var(--akzent); border-color: var(--akzent); color: #fff; font-weight: 600; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.stand { margin-top: 6px; min-height: 2.7em; color: var(--text2); font-size: 12px; white-space: pre-line; }
+.stand.fehler { color: var(--schlecht); }
+.stand.gut { color: var(--gut); }
+.hinweis { color: var(--text3); font-size: 11.5px; }
+#kurven { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
+#kurven li { display: grid; grid-template-columns: 18px 34px 1fr 20px; align-items: center; gap: 4px; padding: 2px 0; border-bottom: 1px solid #eee; }
+#kurven li .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+#kurven li button { padding: 0 4px; line-height: 1.2; }
+.bild { position: relative; border: 1px solid var(--rand); border-radius: 6px; min-height: 0; min-width: 0; }
+.bild canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid #999; border-radius: 4px; padding: 4px 7px; font-size: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.15); white-space: nowrap; }
+.tafel { overflow: auto; max-height: 30vh; border: 1px solid var(--rand); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+th, td { padding: 3px 7px; border-bottom: 1px solid #eee; text-align: right; white-space: nowrap; }
+th { background: var(--flaeche2); position: sticky; top: 0; font-weight: 600; }
+td:first-child, th:first-child { text-align: left; }
+select { font: inherit; padding: 2px 4px; }
+.ablage { word-break: break-all; }
+#zone.ueber { outline: 2px dashed var(--akzent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>RLC-Sprung 2.10</h1>
+  <span class="neben">Nichtlineares RLC-Glied · Arduino Nano mit rlc_sprung_2_6 · Pin 11 PWM → U<sub>C</sub> an A0, Pinspannung an A1 · Eingangssignal = Mittelwert U<sub>E</sub></span>
+  <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
+</header>
+<main>
+  <div class="links">
+    <fieldset>
+      <legend>1 · Verbindung zum Nano</legend>
+      <div class="knoepfe">
+        <button id="verbinden" class="haupt">Verbinden …</button>
+        <button id="trennen" disabled title="Erst verbinden">Trennen</button>
+        <button id="kennung" disabled title="Erst verbinden">Kennung</button>
+      </div>
+      <div id="stand_v" class="stand">Nicht verbunden. „Verbinden“ wählt den Anschluss (COM5).</div>
+    </fieldset>
+    <fieldset>
+      <legend>2 · Sprung</legend>
+      <label class="zeile">Tastgrad T (0…140)<input id="T" type="number" min="0" max="140" step="1" value="128"><span class="einheit" id="T_V">2,51 V</span></label>
+      <label class="zeile">PWM-Frequenz F<select id="F"><option value="1">980,4 Hz</option><option value="2">3,92 kHz</option><option value="4">7,81 kHz</option><option value="3" selected>31,4 kHz</option><option value="5">62,5 kHz</option></select><span class="einheit" id="F_d"></span></label>
+      <label class="zeile">Takt je Wert B<select id="B"><option value="2">0,5 ms</option><option value="4" selected>1 ms</option><option value="8">2 ms</option><option value="16">4 ms</option></select><span class="einheit"></span></label>
+      <label class="zeile">Werte nach dem Sprung N<input id="N" type="number" min="1" max="200000" step="1" value="600"><span class="einheit">Werte</span></label>
+      <label class="zeile">Vorlauf P<input id="P" type="number" min="0" max="10000" step="1" value="20"><span class="einheit">Werte</span></label>
+      <label class="zeile">Entladen vorher V<input id="V" type="number" min="0" max="60000" step="100" value="3000"><span class="einheit">ms</span></label>
+      <label class="zeile">Rampe abwärts danach R<input id="R" type="number" min="0" max="60000" step="100" value="2000"><span class="einheit">ms</span></label>
+      <label class="zeile">Wiederholungen W<input id="W" type="number" min="1" max="50" step="1" value="1"><span class="einheit">×</span></label>
+      <div class="hinweis">Schutz des ADC-Eingangs A0 (Datenblatt: 0 … 5 V): T ist auf 140 begrenzt (Scheitel ≤ 4,5 V gemessen, der Überschwingfaktor steigt mit der Anregung), und nach jeder Messung fährt die Anregung als Rampe auf 0 statt zu springen (sonst Unterschwingen ins Negative).</div>
+      <div class="knoepfe"><button id="messen" class="haupt" disabled title="Erst mit dem Nano verbinden">Sprung messen</button><button id="abbruch" hidden title="Nach der laufenden Messung aufhören">Abbrechen</button></div>
+      <div id="stand_m" class="stand">Gesperrt: erst mit dem Nano verbinden.</div>
+    </fieldset>
+    <fieldset>
+      <legend>3 · Ablage</legend>
+      <div class="knoepfe"><button id="ordner">Ordner C:\6b_Streckenbestimmung wählen …</button></div>
+      <div id="stand_o" class="stand ablage">Kein Ordner gewählt: Messungen werden als Download gespeichert.</div>
+      <div class="hinweis">Jede Messung kommt in den Tagesordner Messungen_TT.MM.JJJJ (wird angelegt, wenn er fehlt).</div>
+    </fieldset>
+    <fieldset id="zone">
+      <legend>4 · Kurven</legend>
+      <ul id="kurven"></ul>
+      <div class="knoepfe">
+        <button id="laden">Messdateien laden …</button><input id="datei" type="file" accept=".txt,.csv,.dat" multiple hidden>
+        <button id="speichern" disabled title="Erst eine Kurve auswählen (Name anklicken)">Gewählte speichern</button>
+      </div>
+      <div class="knoepfe">
+        <button id="entfernen" disabled title="Erst eine Kurve auswählen (Name anklicken)">Gewählte entfernen</button>
+        <button id="alle_weg" disabled title="Keine Kurven geladen">Alle entfernen</button>
+        <span class="hinweis" id="stand_k">Entfernen nimmt die Kurve nur aus der Seite; die Datei im Ordner bleibt.</span>
+      </div>
+      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc210/29/28/27/26/25/24/23/22_*.txt, rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
+      <label class="hinweis" style="display:flex;gap:6px;margin-top:6px"><input id="UE" type="checkbox" checked> Anregung U<sub>E</sub> (Mittelwert) gestrichelt mitzeichnen</label>
+      <label class="hinweis" style="display:flex;gap:6px"><input id="glatt" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> glätten (gleitender Median über 5 Werte; einzelne Flankentreffer)</label>
+    </fieldset>
+  </div>
+  <div class="rechts">
+    <div class="reiterleiste"><button id="rt_aus" class="aktiv" data-r="aus">Auswertung</button><button id="rt_pruef" data-r="pruef" title="Nur zur Überprüfung: eine Kurve mit Messpunkten, Zoom in Sprung und Sprungantwort, Zählwerte des PWM-Sprungs">Prüfen · Zoom</button><button id="rt_theorie" data-r="theorie" title="Fotos des Aufbaus, Schaltplan, Bauteilwerte, Gleichungen">Aufbau und Theorie</button><button id="rt_fit" data-r="fit" title="Vorbereitet: Ansätze zum Anfitten der Sprungantwort (nächster Schritt)">Anfitten · vorbereitet</button></div>
+    <div class="inhalt" id="r_aus">
+    <div class="bild" id="b1"><canvas id="c1" aria-label="Sprungantwort U_C über t"></canvas><div class="tip" id="tip1" hidden></div></div>
+    <div class="bild" id="b2"><canvas id="c2" aria-label="Differenz zur Bezugskurve"></canvas><div class="tip" id="tip2" hidden></div></div>
+    <div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:4px">
+        <strong>Kennwerte</strong>
+        <span class="hinweis">Unteres Bild: <select id="unten"><option value="d">Differenz U<sub>C</sub> zur Bezugskurve</option><option value="p">Spannungsabfall am Port (5 V − U_H, U_L)</option><option value="e">Anregung U_E − ideal d·5 V</option></select> Bezug: <select id="bezug"></select></span>
+        <span class="hinweis">Lineare Schätzung aus den ersten beiden Extremwerten (log. Dekrement), wie im Manuskript Abschn. 3.1</span>
+      </div>
+      <div class="tafel"><table id="tab"><thead><tr>
+        <th>Kurve</th><th>U<sub>max</sub> / V</th><th>t<sub>max</sub> / ms</th><th>U<sub>min</sub> / V</th><th>t<sub>min</sub> / ms</th><th>U<sub>end</sub> / V</th>
+        <th>Überschw. / %</th><th>t<sub>10–90</sub> / ms</th><th>T<sub>d</sub> / ms</th><th>D</th><th>f<sub>0</sub> / Hz</th><th>U<sub>E,end</sub> / V</th><th>Abfall<sub>max</sub> / mV</th><th>Werte</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    </div>
+    <div class="inhalt" id="r_pruef" hidden>
+      <div class="bild" id="b3"><canvas id="c3" class="zoom" aria-label="Prüfen: U_C, U_E, U_H, U_L mit Messpunkten, zoombar"></canvas><div class="tip" id="tip3" hidden></div></div>
+      <div class="bild" id="b4"><canvas id="c4" class="zoom" aria-label="Zählwerte nH, nL, nF je Abtastwert"></canvas><div class="tip" id="tip4" hidden></div></div>
+      <div class="knoepfe" style="align-items:center">
+        <span class="hinweis">Kurve: <select id="pk"></select></span>
+        <button id="z_alles" title="ganze Messung">Alles</button>
+        <button id="z_sprung" title="Zeit −20 … +20 ms um den Sprung">Sprung ±20 ms</button>
+        <button id="z_scheitel" title="±15 ms um den Scheitel, Spannung ±0,1 V">Scheitel</button>
+        <button id="z_zurueck" disabled title="Noch nicht gezoomt">Zurück</button>
+        <label class="hinweis" style="display:flex;gap:4px"><input id="z_punkte" type="checkbox" checked> Messpunkte</label>
+        <label class="hinweis" style="display:flex;gap:4px"><input id="z_pegel" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> roh</label>
+        <span class="hinweis" id="z_stand">Rad: Zeit zoomen am Zeiger · Strg+Rad: Spannung · Rahmen ziehen: Ausschnitt · Doppelklick: alles</span>
+      </div>
+    </div>
+    <div class="inhalt" id="r_theorie" hidden>
+      <h2 style="margin-top:4px">Aufbau</h2>
+      <div class="fotos">
+        <figure><img id="foto1" src="/*FOTO1*/" alt="Aufbau: Drossel mit Eisenkern, davor der Kondensator, Steckplatine mit Arduino Nano"><figcaption>Bild 1: Drossel mit Eisenkern (links, auf dem Halter) mit dem Kondensator davor, Steckplatine mit Arduino Nano und USB-Anschluss (rechts). Foto 23.11.2026.</figcaption></figure>
+        <figure><img id="foto2" src="/*FOTO2*/" alt="Aufbau von schräg oben: Drossel, Steckplatine, Nano mit Steckbrücken"><figcaption>Bild 2: derselbe Aufbau von schräg oben; die Steckbrücken führen von der Drossel und dem Kondensator zur Steckplatine und zum Nano (D11, A0, A1, GND). Foto 23.11.2026.</figcaption></figure>
+      </div>
+      <h3>Schaltplan</h3>
+      <figure id="schaltplan">/*SCHALTPLAN*/<figcaption>Bild 3: Serienschwingkreis aus der Drossel (L mit Eisenkern, Kupferwiderstand der Wicklung R<sub>Cu</sub> = 92 Ω) und dem Kondensator C am Nano; einen Vorwiderstand gibt es nicht. D11 liefert die PWM, A1 misst die Pinspannung, A0 die Kondensatorspannung U<sub>C</sub>. Das Manuskript (Abschn. 3.1, Gl. 3.9, und Abschn. 8) deutet die 92 Ω als äußeren Widerstand R<sub>ext</sub>; nach Auskunft des Verfassers (23.11.2026) sind es die Kupferwiderstände der Spule.</figcaption></figure>
+      <h3>Bauteilwerte</h3>
+      <table class="werte"><thead><tr><th>Größe</th><th>Nennwert</th><th>analytisch (log. Dekrement, Manuskript 3.1)</th><th>Nelder-Mead (Manuskript 3.2)</th></tr></thead><tbody>
+        <tr><td>R / Ω</td><td>92 (Kupferwiderstand der Spule)</td><td>335</td><td>330</td></tr>
+        <tr><td>L / H</td><td>3,9</td><td>10,1</td><td>11,95</td></tr>
+        <tr><td>C / µF</td><td>23</td><td>23 (fest)</td><td>28,2</td></tr>
+        <tr><td>RMSE / mV</td><td>–</td><td>≈ 80</td><td>184</td></tr></tbody></table>
+      <p>Die Nennwerte beschreiben die Messung nicht: Die Lineartheorie mit Nennwerten sagt einen Scheitel von 4,27 V bei 30 ms voraus, gemessen sind 3,87 V bei 62 ms (Simulink-Messung 03.03.2026, T = 128). Der Eisenkern der Drossel macht L vom Strom abhängig (Hysterese, im Manuskript Abschnitt 4 mit dem Jiles-Atherton-Modell beschrieben); der identifizierte Gesamtwiderstand von 330 … 335 Ω liegt weit über dem Kupferwiderstand von 92 Ω, der Rest sind Verluste im Kern (das Manuskript erklärt ihn noch mit einem äußeren Widerstand, den es nicht gibt). Die Messungen vom 22.11.2026 zeigen dieselbe Nichtlinearität am Überschwingfaktor U<sub>max</sub>/U<sub>end</sub>: 1,54 bei T = 128, 1,60 … 1,63 bei T = 140, 1,62 bei T = 150.</p>
+      <h2>Theorie</h2>
+      <h3>Linearer Serienschwingkreis (Manuskript Gl. 2.1 bis 2.3)</h3>
+      <p>Maschensatz mit dem Sprung U<sub>∞</sub> bei t = 0:</p>
+      <math display="block"><mrow><mi>L</mi><mo>·</mo><mfrac><mrow><msup><mi>d</mi><mn>2</mn></msup><msub><mi>U</mi><mi>C</mi></msub></mrow><mrow><mi>d</mi><msup><mi>t</mi><mn>2</mn></msup></mrow></mfrac><mo>+</mo><mi>R</mi><mo>·</mo><mfrac><mrow><mi>d</mi><msub><mi>U</mi><mi>C</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mfrac><msub><mi>U</mi><mi>C</mi></msub><mi>C</mi></mfrac><mo>=</mo><mfrac><msub><mi>U</mi><mi>∞</mi></msub><mi>C</mi></mfrac><mspace width="2em"/><mo>(</mo><mi>t</mi><mo>≥</mo><mn>0</mn><mo>)</mo></mrow></math>
+      <p>mit der Dämpfung α = R/(2L), der ungedämpften Eigenkreisfrequenz ω<sub>0</sub> = 1/√(LC), dem Dämpfungsmaß D = α/ω<sub>0</sub> und ω<sub>d</sub> = √(ω<sub>0</sub>² − α²). Im Schwingfall (D &lt; 1) lautet die Sprungantwort für U<sub>C</sub>(0) = 0 und i(0) = 0:</p>
+      <math display="block"><mrow><msub><mi>U</mi><mi>C</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>U</mi><mi>∞</mi></msub><mo>·</mo><mrow><mo>[</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>α</mi><mi>t</mi></mrow></msup><mo>·</mo><mrow><mo>(</mo><mi>cos</mi><mo>⁡</mo><msub><mi>ω</mi><mi>d</mi></msub><mi>t</mi><mo>+</mo><mfrac><mi>α</mi><msub><mi>ω</mi><mi>d</mi></msub></mfrac><mi>sin</mi><mo>⁡</mo><msub><mi>ω</mi><mi>d</mi></msub><mi>t</mi><mo>)</mo></mrow><mo>]</mo></mrow></mrow></math>
+      <h3>Kennwerte aus den ersten beiden Extremwerten (Manuskript 3.1; so rechnet die Tafel im Reiter „Auswertung“)</h3>
+      <p>Mit den Amplituden A<sub>1</sub> = U<sub>max</sub> − U<sub>end</sub> und A<sub>2</sub> = U<sub>end</sub> − U<sub>min</sub> und der halben Schwingungsdauer T<sub>d</sub>/2 = t<sub>min</sub> − t<sub>max</sub>:</p>
+      <math display="block"><mrow><mi>Λ</mi><mo>=</mo><mi>ln</mi><mo>⁡</mo><mfrac><msub><mi>A</mi><mn>1</mn></msub><msub><mi>A</mi><mn>2</mn></msub></mfrac><mo>,</mo><mspace width="1.5em"/><mi>α</mi><mo>=</mo><mfrac><mi>Λ</mi><mrow><msub><mi>T</mi><mi>d</mi></msub><mo>/</mo><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="1.5em"/><msub><mi>ω</mi><mi>d</mi></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mi>π</mi></mrow><msub><mi>T</mi><mi>d</mi></msub></mfrac><mo>,</mo><mspace width="1.5em"/><msub><mi>ω</mi><mn>0</mn></msub><mo>=</mo><msqrt><msubsup><mi>ω</mi><mi>d</mi><mn>2</mn></msubsup><mo>+</mo><msup><mi>α</mi><mn>2</mn></msup></msqrt><mo>,</mo><mspace width="1.5em"/><mi>D</mi><mo>=</mo><mfrac><mi>α</mi><msub><mi>ω</mi><mn>0</mn></msub></mfrac><mo>,</mo><mspace width="1.5em"/><msub><mi>f</mi><mn>0</mn></msub><mo>=</mo><mfrac><msub><mi>ω</mi><mn>0</mn></msub><mrow><mn>2</mn><mi>π</mi></mrow></mfrac></mrow></math>
+      <p>Daraus bei festem C die Bauteilwerte L<sub>eff</sub> = 1/(ω<sub>0</sub>²·C) und R<sub>eff</sub> = 2·α·L<sub>eff</sub>. Beispiel des Manuskripts: U<sub>1</sub> = 3,866 V bei 62 ms, U<sub>2</sub> = 1,940 V bei 115 ms, U<sub>∞</sub> = 2,505 V → Λ = 0,878, α = 16,6 s<sup>−1</sup>, ω<sub>0</sub> = 65,6 rad/s, D = 0,253, L<sub>eff</sub> = 10,1 H, R<sub>eff</sub> = 335 Ω. Eine lineare Schätzung ist das nur am jeweiligen Arbeitspunkt; die Werte gelten für diese Anregung.</p>
+      <h3>Nichtlineares Modell: L und C als Funktionen (Grundlage für den Reiter „Anfitten“)</h3>
+      <p>Die Bauteilgesetze bleiben exakt, nur die Kennlinien werden gekrümmt: Die Spule führt die Flussverkettung ψ(i), der Kondensator die Ladung q(u<sub>C</sub>). Ihre Ableitungen sind die <b>differentielle Induktivität</b> L<sub>d</sub>(i) und die <b>differentielle Kapazität</b> C<sub>d</sub>(u<sub>C</sub>); L<sub>s</sub> = ψ/i und C<sub>s</sub> = q/u<sub>C</sub> sind die Sekantenwerte. Mit dem Kupferwiderstand R der Wicklung lautet der Maschensatz:</p>
+      <math display="block"><mrow><msub><mi>u</mi><mi>L</mi></msub><mo>=</mo><mfrac><mrow><mi>d</mi><mi>ψ</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msub><mi>L</mi><mi>d</mi></msub><mo>(</mo><mi>i</mi><mo>)</mo><mo>·</mo><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>,</mo><mspace width="1.2em"/><msub><mi>L</mi><mi>d</mi></msub><mo>=</mo><mfrac><mrow><mi>d</mi><mi>ψ</mi></mrow><mrow><mi>d</mi><mi>i</mi></mrow></mfrac><mo>;</mo><mspace width="2em"/><mi>i</mi><mo>=</mo><mfrac><mrow><mi>d</mi><mi>q</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msub><mi>C</mi><mi>d</mi></msub><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><mo>·</mo><mfrac><mrow><mi>d</mi><msub><mi>u</mi><mi>C</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>,</mo><mspace width="1.2em"/><msub><mi>C</mi><mi>d</mi></msub><mo>=</mo><mfrac><mrow><mi>d</mi><mi>q</mi></mrow><mrow><mi>d</mi><msub><mi>u</mi><mi>C</mi></msub></mrow></mfrac></mrow></math>
+      <math display="block"><mrow><msub><mi>u</mi><mi>E</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mi>R</mi><mo>·</mo><mi>i</mi><mo>+</mo><msub><mi>L</mi><mi>d</mi></msub><mo>(</mo><mi>i</mi><mo>)</mo><mo>·</mo><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>+</mo><msub><mi>u</mi><mi>C</mi></msub><mspace width="2em"/><mo>⇒</mo><mspace width="1em"/><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><mi>R</mi><mi>i</mi><mo>−</mo><msub><mi>u</mi><mi>C</mi></msub></mrow><mrow><msub><mi>L</mi><mi>d</mi></msub><mo>(</mo><mi>i</mi><mo>)</mo></mrow></mfrac><mo>,</mo><mspace width="1.2em"/><mfrac><mrow><mi>d</mi><msub><mi>u</mi><mi>C</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mfrac><mi>i</mi><mrow><msub><mi>C</mi><mi>d</mi></msub><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo></mrow></mfrac></mrow></math>
+      <p>Das ist ein Zustandssystem zweiter Ordnung mit den Zuständen i und u<sub>C</sub>; die lineare Lösung (Gl. 2.3) ist der Sonderfall L<sub>d</sub> = const, C<sub>d</sub> = const. Die Nichtlinearität zeigt sich in der Messung daran, dass Überschwingfaktor und Schwingfrequenz von der Anregung abhängen (T = 128: 1,54 und 9,99 Hz; T = 140: 1,63 und 10,04 Hz aus der Tafel im Reiter „Auswertung“); bei einem linearen System wären beide unabhängig von U<sub>E</sub>.</p>
+      <p><b>Die Kennlinien, wie sie auf der Ruppert-Theorieseite 1.2 (Reiter „Reihenschwingkreis mit sättigbarer Spule und spannungsabhängigem Kondensator“, 10.11.2026) festgelegt sind.</b> Beide Bauteile werden über ihre Werkstoffgrößen beschrieben: die differentielle Permeabilität μ(H) des Kerns (H = N·i/l<sub>m</sub>) und die Permittivität ε(E) der Keramik (E = u<sub>C</sub>/d). Spule: B(H) = μ<sub>0</sub>H + B<sub>s</sub>·tanh(μ<sub>0</sub>(μ<sub>e</sub> − 1)H/B<sub>s</sub>), also ein tanh-Baustein plus die Luftgerade; daraus</p>
+      <math display="block"><mrow><mi>L</mi><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>d</mi><mi>ψ</mi></mrow><mrow><mi>d</mi><mi>i</mi></mrow></mfrac><mo>=</mo><msub><mi>L</mi><mn>0</mn></msub><mo>·</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mo>(</mo><msub><mi>μ</mi><mi>e</mi></msub><mo>−</mo><mn>1</mn><mo>)</mo><mo>·</mo><msup><mi>sech</mi><mn>2</mn></msup><mo>(</mo><mi>i</mi><mo>/</mo><msub><mi>I</mi><mi>s</mi></msub><mo>)</mo></mrow><msub><mi>μ</mi><mi>e</mi></msub></mfrac><mo>,</mo><mspace width="1.2em"/><mi>ψ</mi><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo><mfrac><msub><mi>L</mi><mn>0</mn></msub><msub><mi>μ</mi><mi>e</mi></msub></mfrac><mo>·</mo><mrow><mo>[</mo><mi>i</mi><mo>+</mo><mo>(</mo><msub><mi>μ</mi><mi>e</mi></msub><mo>−</mo><mn>1</mn><mo>)</mo><msub><mi>I</mi><mi>s</mi></msub><mi>tanh</mi><mo>⁡</mo><mfrac><mi>i</mi><msub><mi>I</mi><mi>s</mi></msub></mfrac><mo>]</mo></mrow></mrow></math>
+      <p>mit L<sub>0</sub> = μ<sub>0</sub>μ<sub>e</sub>N²A/l<sub>m</sub> (Kleinsignalwert), I<sub>s</sub> = H<sub>s</sub>l<sub>m</sub>/N und dem Restwert L<sub>0</sub>/μ<sub>e</sub> der Luftspule tief in der Sättigung (keine Setzung, sondern Folge von μ(H) → μ<sub>0</sub>). Kondensator (Klasse-2-Keramik, Form aus der Würth-Applikationsschrift ANP062a, DC-Bias-Messung −5/−14/−27/−40 % bei 4/6/8/10 V eines 10-V-X7R):</p>
+      <math display="block"><mrow><mi>C</mi><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><mo>=</mo><mfrac><mrow><mi>d</mi><mi>q</mi></mrow><mrow><mi>d</mi><msub><mi>u</mi><mi>C</mi></msub></mrow></mfrac><mo>=</mo><msub><mi>C</mi><mn>0</mn></msub><mo>·</mo><mrow><mo>[</mo><mi>γ</mi><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>γ</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mrow><mo>|</mo><msub><mi>u</mi><mi>C</mi></msub><mo>/</mo><msub><mi>U</mi><mi>r</mi></msub><mo>|</mo></mrow><mn>3</mn></msup></mrow></mfrac><mo>]</mo></mrow><mo>,</mo><mspace width="0.8em"/><mi>γ</mi><mo>=</mo><mn>0,2</mn><mo>;</mo><mspace width="2em"/><mtext>Manuskript Gl. 5.1 stattdessen:</mtext><mspace width="0.6em"/><mi>C</mi><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><mo>=</mo><mfrac><msub><mi>C</mi><mn>0</mn></msub><mrow><mn>1</mn><mo>+</mo><mi>γ</mi><msubsup><mi>u</mi><mi>C</mi><mn>2</mn></msubsup></mrow></mfrac></mrow></math>
+      <p>γ ist der paraelektrische Sockel bei hoher Spannung. Das Manuskript (Gl. 5.1–5.4) nimmt die quadratische Form mit C<sub>0</sub> = 38,9 µF und γ = 0,0449 V<sup>−2</sup>: C(0) = 38,9 µF, C(2,5 V) = 30,4 µF, C(3,9 V) = 23,1 µF – der aufgedruckte Nennwert 23 µF wäre der Wert nahe der Nennspannung. Welche Form stimmt, entscheidet erst der Fit; beide sind glatt und fallend. Mit i = C(u<sub>C</sub>)·u̇<sub>C</sub> und di/dt = C(u<sub>C</sub>)·ü<sub>C</sub> + C′(u<sub>C</sub>)·u̇<sub>C</sub>² wird der Maschensatz zur Differentialgleichung zweiter Ordnung in u<sub>C</sub> allein:</p>
+      <math display="block"><mrow><msub><mi>u</mi><mi>E</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mi>R</mi><mo>·</mo><mi>C</mi><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><msub><mover><mi>u</mi><mo>˙</mo></mover><mi>C</mi></msub><mo>+</mo><mi>L</mi><mo>(</mo><mi>C</mi><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><msub><mover><mi>u</mi><mo>˙</mo></mover><mi>C</mi></msub><mo>)</mo><mo>·</mo><mrow><mo>[</mo><mi>C</mi><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><msub><mover><mi>u</mi><mo>¨</mo></mover><mi>C</mi></msub><mo>+</mo><msup><mi>C</mi><mo>′</mo></msup><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><msubsup><mover><mi>u</mi><mo>˙</mo></mover><mi>C</mi><mn>2</mn></msubsup><mo>]</mo></mrow><mo>+</mo><msub><mi>u</mi><mi>C</mi></msub><mo>,</mo><mspace width="1.2em"/><msub><mi>u</mi><mi>C</mi></msub><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.6em"/><msub><mover><mi>u</mi><mo>˙</mo></mover><mi>C</mi></msub><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></mrow></math>
+      <p>Für I<sub>s</sub>, U<sub>r</sub> → ∞ bleibt L<sub>0</sub>C<sub>0</sub>ü<sub>C</sub> + RC<sub>0</sub>u̇<sub>C</sub> + u<sub>C</sub> = u<sub>E</sub>, die lineare Gleichung 2.1. In jedem Augenblick ist der Kreis ein RLC-Kreis mit den momentanen Werten L(i), C(u<sub>C</sub>) zwischen Nennwert und Restwert; die momentane Kreisfrequenz 1/√(L(i)C(u<sub>C</sub>)) wandert, die ersten Halbperioden sind kürzer, ausgeschwungen gilt die lineare Periode. Hysterese (Manuskript Abschn. 4, Jiles-Atherton mit M als drittem Zustand, Gl. 4.1–4.7) ist eine Erweiterung davon; die Langevin-Funktion coth(x) − 1/x ist dieselbe Art Sättigungskennlinie wie tanh, neu ist nur der Gedächtnisanteil (δ, k). Ob er gebraucht wird, zeigt die Streuung des Scheitels zwischen wiederholten Sprüngen (gemessen ±40 … 90 mV bei T = 140; Remanenz als Verdacht, noch nicht einzeln verstellt).</p>
+      <p><b>Die neuronale Struktur der Kennlinien (Ruppert).</b> Nachgebildet werden nicht L und C, sondern die integrierten Kennlinien ψ(i) und q(u<sub>C</sub>): Sie sind S-förmig mit einem Wendepunkt im Ursprung, also Rupperts Fall mit K = 1, plus ein fast gerader Baustein für den linearen Rest (L<sub>0</sub>i/μ<sub>e</sub> bzw. γC<sub>0</sub>u<sub>C</sub>). Beide sind ungerade, deshalb wird die Punktwolke am Ursprung gespiegelt. Die Ableitungen der Netze sind dann geschlossen Summen von sech²-Glocken:</p>
+      <math display="block"><mrow><mover><mi>ψ</mi><mo>~</mo></mover><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><mi>tanh</mi><mo>⁡</mo><mo>(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>(</mo><mi>i</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo><mo>)</mo><mspace width="0.8em"/><mo>⇒</mo><mspace width="0.8em"/><mi>L</mi><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><msup><mi>sech</mi><mn>2</mn></msup><mo>(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>(</mo><mi>i</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo><mo>)</mo><mo>;</mo><mspace width="1.5em"/><mtext>ebenso</mtext><mspace width="0.6em"/><mover><mi>q</mi><mo>~</mo></mover><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><mo>⇒</mo><mi>C</mi><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo></mrow></math>
+      <p>Auf der Ruppert-Seite ist das gegen Polynom siebten Grades, Tabelle mit 40 Klassen und kubischen Spline durchgerechnet (gleiche Punktwolken, gleiche Differentialgleichung, größter Fehler von u<sub>C</sub> in Prozent der Sprunghöhe), und das graue Modell – Dynamik aus der Physik, Kennlinien aus dem Netz – rechnet danach jede abgetastete Anregung, nicht nur die gelernte Sprunghöhe.</p>
+      <p><b>Wie die Verläufe L(i) und C(u) aus dem Fit kommen – drei Wege.</b> (0) <i>Rupperts Verfahren wörtlich</i> braucht den Strom i(t): q(t) = ∫i dt über u<sub>C</sub>(t) aufgetragen gibt q(u<sub>C</sub>) Punkt für Punkt, ψ(t) = ∫(u<sub>E</sub> − R·i − u<sub>C</sub>) dt über i(t) gibt ψ(i); durch beide Punktwolken je ein tanh-Netz. <b>Diese Seite misst i noch nicht</b> – ein Shunt in der Masseleitung des Kondensators an einem freien ADC-Kanal (A2; der Nano hat A2 … A7 frei) wäre der nächste Schritt am Aufbau und machte die Trennung von L(i) und C(u<sub>C</sub>) aus einer einzigen Sprungantwort möglich. Bis dahin: (1) <i>Simulation und Suche</i> (Manuskript Abschn. 6): Zustandssystem integrieren, Parameter θ = (M<sub>s</sub>, a, α, k, L<sub>0</sub>, R<sub>0</sub>, C<sub>0</sub>, γ, R<sub>skin</sub>, t<sub>d</sub>) mit Differentialevolution so wählen, dass J(θ) = Σ w(t<sub>i</sub>)·[U<sub>C,sim</sub>(t<sub>i</sub>) − U<sub>C,mess</sub>(t<sub>i</sub>)]² (Gl. 6.4) klein wird; die Kennlinien folgen aus θ. (2) <i>Gleichungsfehler aus dem glatten Fit</i> – das ist der Weg, für den der Reiter „Anfitten“ gebaut wird: Erst wird die Messung durch eine glatte Funktion û<sub>C</sub>(t) angenähert, deren erste und zweite Ableitung in geschlossener Form vorliegen (bei tanh-Neuronen: tanh′ = 1 − tanh², tanh″ = −2·tanh·tanh′; bei Messwerten müsste man numerisch differenzieren und verstärkte das ADC-Rauschen). Dann sind Strom und Stromanstieg ohne Integration bekannt:</p>
+      <math display="block"><mrow><mi>i</mi><mo>=</mo><msub><mi>C</mi><mi>d</mi></msub><mo>(</mo><mover><mi>u</mi><mo>^</mo></mover><mo>)</mo><mo>·</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mo>′</mo></msup><mo>,</mo><mspace width="1.2em"/><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msubsup><mi>C</mi><mi>d</mi><mo>′</mo></msubsup><mo>(</mo><mover><mi>u</mi><mo>^</mo></mover><mo>)</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mrow><mo>′</mo><mn>2</mn></mrow></msup><mo>+</mo><msub><mi>C</mi><mi>d</mi></msub><mo>(</mo><mover><mi>u</mi><mo>^</mo></mover><mo>)</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mo>″</mo></msup><mo>,</mo><mspace width="1.5em"/><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><mi>R</mi><mi>i</mi><mo>−</mo><msub><mi>L</mi><mi>d</mi></msub><mo>(</mo><mi>i</mi><mo>)</mo><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>−</mo><mover><mi>u</mi><mo>^</mo></mover><mo>,</mo><mspace width="1.2em"/><munder><mo>min</mo><mrow><msub><mi>L</mi><mi>d</mi></msub><mo>,</mo><msub><mi>C</mi><mi>d</mi></msub></mrow></munder><munder><mo>∑</mo><mi>n</mi></munder><mi>r</mi><msup><mrow><mo>(</mo><msub><mi>t</mi><mi>n</mi></msub><mo>)</mo></mrow><mn>2</mn></msup></mrow></math>
+      <p>Der Maschensatz muss in jedem Abtastpunkt aufgehen; die Parameter der Kennlinien (L<sub>0</sub>, i<sub>s</sub> bzw. a<sub>k</sub>, b<sub>k</sub>; C<sub>0</sub>, γ) minimieren den Gleichungsfehler r, und daraus werden L<sub>d</sub>(i) und C<sub>d</sub>(u<sub>C</sub>) als Kurven gezeichnet. Dabei gilt ohne Strommessung: Aus <b>einer</b> Sprungantwort allein sind L(i) und C(u<sub>C</sub>) nicht zu trennen (nur ihr Zusammenwirken entlang der einen Bahn in der i-u<sub>C</sub>-Ebene ist angeregt); die Messung mit mehreren Tastgraden (T = 100 … 140, Wiederholungen W) liefert mehrere Bahnen und macht die Trennung möglich. Genau dafür zeichnet die Seite die Anregung U<sub>E</sub> exakt mit auf.</p>
+      <p><b>Warum die Wahl der Ansatzfunktion die eigentliche Frage ist.</b> Fourier-Glieder sind periodisch und können den Übergang in den eingeschwungenen Zustand nur mit vielen Gliedern und Welligkeit nachbilden; Taylor-Polynome laufen außerhalb des Entwicklungspunkts davon. Gedämpfte Sinusglieder e<sup>−αt</sup>·sin(ω<sub>d</sub>t + φ) sind die exakte Lösungsklasse des linearen Falls und scheitern erst an der Nichtlinearität (Frequenz hängt von der Amplitude ab). tanh-Neuronen sind glatt, sättigen von selbst auf einen Endwert und haben geschlossene Ableitungen – deshalb der Vergleich bei gleicher Parameterzahl in Anstieg, Schwingen und eingeschwungenem Zustand. Offen ist, ob der tanh die beste Ansatzfunktion für gedämpfte nichtlineare Schwingungen ist oder nur eine spezielle Lösung des allgemeinen Approximationsproblems; das soll der Reiter „Anfitten“ zeigen.</p>
+      <h3>Anregung: der Mittelwert der PWM ist das Eingangssignal</h3>
+      <p>D11 schaltet mit 31,4 kHz zwischen dem High-Pegel U<sub>H</sub> und dem Low-Pegel U<sub>L</sub> des Treibers (unter Last, Innenwiderstand des Ports; gemessen fällt bis zu 68 mV ab). Die Strecke ist bei 31,4 kHz um den Faktor ω²LC ≈ 10<sup>7</sup> gedämpft (L = 12 H, C = 28 µF), die Welligkeit an U<sub>C</sub> liegt damit unter 1 µV. Wirksam ist allein der Mittelwert:</p>
+      <math display="block"><mrow><msub><mi>U</mi><mi>E</mi></msub><mo>=</mo><mi>d</mi><mo>·</mo><msub><mi>U</mi><mi>H</mi></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>d</mi><mo>)</mo><mo>·</mo><msub><mi>U</mi><mi>L</mi></msub><mo>,</mo><mspace width="1.5em"/><mi>d</mi><mo>=</mo><mfrac><mi>T</mi><mn>255</mn></mfrac><mspace width="0.6em"/><mtext>(phasenrichtige PWM, F = 1 … 3)</mtext><mo>,</mo><mspace width="0.8em"/><mi>d</mi><mo>=</mo><mfrac><mrow><mi>T</mi><mo>+</mo><mn>1</mn></mrow><mn>256</mn></mfrac><mspace width="0.6em"/><mtext>(schnelle PWM, F = 4, 5)</mtext></mrow></math>
+      <p>Der Nano wandelt A0 und A1 abwechselnd alle 125 µs (Timer1, Vorteiler 128, Auto-Trigger); je Ausgabewert werden B Wandlungen je Kanal summiert (B = 4 → 1 ms). Auf A1 werden Treffer ≥ 4,5 V als High (Summe s<sub>H</sub>, Anzahl n<sub>H</sub>) und ≤ 0,5 V als Low (s<sub>L</sub>, n<sub>L</sub>) getrennt gezählt; Treffer auf einer Flanke (n<sub>F</sub>) werden verworfen. U<sub>H</sub> = s<sub>H</sub>/n<sub>H</sub> und U<sub>L</sub> = s<sub>L</sub>/n<sub>L</sub> sind damit die Pegel unter Last; d kommt exakt aus dem Timer-Register. Der Reiter „Prüfen“ zeigt n<sub>H</sub>, n<sub>L</sub>, n<sub>F</sub> je Wert.</p>
+      <h3>Schutz des ADC-Eingangs (Datenblatt ATmega328P 7810D)</h3>
+      <p>Zulässig an jedem Pin −0,5 V … V<sub>CC</sub> + 0,5 V, Injektionsstrom in die Schutzdioden ±1 mA (§28.1), ADC-Eingang GND … V<sub>REF</sub> (§28.9). Der Überschwingfaktor steigt mit der Anregung (1,54 → 1,63); bei T = 150 lag der Scheitel schon bei 4,77 V. Deshalb ist T ≤ 140 fest im Nano und in dieser Seite (Scheitel 4,39 … 4,47 V), und nach jeder Messung fährt die Anregung als Rampe (R ms) auf 0: Ein Sprung auf 0 schwänge mit −0,55·U<sub>end</sub> ins Negative. Der größte Pinstrom ist C·dU<sub>C</sub>/dt ≈ 4 mA (92 V/s gemessen).</p>
+      <p class="hinweis">Quellen: rlc_manuskript.docx (Streckenausmessung, 04.03.2026), Simulink-Messung RLC_Glied_2.txt (03.03.2026), Messungen rlc25/rlc26 (22.11.2026), Datenblatt ATmega328P 7810D–AVR–01/15, RUPPERT_Theorie_1.2.html (Reiter „Reihenschwingkreis mit sättigbarer Spule und spannungsabhängigem Kondensator“, 10.11.2026; Würth Elektronik ANP062a, Abb. 5), H. Ruppert, A. Krug, Y. A. W. Shardt: IFAC-PapersOnLine 55(7), 2022, S. 568–573. Diese Seite: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code), gemeinsam erstellt.</p>
+    </div>
+    <div class="inhalt" id="r_fit" hidden>
+      <h2>Anfitten der Sprungantwort – vorbereitet, noch ohne Ansätze</h2>
+      <p>Hier kommt im nächsten Schritt der Vergleich der Ansatzfunktionen: <b>tanh-Neuronen (Ruppert)</b> gegen <b>Fourier-Reihe</b>, <b>Taylor-Reihe</b> und <b>gedämpfte Sinusglieder</b> (Prony, die exakte Lösungsklasse des linearen Falls). Bewertet wird bei <b>gleicher Parameterzahl</b> der Fehler über die ganze Aufzeichnung, getrennt nach Anstieg, Schwingen und eingeschwungenem Zustand, dazu das Verhalten außerhalb des Messfensters (Fortsetzung). Frage dahinter: Welche Ansatzfunktion approximiert gedämpfte nichtlineare Vorgänge mit den wenigsten Neuronen – und ist der tanh dafür die beste Wahl oder nur eine spezielle Lösung des allgemeinen Approximationsproblems?</p>
+      <div class="knoepfe" style="align-items:center"><span class="hinweis">Kurve für den Fit: <select id="fk"></select></span><button id="f_daten">Daten der Kurve zeigen</button><span class="hinweis" id="f_stand">Schnittstelle: <code>fitDaten(kurve)</code> liefert t, U<sub>C</sub>, U<sub>E</sub> ab dem Sprung; Ansätze hängen sich in <code>fitModelle</code> ein.</span></div>
+      <table class="werte" id="f_tafel"><thead><tr><th>Kurve</th><th>Werte ab Sprung</th><th>t<sub>0</sub> … t<sub>end</sub> / ms</th><th>Δt / ms</th><th>U<sub>C,end</sub> / V</th><th>U<sub>E,end</sub> / V</th><th>Anregung gemessen</th></tr></thead><tbody></tbody></table>
+      <table class="werte" id="f_modelle"><thead><tr><th>Ansatz</th><th>Parameter</th><th>RMSE gesamt / mV</th><th>RMSE Anstieg / mV</th><th>RMSE Schwingen / mV</th><th>RMSE eingeschwungen / mV</th></tr></thead><tbody><tr><td colspan="6" class="hinweis">Noch kein Ansatz eingehängt (fitModelle ist leer).</td></tr></tbody></table>
+    </div>
+  </div>
+</main>
+<script type="application/json" id="d_messungen">/*MESSUNGEN*/</script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const LSB = 5 / 1023;
+const FARBEN = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"];
+const STRICHE = [[], [7, 4], [2, 3], [10, 3, 2, 3]];
+const FNAME = {1: "980,4 Hz", 2: "3,92 kHz", 3: "31,4 kHz", 4: "7,81 kHz", 5: "62,5 kHz"};
+let kurven = [], naechste = 0, gewaehlt = null, ordner = null;
+const zahl = (x, n) => Number.isFinite(x) ? x.toLocaleString("de-DE", {minimumFractionDigits: n, maximumFractionDigits: n}) : "–";
+const tastgrad = (T, F) => T === 0 ? 0 : T === 255 ? 1 : (F <= 3 ? T / 255 : (T + 1) / 256);
+
+// ---------- Mittelwert der Anregung (wie rlc_messen_2.4.py): Pegel halten, wenn im Fenster keiner vorkommt
+function anregung(roh, T, F, B) {   // roh: [k, s0, sH, nH, sL, nL, nF]
+  let uh = 5, ul = 0; const d = tastgrad(T, F), r = {k: [], t: [], u: [], uh: [], ul: [], nf: [], nh: [], nl: [], d};
+  for (const [k, s0, sH, nH, sL, nL, nF] of roh) {
+    if (nH) uh = sH / nH * LSB; if (nL) ul = sL / nL * LSB;
+    r.k.push(k); r.t.push((k + 0.5) * B * 250e-6); r.u.push(s0 / B * LSB); r.uh.push(uh); r.ul.push(ul); r.nf.push(nF); r.nh.push(nH); r.nl.push(nL);
+  }
+  return r;
+}
+function median5(a) { return a.map((_, i) => { const w = a.slice(Math.max(0, i - 2), i + 3).slice().sort((x, y) => x - y); return w[w.length >> 1]; }); }
+function ue(k) {   // U_E-Verlauf je nach Glättung; null, wenn die Kurve keine Anregung hat
+  if (k.ue_fertig) return k.ue_fertig;
+  if (!k.uh) return null;
+  const g = $("glatt").checked, uh = g ? median5(k.uh) : k.uh, ul = g ? median5(k.ul) : k.ul;
+  return k.t.map((t, i) => { const d = k.kk[i] >= 0 ? k.d : 0; return d * uh[i] + (1 - d) * ul[i]; });
+}
+
+// ---------- Kurven und Kennwerte
+function neueKurve(name, z, quelle) {   // z: {t, u, [kk, uh, ul, d, nf, ue_fertig, text]}
+  const k = Object.assign({id: naechste, name, quelle, sichtbar: true, farbe: FARBEN[naechste % 8], strich: STRICHE[Math.floor(naechste / 8) % 4]}, z);
+  naechste++; kurven.push(k); gewaehlt = k.id; alles(); return k;
+}
+function kennwerte(k) {
+  const n0 = k.kk ? k.kk.findIndex(x => x >= 0) : 0, t = k.t.slice(Math.max(0, n0)), u = k.u.slice(Math.max(0, n0)), n = u.length, r = {n: k.t.length};
+  if (n < 5) return r;
+  const m = Math.max(1, Math.round(n * 0.1)); let s = 0; for (let i = n - m; i < n; i++) s += u[i]; r.Uend = s / m;
+  let im = 0; for (let i = 1; i < n; i++) if (u[i] > u[im]) im = i;
+  r.Umax = u[im]; r.tmax = t[im]; r.ueber = (r.Umax - r.Uend) / r.Uend * 100;
+  const u0 = u[0], h = r.Uend - u0, z = (p) => { for (let i = 1; i < n; i++) if ((u[i] - u0) >= p * h) return t[i - 1] + (t[i] - t[i - 1]) * ((u0 + p * h) - u[i - 1]) / (u[i] - u[i - 1]); return NaN; };
+  r.t1090 = z(0.9) - z(0.1);
+  let iu = -1, unter = false;
+  for (let i = im + 1; i < n; i++) { if (u[i] < r.Uend) { unter = true; if (iu < 0 || u[i] < u[iu]) iu = i; } else if (unter) break; }
+  if (iu > 0 && r.Umax > r.Uend) {
+    r.Umin = u[iu]; r.tmin = t[iu];
+    const A1 = r.Umax - r.Uend, A2 = r.Uend - r.Umin, Td = 2 * (r.tmin - r.tmax), al = Math.log(A1 / A2) / (Td / 2), wd = 2 * Math.PI / Td, w0 = Math.hypot(wd, al);
+    r.Td = Td; r.D = al / w0; r.f0 = w0 / (2 * Math.PI);
+  }
+  const e = ue(k);
+  if (e) {
+    const en = e.slice(Math.max(0, n0)); let se = 0; for (let i = n - m; i < n; i++) se += en[i]; r.UEend = se / m;
+    if (k.uh) { const g = $("glatt").checked, uh = g ? median5(k.uh) : k.uh, ul = g ? median5(k.ul) : k.ul; let a = 0; for (let i = Math.max(0, n0); i < k.t.length; i++) a = Math.max(a, 5 - uh[i], ul[i]); r.abfall = a * 1000; }
+  }
+  return r;
+}
+function lesen(text, name) {
+  const zeilen = text.split(/\r?\n/), z = []; let namen = null, kopf = "";
+  for (const l of zeilen) {
+    const tl = l.trim(); if (!tl) continue;
+    if (tl.startsWith("#")) { kopf += tl + "\n"; const w = tl.slice(1).trim().split(/\s+/); if (w.includes("t_s") || w.includes("U_C_V")) namen = w; continue; }
+    const p = tl.split(/[\s;,]+/).map(Number);
+    if (p.length >= 2 && p.every(Number.isFinite)) z.push(p);
+  }
+  if (z.length < 5) throw new Error(name + ": keine Messwerte erkannt");
+  const sp = i => z.map(r => r[i]), ix = n => namen ? namen.indexOf(n) : -1;
+  if (namen && ix("U_C_V") >= 0) {
+    const r = {t: sp(ix("t_s")), u: sp(ix("U_C_V")), kk: sp(ix("k"))};
+    const dm = /d = ([0-9.]+)/.exec(kopf), satz = /T:N:V:F:B:P = (\d+):(\d+):(\d+):(\d+):(\d+):(\d+)/.exec(kopf);
+    if (ix("U_H_V") >= 0) { r.uh = sp(ix("U_H_V")); r.ul = sp(ix("U_L_V")); r.d = dm ? Number(dm[1]) : satz ? tastgrad(+satz[1], +satz[4]) : NaN; if (ix("nF") >= 0) { r.nf = sp(ix("nF")); r.nh = sp(ix("nH")); r.nl = sp(ix("nL")); } if (!Number.isFinite(r.d)) r.ue_fertig = sp(ix("U_E_V")); }
+    // rlc2_* (Format 2.0): U_E_V ist nur der rohe PWM-Mittel aus 4 Momentwerten -- kein Mittelwert der Anregung, wird nicht gezeichnet (2.7)
+    r.text = text; return r;
+  }
+  if (z[0].length >= 3) return {t: sp(0), u: sp(2), text};                                   // rlc_*.txt 1.0: t adc U
+  const mx = Math.max(...sp(1)); return {t: sp(0), u: mx > 6 ? sp(1).map(a => a * LSB) : sp(1)};   // Simulink: t U oder t adc
+}
+
+// ---------- Zeichnen
+const RAND = {l: 58, r: 14, o: 12, u: 34};
+function leinwand(c) {
+  const b = c.parentElement.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  const w = Math.max(50, Math.floor(b.width) - 2), h = Math.max(50, Math.floor(b.height) - 2);
+  if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
+  const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h); return {g, w, h};
+}
+function teilung(a, b, n) {
+  const roh = (b - a) / n, p = Math.pow(10, Math.floor(Math.log10(roh))), f = roh / p, s = (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+  const r = []; for (let v = Math.ceil(a / s) * s; v <= b + s * 1e-9; v += s) r.push(Math.abs(v) < s * 1e-9 ? 0 : v); return r;
+}
+function stellen(t) { if (t.length < 2) return 0; const s = Math.abs(t[1] - t[0]); return Math.max(0, Math.min(6, -Math.floor(Math.log10(s) + 1e-9))); }   // Nachkommastellen aus dem Teilungsschritt (2.8: Zoom)
+function achsen(g, w, h, x0, x1, y0, y1, ytext, xtext) {
+  const X = x => RAND.l + (x - x0) / (x1 - x0) * (w - RAND.l - RAND.r), Y = y => h - RAND.u - (y - y0) / (y1 - y0) * (h - RAND.o - RAND.u);
+  g.font = "11px system-ui, Segoe UI, Arial"; g.lineWidth = 1;
+  const tx = teilung(x0, x1, 10), ty = teilung(y0, y1, 6), nx = stellen(tx), ny = stellen(ty);
+  for (const v of tx) { g.strokeStyle = "#e6e6e6"; g.beginPath(); g.moveTo(X(v), RAND.o); g.lineTo(X(v), h - RAND.u); g.stroke(); g.fillStyle = "#555"; g.textAlign = "center"; g.fillText(zahl(v, nx), X(v), h - RAND.u + 14); }
+  for (const v of ty) { g.strokeStyle = "#e6e6e6"; g.beginPath(); g.moveTo(RAND.l, Y(v)); g.lineTo(w - RAND.r, Y(v)); g.stroke(); g.fillStyle = "#555"; g.textAlign = "right"; g.fillText(zahl(v, ny), RAND.l - 5, Y(v) + 4); }
+  g.strokeStyle = "#888"; g.strokeRect(RAND.l, RAND.o, w - RAND.l - RAND.r, h - RAND.o - RAND.u);
+  g.fillStyle = "#333"; g.textAlign = "center"; g.fillText(xtext, RAND.l + (w - RAND.l - RAND.r) / 2, h - 4);
+  g.save(); g.translate(12, RAND.o + (h - RAND.o - RAND.u) / 2); g.rotate(-Math.PI / 2); g.fillText(ytext, 0, 0); g.restore();
+  return {X, Y};
+}
+function linie(g, X, Y, t, y, farbe, breite, strich) {
+  g.strokeStyle = farbe; g.lineWidth = breite; g.setLineDash(strich); g.beginPath(); let an = false;
+  for (let i = 0; i < t.length; i++) { if (!Number.isFinite(y[i])) { an = false; continue; } const px = X(t[i] * 1000), py = Y(y[i]); an ? g.lineTo(px, py) : g.moveTo(px, py); an = true; }
+  g.stroke(); g.setLineDash([]);
+}
+let ansicht1 = null, ansicht2 = null;
+function bereich() {
+  const v = kurven.filter(k => k.sichtbar); let x0 = 0, x1 = 0.1, y0 = 0, y1 = 1;
+  for (const k of v) { x0 = Math.min(x0, k.t[0]); x1 = Math.max(x1, k.t[k.t.length - 1]); for (const u of k.u) { if (u > y1) y1 = u; if (u < y0) y0 = u; } }
+  return {v, x0: x0 * 1000, x1: x1 * 1000, y0: y0 - 0.05 * (y1 - y0), y1: y1 + 0.05 * (y1 - y0)};
+}
+function klipp(g, w, h) { g.save(); g.beginPath(); g.rect(RAND.l, RAND.o, w - RAND.l - RAND.r, h - RAND.o - RAND.u); g.clip(); }
+function zeichne1() {
+  const c = $("c1"), {g, w, h} = leinwand(c), B = bereich(), mitE = $("UE").checked;
+  const {X, Y} = achsen(g, w, h, B.x0, B.x1, B.y0, B.y1, "U / V", "t / ms   ·   durchgezogen: U_C (A0)" + (mitE ? "   ·   gestrichelt: Anregung U_E (Mittelwert)" : ""));
+  ansicht1 = {X, w, h, x0: B.x0, x1: B.x1};
+  klipp(g, w, h);
+  for (const k of B.v) {
+    if (mitE) { const e = ue(k); if (e) linie(g, X, Y, k.t, e, k.farbe, 1.3, [6, 4]); }
+    linie(g, X, Y, k.t, k.u, k.farbe, k.id === gewaehlt ? 2.4 : 1.6, k.strich);
+  }
+  g.restore();
+  if (!B.v.length) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText("Keine Kurve sichtbar: Sprung messen oder Messdatei laden", w / 2, h / 2); }
+}
+function differenz(k, r) {
+  const d = []; let j = 0;
+  for (let i = 0; i < k.t.length; i++) {
+    const t = k.t[i]; if (t < r.t[0] || t > r.t[r.t.length - 1]) { d.push(NaN); continue; }
+    while (j < r.t.length - 2 && r.t[j + 1] < t) j++;
+    const a = r.t[j], b = r.t[j + 1], ur = b > a ? r.u[j] + (r.u[j + 1] - r.u[j]) * (t - a) / (b - a) : r.u[j];
+    d.push((k.u[i] - ur) * 1000);
+  }
+  return d;
+}
+function zeichne2() {
+  const c = $("c2"), {g, w, h} = leinwand(c), art = $("unten").value, B = bereich();
+  let reihen = [], ytext = "", xtext = "", lsb = false;
+  if (art === "d") {
+    const r = kurven.find(k => k.id === Number($("bezug").value));
+    if (r) reihen = B.v.filter(k => k !== r).map(k => ({k, y: differenz(k, r), s: k.strich}));
+    ytext = "Δ U_C / mV"; xtext = r ? "Differenz U_C zur Bezugskurve „" + r.name + "“ · gestrichelt grau: ±1 ADC-Stufe (4,89 mV)" : "Differenz: keine Bezugskurve"; lsb = true;
+  } else if (art === "p") {
+    const gl = $("glatt").checked;
+    for (const k of B.v) if (k.uh) { const uh = gl ? median5(k.uh) : k.uh, ul = gl ? median5(k.ul) : k.ul;
+      reihen.push({k, y: uh.map(v => (5 - v) * 1000), s: []}, {k, y: ul.map(v => v * 1000), s: [2, 3]}); }
+    ytext = "mV"; xtext = "Spannungsabfall am Port: durchgezogen 5 V − U_H (High-Treiber), gepunktet U_L (Low-Treiber)" + (gl ? " · geglättet" : " · roh");
+  } else {
+    for (const k of B.v) { const e = ue(k); if (e && Number.isFinite(k.d)) reihen.push({k, y: e.map((v, i) => (v - (k.kk && k.kk[i] < 0 ? 0 : k.d) * 5) * 1000), s: k.strich}); }
+    ytext = "mV"; xtext = "Anregung U_E − ideal d·5 V (ohne Innenwiderstand)";
+  }
+  let lo = lsb ? -5 * LSB * 1000 : 0, hi = lsb ? 5 * LSB * 1000 : 1;
+  for (const {y} of reihen) for (const x of y) if (Number.isFinite(x)) { if (x < lo) lo = x; if (x > hi) hi = x; }
+  if (lsb) { const m = Math.max(-lo, hi); lo = -m; hi = m; }
+  const p = (hi - lo) * 0.08 || 1, {X, Y} = achsen(g, w, h, B.x0, B.x1, lo - p, hi + p, ytext, xtext);
+  ansicht2 = {X, w, h, x0: B.x0, x1: B.x1, reihen, art};
+  klipp(g, w, h);
+  if (lsb) { g.strokeStyle = "#999"; g.setLineDash([3, 3]); for (const s of [-1, 1]) { g.beginPath(); g.moveTo(RAND.l, Y(s * LSB * 1000)); g.lineTo(w - RAND.r, Y(s * LSB * 1000)); g.stroke(); } g.setLineDash([]); }
+  for (const {k, y, s} of reihen) linie(g, X, Y, k.t, y, k.farbe, 1.4, s);
+  g.restore();
+  if (!reihen.length) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(art === "d" ? "Keine zweite sichtbare Kurve zum Vergleich" : "Keine sichtbare Kurve mit gemessener Anregung (ab rlc_sprung_2_2)", w / 2, h / 2); }
+}
+function liste() {
+  const ul = $("kurven"); ul.innerHTML = "";
+  for (const k of kurven) {
+    const li = document.createElement("li");
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = k.sichtbar; cb.title = "anzeigen"; cb.onchange = () => { k.sichtbar = cb.checked; alles(); };
+    const sw = document.createElement("canvas"); sw.width = 34; sw.height = 10; const sg = sw.getContext("2d"); sg.strokeStyle = k.farbe; sg.lineWidth = 2.4; sg.setLineDash(k.strich); sg.beginPath(); sg.moveTo(1, 5); sg.lineTo(33, 5); sg.stroke();
+    const nm = document.createElement("span"); nm.className = "name"; nm.textContent = k.name; nm.title = k.name + " · " + k.quelle + " · anklicken zum Auswählen"; nm.style.cursor = "pointer";
+    if (k.id === gewaehlt) nm.style.fontWeight = "700";
+    nm.onclick = () => { gewaehlt = k.id; alles(); };
+    const x = document.createElement("button"); x.textContent = "×"; x.title = "aus der Liste nehmen (die Datei bleibt)"; x.onclick = () => { kurven = kurven.filter(q => q !== k); if (gewaehlt === k.id) gewaehlt = null; alles(); };
+    li.append(cb, sw, nm, x); ul.append(li);
+  }
+  const sel = $("bezug"), alt = sel.value; sel.innerHTML = "";
+  for (const k of kurven) { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; sel.append(o); }
+  if (kurven.some(k => String(k.id) === alt)) sel.value = alt;
+  const kg = kurven.find(k => k.id === gewaehlt);
+  $("speichern").disabled = !kg; $("speichern").title = kg ? "„" + kg.name + "“ speichern" : "Erst eine Kurve auswählen (Name anklicken)";
+  $("entfernen").disabled = !kg; $("entfernen").title = kg ? "„" + kg.name + "“ aus der Seite nehmen (Datei bleibt)" : "Erst eine Kurve auswählen (Name anklicken)";
+  $("alle_weg").disabled = !kurven.length; $("alle_weg").title = kurven.length ? "alle " + kurven.length + " Kurven aus der Seite nehmen (zweimal klicken; Dateien bleiben)" : "Keine Kurven geladen";
+  const pk = $("pk"), pa = pk.value; pk.innerHTML = "";
+  { const o = document.createElement("option"); o.value = "alle"; o.textContent = "alle sichtbaren"; pk.append(o); }
+  for (const k of kurven) { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; pk.append(o); }
+  pk.value = kurven.some(k => String(k.id) === pa) || pa === "alle" ? pa : (kg ? String(kg.id) : "alle");
+}
+// ---------- Entfernen (sein Wort 23.11.2026: „löschknopf“) -- nur aus der Seite, Dateien bleiben
+function entfernen(k) { kurven = kurven.filter(q => q !== k); if (gewaehlt === k.id) gewaehlt = kurven.length ? kurven[kurven.length - 1].id : null; alles(); }
+$("entfernen").onclick = () => { const k = kurven.find(q => q.id === gewaehlt); if (!k) return; const n = k.name; entfernen(k); $("stand_k").textContent = "„" + n + "“ entfernt; die Datei bleibt."; };
+let alleWegZeit = null;
+$("alle_weg").onclick = () => {
+  const b = $("alle_weg");
+  if (alleWegZeit) { clearTimeout(alleWegZeit); alleWegZeit = null; const n = kurven.length; kurven = []; gewaehlt = null; b.textContent = "Alle entfernen"; b.classList.remove("warn"); alles(); $("stand_k").textContent = n + " Kurven entfernt; die Dateien bleiben."; return; }
+  b.textContent = "Wirklich alle " + kurven.length + " entfernen? (nochmal klicken)"; b.classList.add("warn"); $("stand_k").textContent = "Zweiter Klick innerhalb von 5 s entfernt alle Kurven aus der Seite.";
+  alleWegZeit = setTimeout(() => { alleWegZeit = null; b.textContent = "Alle entfernen"; b.classList.remove("warn"); $("stand_k").textContent = "Nicht entfernt (Zeit abgelaufen)."; }, 5000);
+};
+function tafel() {
+  const tb = $("tab").tBodies[0]; tb.innerHTML = "";
+  for (const k of kurven) {
+    const r = kennwerte(k), tr = document.createElement("tr");
+    const z = [r.Umax, 3, r.tmax * 1000, 1, r.Umin, 3, r.tmin * 1000, 1, r.Uend, 4, r.ueber, 1, r.t1090 * 1000, 1, r.Td * 1000, 0, r.D, 3, r.f0, 2, r.UEend, 4, r.abfall, 0];
+    const td0 = document.createElement("td"); td0.innerHTML = `<span style="display:inline-block;width:14px;height:3px;background:${k.farbe};vertical-align:middle;margin-right:6px"></span>`; td0.append(k.name); tr.append(td0);
+    for (let i = 0; i < z.length; i += 2) { const td = document.createElement("td"); td.textContent = zahl(z[i], z[i + 1]); tr.append(td); }
+    const tn = document.createElement("td"); tn.textContent = r.n; tr.append(tn); tb.append(tr);
+  }
+}
+function alles() { liste(); tafel(); if (reiter === "aus") { zeichne1(); zeichne2(); } else if (reiter === "pruef") { zeichne3(); zeichne4(); } }
+new ResizeObserver(() => { zeichne1(); zeichne2(); }).observe($("b1"));
+new ResizeObserver(() => { zeichne3(); zeichne4(); }).observe($("b3"));
+for (const id of ["UE", "glatt", "unten", "bezug"]) $(id).onchange = alles;
+let reiter = "aus";
+function reiterWahl(r) {
+  reiter = r; for (const n of ["aus", "pruef", "theorie", "fit"]) { $("r_" + n).hidden = r !== n; $("rt_" + n).classList.toggle("aktiv", r === n); }
+  if (r === "aus" || r === "pruef") requestAnimationFrame(alles); if (r === "fit") fitTafel();
+}
+for (const n of ["aus", "pruef", "theorie", "fit"]) $("rt_" + n).onclick = () => reiterWahl(n);
+
+// ---------- Anfitten: Vorbereitung (nächster Schritt hängt Ansätze in fitModelle ein)
+const fitModelle = [];   // {name, parameter, anpassen(t, u) -> {y: Array, rmse: {gesamt, anstieg, schwingen, eingeschwungen}}}
+function fitDaten(k) {   // Daten ab dem Sprung: t ab 0, U_C, U_E (null ohne gemessene Anregung); Abschnitte: Anstieg bis t_max, Schwingen bis 5·T_d, Rest eingeschwungen
+  const n0 = k.kk ? Math.max(0, k.kk.findIndex(x => x >= 0)) : 0, e = ue(k), r = kennwerte(k);
+  const t = k.t.slice(n0), u = k.u.slice(n0), uE = e ? e.slice(n0) : null, dt = t.length > 1 ? t[1] - t[0] : NaN;
+  const tS = Number.isFinite(r.Td) ? r.tmax + 5 * r.Td : NaN;
+  return {name: k.name, t, u, uE, dt, n: t.length, Uend: r.Uend, UEend: r.UEend, tmax: r.tmax, Td: r.Td, abschnitte: {anstieg: [t[0], r.tmax], schwingen: [r.tmax, tS], eingeschwungen: [tS, t[t.length - 1]]}};
+}
+function fitTafel() {
+  const sel = $("fk"), alt = sel.value; sel.innerHTML = "";
+  for (const k of kurven) { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; sel.append(o); }
+  sel.value = kurven.some(k => String(k.id) === alt) ? alt : (gewaehlt !== null ? String(gewaehlt) : (kurven[0] ? String(kurven[0].id) : ""));
+  const tb = $("f_tafel").tBodies[0]; tb.innerHTML = "";
+  const k = kurven.find(q => String(q.id) === sel.value); if (!k) return;
+  const d = fitDaten(k), tr = document.createElement("tr");
+  for (const v of [d.name, d.n, zahl(d.t[0] * 1000, 1) + " … " + zahl(d.t[d.n - 1] * 1000, 1), zahl(d.dt * 1000, 2), zahl(d.Uend, 4), zahl(d.UEend, 4), d.uE ? "ja" : "nein"]) { const td = document.createElement("td"); td.textContent = v; tr.append(td); }
+  tb.append(tr);
+  const tm = $("f_modelle").tBodies[0]; tm.innerHTML = "";
+  if (!fitModelle.length) { tm.innerHTML = '<tr><td colspan="6" class="hinweis">Noch kein Ansatz eingehängt (fitModelle ist leer).</td></tr>'; return; }
+  for (const m of fitModelle) { const e = m.anpassen(d.t, d.u), r = document.createElement("tr"); for (const v of [m.name, m.parameter, zahl(e.rmse.gesamt * 1000, 1), zahl(e.rmse.anstieg * 1000, 1), zahl(e.rmse.schwingen * 1000, 1), zahl(e.rmse.eingeschwungen * 1000, 1)]) { const td = document.createElement("td"); td.textContent = v; r.append(td); } tm.append(r); }
+}
+$("fk").onchange = fitTafel; $("f_daten").onclick = () => { fitTafel(); const k = kurven.find(q => String(q.id) === $("fk").value); $("f_stand").textContent = k ? "Daten von „" + k.name + "“ bereit: " + fitDaten(k).n + " Werte ab dem Sprung." : "Keine Kurve."; };
+
+// ---------- Prüfreiter: eine Kurve mit Messpunkten, Zoom (sein Wort: „zum reinzoomen ob das wirklich alles so ist … dient nur zur überprüfung“)
+let Z = null, Zalt = [], ansicht3 = null, ansicht4 = null, ziehen = null;
+function pruefKurven() { const v = $("pk").value; if (v === "alle") return kurven.filter(k => k.sichtbar); const k = kurven.find(q => String(q.id) === v); return k ? [k] : []; }
+function pruefEine() { const v = pruefKurven(); const kg = v.find(k => k.id === gewaehlt); return kg || v[0] || null; }
+function zoomSetzen(z) { if (Z) Zalt.push(Z); if (Zalt.length > 40) Zalt.shift(); Z = z; $("z_zurueck").disabled = !Zalt.length && !Z; $("z_zurueck").title = Zalt.length || Z ? "vorigen Ausschnitt" : "Noch nicht gezoomt"; zeichne3(); zeichne4(); }
+function bereich3() {
+  const v = pruefKurven(); let x0 = 0, x1 = 0.1, y0 = 0, y1 = 1;
+  for (const k of v) { x0 = Math.min(x0, k.t[0]); x1 = Math.max(x1, k.t[k.t.length - 1]); for (const u of k.u) { if (u > y1) y1 = u; if (u < y0) y0 = u; }
+    if (k.uh && $("z_pegel").checked) for (const u of k.uh) if (u > y1) y1 = u; }
+  const b = Z || {x0: x0 * 1000, x1: x1 * 1000, y0: y0 - 0.05 * (y1 - y0), y1: y1 + 0.05 * (y1 - y0)}; return Object.assign({v}, b);
+}
+function punkte(g, X, Y, t, y, farbe, form, x0, x1) {
+  g.fillStyle = farbe; g.strokeStyle = farbe; g.lineWidth = 1;
+  for (let i = 0; i < t.length; i++) { const tm = t[i] * 1000; if (tm < x0 || tm > x1 || !Number.isFinite(y[i])) continue; const px = X(tm), py = Y(y[i]);
+    if (form === "o") { g.beginPath(); g.arc(px, py, 2.6, 0, 2 * Math.PI); g.fill(); } else if (form === "x") { g.beginPath(); g.moveTo(px - 2.5, py - 2.5); g.lineTo(px + 2.5, py + 2.5); g.moveTo(px - 2.5, py + 2.5); g.lineTo(px + 2.5, py - 2.5); g.stroke(); } else g.fillRect(px - 2.2, py - 2.2, 4.4, 4.4); }
+}
+function zeichne3() {
+  const c = $("c3"); if ($("r_pruef").hidden) return; const {g, w, h} = leinwand(c), B = bereich3(), mitP = $("z_punkte").checked, mitPegel = $("z_pegel").checked;
+  const e1 = pruefEine(), nSicht = e1 ? e1.t.filter(t => t * 1000 >= B.x0 && t * 1000 <= B.x1).length : 0;
+  const {X, Y} = achsen(g, w, h, B.x0, B.x1, B.y0, B.y1, "U / V", "t / ms   ·   U_C durchgezogen ○   ·   U_E gestrichelt □" + (mitPegel ? "   ·   U_H, U_L roh gepunktet ×" : "") + "   ·   senkrecht: Sprung (t = 0)" + (nSicht ? "   ·   " + nSicht + " Messpunkte im Ausschnitt" : ""));
+  ansicht3 = {X, Y, w, h, x0: B.x0, x1: B.x1, y0: B.y0, y1: B.y1, v: B.v};
+  klipp(g, w, h);
+  if (B.x0 <= 0 && B.x1 >= 0) { g.strokeStyle = "#999"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(X(0), RAND.o); g.lineTo(X(0), h - RAND.u); g.stroke(); g.setLineDash([]); }
+  const dicht = mitP && B.v.length && B.v.every(k => k.t.filter(t => t * 1000 >= B.x0 && t * 1000 <= B.x1).length <= 600);
+  for (const k of B.v) {
+    if (mitPegel && k.uh) { linie(g, X, Y, k.t, k.uh, "#777", 1, [1, 3]); linie(g, X, Y, k.t, k.ul, "#777", 1, [1, 3]); if (dicht) { punkte(g, X, Y, k.t, k.uh, "#777", "x", B.x0, B.x1); punkte(g, X, Y, k.t, k.ul, "#777", "x", B.x0, B.x1); } }
+    const e = ue(k); if (e) { linie(g, X, Y, k.t, e, k.farbe, 1.3, [6, 4]); if (dicht) punkte(g, X, Y, k.t, e, k.farbe, "q", B.x0, B.x1); }
+    linie(g, X, Y, k.t, k.u, k.farbe, 1.8, k.strich); if (dicht) punkte(g, X, Y, k.t, k.u, k.farbe, "o", B.x0, B.x1);
+  }
+  g.restore();
+  if (!B.v.length) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText("Keine Kurve: oben links messen oder laden, dann hier wählen", w / 2, h / 2); }
+  else if (mitP && !dicht) { g.fillStyle = "#666"; g.textAlign = "right"; g.fillText("Messpunkte erst ab 600 Werten im Ausschnitt (jetzt " + nSicht + "): hineinzoomen", w - RAND.r - 6, RAND.o + 14); }
+  if (ziehen && ziehen.x1 !== undefined) { g.strokeStyle = "#2a78d6"; g.fillStyle = "rgba(42,120,214,.12)"; const x = Math.min(ziehen.x0, ziehen.x1), y = Math.min(ziehen.y0, ziehen.y1); g.fillRect(x, y, Math.abs(ziehen.x1 - ziehen.x0), Math.abs(ziehen.y1 - ziehen.y0)); g.strokeRect(x, y, Math.abs(ziehen.x1 - ziehen.x0), Math.abs(ziehen.y1 - ziehen.y0)); }
+}
+function zeichne4() {
+  const c = $("c4"); if ($("r_pruef").hidden) return; const {g, w, h} = leinwand(c), B = bereich3(), k = pruefEine();
+  const hat = k && k.nh; let Bk = 4; if (hat) for (let i = 0; i < k.nh.length; i++) Bk = Math.max(Bk, k.nh[i] + k.nl[i] + k.nf[i]);
+  const {X, Y} = achsen(g, w, h, B.x0, B.x1, -0.3, Bk + 0.3, "Anzahl", hat ? "Zählwerte je Abtastwert auf A1 (" + Bk + " Wandlungen je Wert): nH High ≥ 4,5 V grün · nL Low ≤ 0,5 V blau · nF Flanke dazwischen rot   ·   Kurve „" + k.name + "“" : "Zählwerte des PWM-Sprungs");
+  ansicht4 = {X, w, h, x0: B.x0, x1: B.x1, k: hat ? k : null};
+  klipp(g, w, h);
+  if (hat) {
+    const stufe = (y, farbe, dash) => { g.strokeStyle = farbe; g.lineWidth = 1.4; g.setLineDash(dash); g.beginPath(); let an = false; const dt = k.t.length > 1 ? (k.t[1] - k.t[0]) * 1000 : 1;
+      for (let i = 0; i < k.t.length; i++) { const a = k.t[i] * 1000 - dt / 2, b = a + dt; if (b < B.x0 || a > B.x1) { an = false; continue; } const py = Y(y[i]); an ? g.lineTo(X(a), py) : g.moveTo(X(a), py); g.lineTo(X(b), py); an = true; } g.stroke(); g.setLineDash([]); };
+    stufe(k.nh, "#1b8a3a", []); stufe(k.nl, "#2a78d6", [5, 3]); stufe(k.nf, "#c8102e", [2, 2]);
+    if (B.x0 <= 0 && B.x1 >= 0) { g.strokeStyle = "#999"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(X(0), RAND.o); g.lineTo(X(0), h - RAND.u); g.stroke(); g.setLineDash([]); }
+  }
+  g.restore();
+  if (!hat) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(k ? "„" + k.name + "“ hat keine Zählwerte (Format ohne getrennte Pegel, vor rlc_sprung_2_2)" : "Keine Kurve gewählt", w / 2, h / 2); }
+}
+function zoomMaus(c, ev) { const b = c.getBoundingClientRect(); return {mx: ev.clientX - b.left, my: ev.clientY - b.top}; }
+function xVon(A, mx) { return A.x0 + (mx - RAND.l) / (A.w - RAND.l - RAND.r) * (A.x1 - A.x0); }
+function yVon(A, my) { return A.y0 + (A.h - RAND.u - my) / (A.h - RAND.o - RAND.u) * (A.y1 - A.y0); }
+function zoomRad(ev) {
+  const A = ansicht3; if (!A) return; ev.preventDefault(); const {mx, my} = zoomMaus($("c3"), ev); const f = ev.deltaY < 0 ? 1 / 1.25 : 1.25;
+  const B = bereich3(); let z = {x0: B.x0, x1: B.x1, y0: B.y0, y1: B.y1};
+  if (ev.ctrlKey) { const y = yVon(A, Math.min(Math.max(my, RAND.o), A.h - RAND.u)); z.y0 = y - (y - z.y0) * f; z.y1 = y + (z.y1 - y) * f; }
+  else { const x = xVon(A, Math.min(Math.max(mx, RAND.l), A.w - RAND.r)); z.x0 = x - (x - z.x0) * f; z.x1 = x + (z.x1 - x) * f; }
+  if (z.x1 - z.x0 < 0.5 || z.y1 - z.y0 < 0.002) return; zoomSetzen(z);
+}
+$("c3").addEventListener("wheel", zoomRad, {passive: false}); $("c4").addEventListener("wheel", zoomRad, {passive: false});
+$("c3").addEventListener("mousedown", ev => { if (ev.button !== 0) return; const {mx, my} = zoomMaus($("c3"), ev); ziehen = {x0: mx, y0: my}; });
+window.addEventListener("mouseup", ev => {
+  if (!ziehen) return; const A = ansicht3, z = ziehen; ziehen = null; if (!A || z.x1 === undefined) { zeichne3(); return; }
+  if (Math.abs(z.x1 - z.x0) < 5 || Math.abs(z.y1 - z.y0) < 5) { zeichne3(); return; }
+  const cl = (v, a, b) => Math.min(Math.max(v, a), b);
+  zoomSetzen({x0: xVon(A, cl(Math.min(z.x0, z.x1), RAND.l, A.w - RAND.r)), x1: xVon(A, cl(Math.max(z.x0, z.x1), RAND.l, A.w - RAND.r)), y0: yVon(A, cl(Math.max(z.y0, z.y1), RAND.o, A.h - RAND.u)), y1: yVon(A, cl(Math.min(z.y0, z.y1), RAND.o, A.h - RAND.u))});
+});
+$("c3").addEventListener("dblclick", () => { Zalt = []; Z = null; zoomSetzen(null); $("z_zurueck").disabled = true; });
+$("z_alles").onclick = () => zoomSetzen(null);
+$("z_sprung").onclick = () => { const B = bereich3(); zoomSetzen({x0: -20, x1: 20, y0: Z ? B.y0 : B.y0, y1: B.y1}); };
+$("z_scheitel").onclick = () => { const k = pruefEine(); if (!k) return; const r = kennwerte(k); if (!Number.isFinite(r.tmax)) return; zoomSetzen({x0: r.tmax * 1000 - 15, x1: r.tmax * 1000 + 15, y0: r.Umax - 0.1, y1: r.Umax + 0.1}); };
+$("z_zurueck").onclick = () => { Z = Zalt.pop() || null; $("z_zurueck").disabled = !Zalt.length && !Z; zeichne3(); zeichne4(); };
+for (const id of ["pk", "z_punkte", "z_pegel"]) $(id).onchange = () => { zeichne3(); zeichne4(); };
+function zeiger3(cid, tid, nr) {
+  const c = $(cid), tip = $(tid);
+  c.addEventListener("mousemove", ev => {
+    const A = nr === 3 ? ansicht3 : ansicht4; if (!A) return; const {mx, my} = zoomMaus(c, ev);
+    if (ziehen && nr === 3) { ziehen.x1 = mx; ziehen.y1 = my; tip.hidden = true; zeichne3(); return; }
+    if (mx < RAND.l || mx > A.w - RAND.r) { tip.hidden = true; return; }
+    const tms = xVon(A, mx), ks = nr === 3 ? A.v : (A.k ? [A.k] : []);
+    const zl = ks.map(k => { const i = naechster(k.t, tms), e = ue(k); let s = `<span style="color:${k.farbe}">■</span> ${k.name}: k ${k.kk ? k.kk[i] : i} · t ${zahl(k.t[i] * 1000, 2)} ms · U<sub>C</sub> <b>${zahl(k.u[i], 4)} V</b>`;
+      if (e) s += ` · U<sub>E</sub> <b>${zahl(e[i], 4)} V</b>`; if (k.uh) s += ` · U<sub>H</sub> ${zahl(k.uh[i], 3)} · U<sub>L</sub> ${zahl(k.ul[i], 3)} V`; if (k.nh) s += ` · nH ${k.nh[i]} nL ${k.nl[i]} nF ${k.nf[i]}`; return s; });
+    if (!zl.length) { tip.hidden = true; return; }
+    tip.innerHTML = `t = ${zahl(tms, 2)} ms<br>` + zl.join("<br>"); tip.hidden = false;
+    const b = c.getBoundingClientRect(), bw = tip.offsetWidth; tip.style.left = (mx + 14 + bw > b.width ? Math.max(0, mx - 14 - bw) : mx + 14) + "px"; tip.style.top = "10px";
+  });
+  c.addEventListener("mouseleave", () => { tip.hidden = true; });
+}
+zeiger3("c3", "tip3", 3); zeiger3("c4", "tip4", 4);
+
+// ---------- Mauszeiger
+function naechster(t, tms) { let a = 0, b = t.length - 1; const x = tms / 1000; while (b - a > 1) { const m = (a + b) >> 1; t[m] < x ? a = m : b = m; } return Math.abs(t[a] - x) <= Math.abs(t[b] - x) ? a : b; }
+function zeiger(cid, tid, nr) {
+  const c = $(cid), tip = $(tid);
+  c.addEventListener("mousemove", ev => {
+    const A = nr === 1 ? ansicht1 : ansicht2; if (!A) return;
+    const b = c.getBoundingClientRect(), mx = ev.clientX - b.left;
+    if (mx < RAND.l || mx > A.w - RAND.r) { tip.hidden = true; return; }
+    const tms = A.x0 + (mx - RAND.l) / (A.w - RAND.l - RAND.r) * (A.x1 - A.x0);
+    let zl;
+    if (nr === 1) zl = kurven.filter(k => k.sichtbar).map(k => { const i = naechster(k.t, tms), e = ue(k);
+      return `<span style="color:${k.farbe}">■</span> ${k.name}: U<sub>C</sub> <b>${zahl(k.u[i], 4)} V</b>` + (e ? ` · U<sub>E</sub> <b>${zahl(e[i], 4)} V</b>` : ""); });
+    else zl = A.reihen.map(({k, y, s}) => { const i = naechster(k.t, tms); return `<span style="color:${k.farbe}">${s.length ? "┄" : "■"}</span> ${k.name}: <b>${zahl(y[i], 1)} mV</b>`; });
+    if (!zl.length) { tip.hidden = true; return; }
+    tip.innerHTML = `t = ${zahl(tms, 1)} ms<br>` + zl.join("<br>"); tip.hidden = false;
+    const bw = tip.offsetWidth; tip.style.left = (mx + 14 + bw > b.width ? mx - 14 - bw : mx + 14) + "px"; tip.style.top = "10px";
+    if (nr === 1) { zeichne1(); const g = c.getContext("2d"); g.strokeStyle = "#555"; g.lineWidth = 1; g.beginPath(); g.moveTo(mx, RAND.o); g.lineTo(mx, A.h - RAND.u); g.stroke(); }
+  });
+  c.addEventListener("mouseleave", () => { tip.hidden = true; if (nr === 1) zeichne1(); });
+}
+zeiger("c1", "tip1", 1); zeiger("c2", "tip2", 2);
+
+// ---------- Web Serial
+let port = null, leser = null, zeilenPuffer = "", zeilen = [], warter = null, beschaeftigt = false, abbrechen = false;
+function standV(t, art) { const e = $("stand_v"); e.textContent = t; e.className = "stand" + (art ? " " + art : ""); }
+function standM(t, art) { const e = $("stand_m"); e.textContent = t; e.className = "stand" + (art ? " " + art : ""); }
+function knoepfe() {
+  const v = !!port, sperr = !v ? "Erst mit dem Nano verbinden" : beschaeftigt ? "Gesperrt: Messung läuft" : "";
+  $("verbinden").disabled = v; $("verbinden").title = v ? "Schon verbunden" : "Anschluss wählen (COM5)";
+  for (const id of ["trennen", "kennung"]) { $(id).disabled = !v || beschaeftigt; $(id).title = sperr || (id === "trennen" ? "Verbindung lösen (z. B. damit die Brücke messen kann)" : "Kennung des Nano abfragen"); }
+  $("messen").disabled = !v || beschaeftigt; $("messen").title = sperr || "Sprung auslösen und aufnehmen";
+  $("abbruch").hidden = !beschaeftigt;
+  if (!v && !beschaeftigt) standM("Gesperrt: erst mit dem Nano verbinden.");
+}
+function zeileDa(l) { zeilen.push(l); if (warter) warter(); }
+async function lesenSchleife() {
+  const dec = new TextDecoder();
+  try {
+    leser = port.readable.getReader();
+    try {
+      for (;;) {
+        const {value, done} = await leser.read(); if (done) break;
+        zeilenPuffer += dec.decode(value, {stream: true});
+        let i; while ((i = zeilenPuffer.indexOf("\n")) >= 0) { const l = zeilenPuffer.slice(0, i).replace(/\r$/, "").trim(); zeilenPuffer = zeilenPuffer.slice(i + 1); if (l) zeileDa(l); }
+      }
+    } finally { leser.releaseLock(); leser = null; }
+  } catch (e) { if (port) standV("Lesefehler: " + e.message, "fehler"); }
+}
+function warteAuf(pruef, ms) {
+  return new Promise((res, rej) => {
+    const ende = setTimeout(() => { warter = null; rej(new Error("keine Antwort nach " + (ms / 1000).toFixed(1) + " s")); }, ms);
+    const sieh = () => { const r = pruef(); if (r) { clearTimeout(ende); warter = null; res(r); } };
+    warter = sieh; sieh();
+  });
+}
+async function senden(t) { const w = port.writable.getWriter(); try { await w.write(new TextEncoder().encode(t + "\n")); } finally { w.releaseLock(); } }
+$("verbinden").onclick = async () => {
+  if (!("serial" in navigator)) { standV("Dieser Browser kann kein Web Serial. Bitte die Datei in Chrome oder Edge öffnen.", "fehler"); return; }
+  try {
+    const p = await navigator.serial.requestPort();
+    standV("Öffne den Anschluss …");
+    await p.open({baudRate: 1000000, bufferSize: 65536});
+    port = p; zeilen = []; zeilenPuffer = ""; knoepfe(); lesenSchleife();
+    standV("Warte auf den Nano (er startet beim Öffnen neu) …");
+    await warteAuf(() => zeilen.find(l => l.startsWith("RLC_SPRUNG")), 5000);
+    zeilen = []; await senden("?"); const k = await warteAuf(() => zeilen.find(l => l.startsWith("RLC_SPRUNG")), 3000);
+    if (!/RLC_SPRUNG 2\.6/.test(k)) standV("Verbunden, aber falsche Fassung: " + k + "\nDiese Seite braucht rlc_sprung_2_6.", "fehler");
+    else standV("Verbunden: " + k, "gut");
+  } catch (e) {
+    const t = /already open|Failed to open/i.test(e.message) ? "Anschluss belegt – läuft gerade eine Messung über die Brücke oder ein anderes Programm (Arduino IDE, Thonny)?" : e.name === "NotFoundError" ? "Kein Anschluss gewählt." : e.message;
+    standV("Nicht verbunden: " + t + (port ? "\nAntwortet der Nano nicht, ist vielleicht ein anderes Programm darauf (rlc_sprung_2_6 nötig)." : ""), "fehler");
+    if (port) await trennen(true);
+  }
+  knoepfe();
+};
+async function trennen(still) {
+  const p = port; port = null;
+  try { if (leser) await leser.cancel(); } catch (e) {}
+  try { await p.close(); } catch (e) {}
+  if (!still) standV("Getrennt.");
+  knoepfe();
+}
+$("trennen").onclick = () => trennen(false);
+$("kennung").onclick = async () => {
+  try { zeilen = []; await senden("?"); standV("Verbunden: " + await warteAuf(() => zeilen.find(l => l.startsWith("RLC_SPRUNG")), 3000), "gut"); }
+  catch (e) { standV("Kennung: " + e.message, "fehler"); }
+};
+function T_V() {
+  const T = Number($("T").value), F = Number($("F").value), ok = Number.isInteger(T) && T >= 0 && T <= 255;
+  $("T_V").textContent = ok ? zahl(tastgrad(T, F) * 5, 2) + " V" : "–"; $("F_d").textContent = ok ? "d " + zahl(tastgrad(T, F), 4) : "";
+}
+$("T").oninput = T_V; $("F").onchange = T_V; T_V();
+function pruefeEingabe() {
+  const v = id => Number($(id).value), E = {T: v("T"), N: v("N"), V: v("V"), F: v("F"), B: v("B"), P: v("P"), W: v("W"), R: v("R")};
+  const g = (x, a, b) => Number.isInteger(x) && x >= a && x <= b;
+  if (!g(E.T, 0, 255)) throw new Error("Tastgrad T muss eine ganze Zahl sein");
+  if (E.T > 140) throw new Error("T > 140 gesperrt: U_C schwingt über (Faktor 1,54 … 1,63, steigt mit der Anregung; bei T = 150 schon 4,77 V). A0 verträgt laut Datenblatt nur 0 … 5 V. Der Nano lehnt T > 140 ebenfalls ab.");
+  if (!g(E.N, 1, 200000)) throw new Error("N muss eine ganze Zahl 1…200000 sein");
+  if (!g(E.P, 0, 10000)) throw new Error("Vorlauf P muss eine ganze Zahl 0…10000 sein");
+  if (!g(E.V, 0, 60000)) throw new Error("Entladen V muss eine ganze Zahl 0…60000 ms sein");
+  if (!g(E.W, 1, 50)) throw new Error("Wiederholungen W: 1…50");
+  if (!g(E.R, 0, 60000)) throw new Error("Rampe R muss eine ganze Zahl 0…60000 ms sein");
+  return E;
+}
+const zwei = n => String(n).padStart(2, "0");
+function zeitname(d) { return `${d.getFullYear()}-${zwei(d.getMonth() + 1)}-${zwei(d.getDate())}_${zwei(d.getHours())}${zwei(d.getMinutes())}${zwei(d.getSeconds())}`; }
+async function eineMessung(E, nr) {
+  const jetzt = new Date(), satz = `${E.T}:${E.N}:${E.V}:${E.F}:${E.B}:${E.P}:${E.R}`;
+  zeilen = []; await senden(`M ${E.T} ${E.N} ${E.V} ${E.F} ${E.B} ${E.P} ${E.R}`);
+  standM(`Messung ${nr}/${E.W}: entladen ${E.V} ms, dann ${E.P} Werte Vorlauf, Sprung auf ${E.T}/255 bei ${FNAME[E.F]}, ${E.N} Werte, danach Rampe ${E.R} ms …`);
+  const start = await warteAuf(() => zeilen.find(l => l.startsWith("START") || l.startsWith("FEHLER")), E.V + 5000);
+  if (start.startsWith("FEHLER")) throw new Error(start);
+  const ende = await warteAuf(() => zeilen.find(l => l.startsWith("ENDE") || l.startsWith("FEHLER")), (E.N + E.P) * E.B * 0.25 + E.R + 15000);
+  if (ende.startsWith("FEHLER")) throw new Error(ende);
+  const roh = zeilen.filter(l => /^-?\d+( \d+){6}$/.test(l)).map(l => l.split(" ").map(Number));
+  const [, dauer, verloren] = ende.split(" ").map(Number);
+  if (roh.length !== E.N + E.P) throw new Error(`${roh.length} statt ${E.N + E.P} Werte empfangen`);
+  if (roh.some(([k], i) => k !== i - E.P)) throw new Error("Werte nicht lückenlos nummeriert");
+  if (verloren) throw new Error(`${verloren} Werte im Nano verloren (Ausgabe zu langsam für diesen Takt)`);
+  const a = anregung(roh, E.T, E.F, E.B), d = a.d;
+  const kopf = zeilen.filter(l => !/^-?\d/.test(l));
+  let text = `# RLC_Sprung_2.10.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+  roh.forEach(([k, s0, sH, nH, sL, nL, nF], i) => { const dd = k >= 0 ? d : 0;
+    text += `${k} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
+  const name = `rlc210_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+  const k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
+  const kw = kennwerte(k);
+  standM(`Messung ${nr}/${E.W}: ${roh.length} Werte in ${zahl(dauer / 1000, 1)} ms, keine Lücke. U_C max ${zahl(kw.Umax, 4)} V bei ${zahl(kw.tmax * 1000, 1)} ms, U_E Ende ${zahl(kw.UEend, 4)} V (ideal ${zahl(d * 5, 4)} V).`, "gut");
+  await ablegen(k);
+}
+$("messen").onclick = async () => {
+  let E; try { E = pruefeEingabe(); } catch (e) { standM(e.message, "fehler"); return; }
+  beschaeftigt = true; abbrechen = false; knoepfe();
+  try { for (let i = 1; i <= E.W && !abbrechen; i++) await eineMessung(E, i); if (abbrechen) standM("Abgebrochen nach der laufenden Messung.", "fehler"); }
+  catch (e) { standM("Messung fehlgeschlagen: " + e.message, "fehler"); }
+  beschaeftigt = false; knoepfe();
+};
+$("abbruch").onclick = () => { abbrechen = true; $("abbruch").disabled = true; setTimeout(() => $("abbruch").disabled = false, 500); };
+
+// ---------- Ablage
+function tagesordnerName(d) { return `Messungen_${zwei(d.getDate())}.${zwei(d.getMonth() + 1)}.${d.getFullYear()}`; }
+function textVon(k) { return k.text || ("# " + k.name + " (" + k.quelle + ")\n# t_s U_C_V\n" + k.t.map((t, i) => `${t.toFixed(6)} ${k.u[i].toFixed(6)}`).join("\n") + "\n"); }
+$("ordner").onclick = async () => {
+  if (!window.showDirectoryPicker) { $("stand_o").textContent = "Dieser Browser kann keinen Ordner wählen (nur Chrome/Edge). Messungen kommen als Download."; return; }
+  try { ordner = await window.showDirectoryPicker({id: "rlc6b", mode: "readwrite"}); $("stand_o").textContent = "Ordner: " + ordner.name + "\\" + tagesordnerName(new Date()) + "\\"; $("stand_o").className = "stand ablage gut"; }
+  catch (e) { if (e.name !== "AbortError") $("stand_o").textContent = "Ordner nicht gewählt: " + e.message; }
+};
+async function ablegen(k) {
+  const text = textVon(k);
+  if (ordner) {
+    try {
+      const tn = tagesordnerName(new Date()), t = await ordner.getDirectoryHandle(tn, {create: true});
+      try { await t.getFileHandle(k.name); $("stand_o").textContent = `„${k.name}“ gibt es in ${tn} schon – nicht überschrieben.`; $("stand_o").className = "stand ablage fehler"; return; } catch (e) { if (e.name !== "NotFoundError") throw e; }
+      const f = await t.getFileHandle(k.name, {create: true}), w = await f.createWritable(); await w.write(text); await w.close();
+      $("stand_o").textContent = `Gespeichert: ${ordner.name}\\${tn}\\${k.name}`; $("stand_o").className = "stand ablage gut"; return;
+    } catch (e) { $("stand_o").textContent = "Speichern im Ordner fehlgeschlagen (" + e.message + "), deshalb als Download."; $("stand_o").className = "stand ablage fehler"; }
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type: "text/plain"})); a.download = k.name; document.body.append(a); a.click(); a.remove();
+  if (!ordner) { $("stand_o").textContent = `Als Download gespeichert: ${k.name} (für den Tagesordner erst „Ordner wählen“).`; $("stand_o").className = "stand ablage"; }
+}
+$("speichern").onclick = () => { const k = kurven.find(q => q.id === gewaehlt); if (k) ablegen(k); };
+
+// ---------- Dateien laden
+async function dateienLaden(fs) {
+  for (const f of fs) {
+    try { neueKurve(f.name, lesen(await f.text(), f.name), "Datei " + f.name); }
+    catch (e) { standM("Laden: " + e.message, "fehler"); }
+  }
+}
+$("laden").onclick = () => $("datei").click();
+$("datei").onchange = e => { dateienLaden([...e.target.files]); e.target.value = ""; };
+document.body.addEventListener("dragover", e => { e.preventDefault(); $("zone").classList.add("ueber"); });
+document.body.addEventListener("dragleave", () => $("zone").classList.remove("ueber"));
+document.body.addEventListener("drop", e => { e.preventDefault(); $("zone").classList.remove("ueber"); dateienLaden([...e.dataTransfer.files]); });
+
+// ---------- eingebettete Messungen
+for (const m of JSON.parse($("d_messungen").textContent)) neueKurve(m.name, lesen(m.text, m.name), m.quelle);
+gewaehlt = kurven.length ? kurven[kurven.length - 1].id : null;
+if (kurven.length) $("bezug").value = kurven[0].id;
+knoepfe(); alles();
+</script>
+</body>
+</html>
