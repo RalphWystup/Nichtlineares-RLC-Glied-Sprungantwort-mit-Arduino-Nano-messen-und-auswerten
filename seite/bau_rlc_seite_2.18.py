@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""bau_rlc_seite_2.17.py (23.11.2026): baut RLC_Sprung_2.17.html aus rlc_sprung_vorlage_2.17.html und bettet zwei Nano-Messungen, zwei Fotos des Aufbaus (bilder_aufbau/) und den Schaltplan (schaltplan_rlc_1.3.svg) ein (All-in-one), bei jedem Bau neu aus
-der Quelle: zwei Messungen mit rlc_sprung_2_7 und Shunt 47 Ω (23.11.2026, T = 140 und 128, mit Strom). Aufruf: python3 bau_rlc_seite_2.17.py <ziel.html>
+"""bau_rlc_seite_2.18.py (23.11.2026): baut RLC_Sprung_2.18.html aus rlc_sprung_vorlage_2.18.html und bettet zwei Nano-Messungen, zwei Fotos des Aufbaus (bilder_aufbau/) und den Schaltplan (schaltplan_rlc_1.3.svg) ein (All-in-one), bei jedem Bau neu aus
+der Quelle: zwei Messungen mit rlc_sprung_2_7 und Shunt 47 Ω (23.11.2026, T = 140 und 128, mit Strom). Aufruf: python3 bau_rlc_seite_2.18.py <ziel.html>
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt."""
 import json, os, sys, hashlib
 H = os.path.dirname(os.path.abspath(__file__)); W = os.path.dirname(H)
@@ -10,7 +10,7 @@ ziel = sys.argv[1]
 if os.path.exists(ziel): raise SystemExit(f"{ziel} besteht schon -- nichts überschrieben")
 m = []
 for n, p, q in Q: t = open(p, encoding="utf-8").read(); m.append({"name": n, "quelle": q, "text": t}); print("  Quelle", n, hashlib.sha256(t.encode()).hexdigest()[:16])
-s = open(os.path.join(H, "rlc_sprung_vorlage_2.17.html"), encoding="utf-8").read()
+s = open(os.path.join(H, "rlc_sprung_vorlage_2.18.html"), encoding="utf-8").read()
 assert s.count("/*MESSUNGEN*/") == 1
 s = s.replace("/*MESSUNGEN*/", json.dumps(m, ensure_ascii=False).replace("<", "\\u003c"))
 import base64

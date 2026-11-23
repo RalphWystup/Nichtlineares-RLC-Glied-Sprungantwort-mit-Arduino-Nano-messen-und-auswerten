@@ -1,5 +1,5 @@
 Browser: Skalierung/Fenster 1.5x1600x708
-RICHTIG P1 Seite geladen: RLC-Sprung 2.17 · Messen und Auswerten
+RICHTIG P1 Seite geladen: RLC-Sprung 2.18 · Messen und Auswerten
 RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|39
 RICHTIG P2 eingebettete Kurven: 2 Kurven (rlc27 T140, T128 mit Strom)
 RICHTIG P3 Kennwerte T140 (rlc27, Shunt) gegen Datei: Seite Umax 4.3842 V @ 57.5 ms, Uend 2.7436; Datei 4.3842 @ 57.5, 2.7436; D 0.296, f0 10.07 Hz, U_E,end 2.7428 V, Abfall 125 mV
@@ -15,6 +15,8 @@ RICHTIG P6 drei Dateien geladen (ADC-Zählwerte, 1.0, 2.0): RLC_Glied.txt:676:3.
 RICHTIG P6c Format-2.0-Kurve zeichnet keine Anregung (roher PWM-Mittel): ue() = null
 RICHTIG P6b Tafel hat 5 Zeilen, Liste 5 Einträge: 
 RICHTIG P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt 47 Ω) kleiner 500 mV (Strecke geändert, Scheitel 3,866 → 3,947 V): größte |Δ| 360.5 mV
+RICHTIG P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel 3,8 … 4,0 mA: i · i|mA|4|3.90|2
+RICHTIG P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“: t = 20,4 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt gemessen: 2,548 mA┄ rlc27_2026-11-23_113109_T140_F3_B4.txt C·dU/dt: 2,701 mA■ rlc27_2026-11-23_113104_T128_F
 RICHTIG P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung): 4 Reihen (erwartet 4: beide rlc27 je U_H und U_L)
 RICHTIG P8b U_E − ideal gezeichnet: 2 Reihen
 RICHTIG P9 Zeigertipp zeigt t und Werte aller Kurven: t = 101,4 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt: UC 2,2165 V · UE 2,7473 V■ rlc27_2026-11-23_113104_T128_F3_B4.txt: UC 2,0455 V · UE 2,5110 V■ RLC_Glied.tx
@@ -42,11 +44,11 @@ RICHTIG P21c kleinere Glättung w = 3: Rest ebenfalls erreicht: 9|3.75|true
 RICHTIG P22 Format 2.7 gelesen: U_2 und i je 7 Werte, Rs = 47, i(k=0) = 15 LSB/47 Ω = 1,5599 mA, i(k=4) = −10 LSB/47 Ω = −1,0399 mA: 7|7|47|1.5599|-1.0399|7
 RICHTIG P22b Stromansicht zeichnet den gemessenen Strom der 2.7-Kurve: true|7|rlc213_probe.txt
 RICHTIG P22c R_s = 2000 Ω abgewiesen: Shunt R_s: 0 … 1000 Ω
-RICHTIG P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller drei Leinwand-Reiter über 5 kB: {"z":"2026-11-23 10:35:16 | Probe | eine Zeile","r":{"aus":"210652:image/png","pruef":"139445:image/png","imp":"184436:image/png"},"puffer":2}
+RICHTIG P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller drei Leinwand-Reiter über 5 kB: {"z":"2026-11-23 11:11:24 | Probe | eine Zeile","r":{"aus":"210556:image/png","pruef":"139430:image/png","imp":"184196:image/png"},"puffer":2}
 RICHTIG P17a Gewählte entfernen nimmt genau die gewählte Kurve: 4|false|„rlc2_2026-11-22_162318_T128_F3_B4.txt“ entfernt; die Datei bleibt.
 RICHTIG P17b Alle entfernen: erster Klick entfernt nichts, fragt nach: 4|Wirklich alle 4 entfernen? (nochmal klicken)|true
 RICHTIG P17c zweiter Klick entfernt alle, Knöpfe danach gesperrt: 0|Alle entfernen|true|true|0
 RICHTIG P12 keine Skriptfehler: keine
 RICHTIG P13 kein Netzabruf: keiner
 
-ERGEBNIS 46 von 46 RICHTIG (Skalierung 1.5)
+ERGEBNIS 48 von 48 RICHTIG (Skalierung 1.5)

@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.19.mjs -- (1.19: für Seite 2.18: P8c Strom im unteren Bild der Auswertung (Vorgabe, 4 Reihen, Scheitel 3,9 mA, Zeigertipp in mA);
 // rlc_seite_probe_1.18.mjs -- (1.18: für Seite 2.17: eingebettet rlc27 T140/T128 mit Strom (Spalte U_C_V aus dem Kopf gelesen); zwei eingebettete Kurven (ohne Simulink), kein Kalibrierreiter (P20, P21d entfallen), Stromansicht nur Shunt;
 // rlc_seite_probe_1.17.mjs -- (1.17: für Seite 2.16; P21d prüft auch, dass der Rest am Ende keine Rampe hat (Mittel der letzten 50 Werte unter 3 mV);
 // rlc_seite_probe_1.16.mjs -- (1.16: für Seite 2.15; P23 Beobachtbarkeit (Protokollzeile, PNG-Blob je Reiter); P21d Impulsantwort der Simulink-Kurve konvergiert (Rest endlich, unter 60 mV, ∫g ≈ 1) -- in 2.14 lief sie davon;
@@ -54,7 +55,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.17/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.18/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
@@ -96,6 +97,14 @@ await js(`$("bezug").value = kurven.find(k => k.name.includes("T128")).id; $("be
 await warte(200);
 const dmax = await js(`(() => { const r = kurven.find(k => k.name.includes("T128") && k.name.startsWith("rlc27")), k = kurven.find(k => k.name.startsWith("rlc2_")); const d = differenz(k, r).filter(Number.isFinite); return Math.max(...d.map(Math.abs)); })()`);
 P("P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt 47 Ω) kleiner 500 mV (Strecke geändert, Scheitel 3,866 → 3,947 V)", dmax < 500, `größte |Δ| ${dmax.toFixed(1)} mV`);
+// P8c Strom im unteren Bild (Vorgabe, weil die eingebetteten Kurven Strom haben)
+const v8 = await js(`$("unten").value`); await js(`$("unten").value = "i"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
+const s8 = await js(`(() => { const r = ansicht2.reihen; const mess = r.filter(x => !x.s.length), mx = Math.max(...mess.flatMap(x => x.y.filter(Number.isFinite))); return [ansicht2.art, ansicht2.einheit, r.length, mx.toFixed(2), r.filter(x => x.s.length).length].join("|"); })()`);
+P("P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel 3,8 … 4,0 mA", v8 === "i" && /^i\|mA\|4\|3\.[89]\d\|2$/.test(s8), v8 + " · " + s8);
+const b2 = await js(`(() => { const b = $("c2").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
+await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b2[0] + 58 + (b2[2] - 72) * 0.04, y: b2[1] + b2[3] * 0.5}); await warte(150);
+const tip2 = await js(`$("tip2").hidden ? "versteckt" : $("tip2").textContent`); P("P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“", /gemessen: -?\d+,\d{3} mA/.test(tip2) && /C·dU\/dt: -?\d+,\d{3} mA/.test(tip2), tip2.slice(0, 160));
+await bild("p8c_strom_auswertung");
 // P8 unteres Bild umschalten: Port-Abfall und U_E − ideal
 await js(`$("unten").value = "p"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
 const reihenP = await js("ansicht2.reihen.length"); P("P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung)", reihenP === 4 + 0, `${reihenP} Reihen (erwartet 4: beide rlc27 je U_H und U_L)`);
