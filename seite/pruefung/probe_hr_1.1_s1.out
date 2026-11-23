@@ -1,0 +1,40 @@
+Browser: Skalierung/Fenster 1x1600x708
+RICHTIG P1 Seite geladen: Verfahren_HR 1.1 · Schritt für Schritt an der gemessenen Sprungantwort
+RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true
+RICHTIG P2 zwei eingebettete Messungen mit Strom (rlc27 T140, T128): 2|rlc27_2026-11-23_113109_T140_F3_B4.txt:600,rlc27_2026-11-23_113104_T128_F3_B4.txt:600
+RICHTIG P3 alle Schritte gerechnet (Standzeile): Gerechnet: R_Cu = 92,2 Ω, R_Fe = 2.707 Ω, DGL gegen Messung 1,86 % ΔU.
+RICHTIG P4 Kupferwiderstand aus ψ(∞) = 0 zwischen 85 und 100 Ω (Angabe 92 Ω, Vorrechnung 93,1 Ω): 92.21
+RICHTIG P5 Eisenverlust R_Fe aus der Schleifenfläche zwischen 2 und 8 kΩ (Vorrechnung 4 … 5 kΩ), Schleife vorher negativ, nachher kleiner: [2707.193462779628,-39.2179579953362,24.75973567829023]
+RICHTIG P6 mittlere Kapazität q(t_end)/ΔU zwischen 24 und 30 µF (Vorrechnung 27,1 µF): 27.2
+RICHTIG P7 Verfahren_HR-Fits: ψ(i_m) beim Schleifen-Kriterium Rest ≤ 3,5 % des Hubs (Vorrechnung 2,3 … 2,6 % bei 4 … 5 kΩ), q(u_C) Rest ≤ 2 % (0,9 %): [4000,1.91815300714984,0.7543010562949902]
+RICHTIG P7b ψ(i_m) beim gewählten R_Fe (kleinster DGL-Fehler, Schleife überkorrigiert): Rest ≤ 6 % des Hubs, in der Tafel ausgewiesen: [2707.193462779628,2.7247175137724]
+RICHTIG P8 L_d(0) zwischen 2 und 20 H (schlecht bestimmt: 3,8 … 11 H je nach Fenster, siehe Schritt 7), L_d am Stromscheitel 5 … 25 H, C_d(0) zwischen 15 und 40 µF: [5.102527169448393,6.689301889341693,21.913180350779342]
+RICHTIG P9 DGL mit den Kennlinien: T140 (Quelle) RMSE ≤ 5 % ΔU (Vorrechnung 2,6 %), T128 (Vorhersage) RMSE ≤ 6 % (3,8 %), beide größter Fehler ≤ 15 %: [["T140",1.86,6.16],["T128",4.07,13.37]]
+RICHTIG P10 Vergleich: direkter Fit fällt monoton mit K (8 Werte), Kennlinienweg drei Werte endlich, Vorhersage endlich: [[13.261,3.543,2.773,0.868,0.321,0.308,0.196,0.137],[[3.22,3.89],[2.62,4.57],[1.75,3.94]]]
+RICHTIG P11.0 Schritt 0: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[],"gezeichnet":[],"tafeln":0,"mathe":1,"rollt":false}
+RICHTIG P11.1 Schritt 1: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[353,353],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P11.2 Schritt 2: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[385,385],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P11.3 Schritt 3: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[365,365],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P11.4 Schritt 4: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[429,429],"gezeichnet":[true,true],"tafeln":1,"mathe":0,"rollt":false}
+RICHTIG P11.5 Schritt 5: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[222,222],"gezeichnet":[true,true],"tafeln":2,"mathe":1,"rollt":false}
+RICHTIG P11.6 Schritt 6: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[300,300],"gezeichnet":[true,true],"tafeln":5,"mathe":4,"rollt":false}
+RICHTIG P11.7 Schritt 7: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[251,251],"gezeichnet":[true,true],"tafeln":3,"mathe":5,"rollt":false}
+RICHTIG P11.8 Schritt 8: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[306,306],"gezeichnet":[true,true],"tafeln":2,"mathe":1,"rollt":false}
+RICHTIG P11.9 Schritt 9: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[283,283],"gezeichnet":[true,true],"tafeln":3,"mathe":3,"rollt":false}
+RICHTIG P11.10 Schritt 10: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[308,308],"gezeichnet":[true,true],"tafeln":1,"mathe":0,"rollt":false}
+RICHTIG P11.11 Schritt 11: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[378,378],"gezeichnet":[false,false],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P11.12 Schritt 12: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen: {"sichtbar":true,"andere":0,"hoehen":[289,289],"gezeichnet":[true,true],"tafeln":1,"mathe":1,"rollt":false}
+RICHTIG P12 Gleichungen mit Koeffiziententafeln: Schritt 6 ≥ 4 Gleichungen und ≥ 5 Tafeln, Schritt 7 ≥ 5 Gleichungen, Schritt 9 ≥ 3 Gleichungen und ≥ 3 Tafeln: [4,5,5,3,3]
+RICHTIG P12b Koeffiziententafeln Schritt 6: tanh-Tafeln haben K Zeilen, Polynomtafeln P Zeilen: {"zeilen":[4,3,3,10,10],"Kpsi":3,"Kq":3,"Ppsi":10}
+RICHTIG P13 Vergleichstafel Schritt 10: 11 Zeilen (8 direkt + 3 Kennlinienweg), Befund und Vorhersage-Satz: {"zeilen":11,"befund":true,"vorher":true}
+RICHTIG P14 Klammern: ≥ 60 feste Klammern, keine höher als 1,6 Schrifthöhen, jede dehnbare mit Bruch in eigener mrow: {"fest":126,"festHoch":[],"dehn":0,"dehnOhneBruch":[]}
+RICHTIG P21 Simulation und Suche: läuft durch, Fehler der gewählten Messung sinkt unter den Startwert und unter 1,5 % ΔU, andere Messung mit Zahl ausgewiesen, zwei Bilder, drei Tafeln, Befund: {"stand":"Fertig nach 25 Schritten (618 DGL-Läufe,","it":25,"vor":1.863,"nach":0.282,"andereVor":4.07,"andereNach":1.313,"tafeln":3,"befund":true,"gezeichnet":true,"RCu":92,"RFe":2372}
+RICHTIG P22 Faltung: Tafel mit ≥ 5 Zeilen, Faltung T140→T128 mit g̃ und mit geglätteter Differenz je ≤ 1 % ΔU (Vorrechnung 0,56 %), DGL-Zahl endlich, Befund, zwei Bilder: {"zeilen":5,"faltH":0.68,"faltG":0.57,"dgl":4.07,"befund":true,"gezeichnet":true}
+RICHTIG P15 Eingabe ändern löscht das Ergebnis, „Alle Schritte rechnen“ rechnet mit K = 1 neu: Werte geändert – „Alle Schritte rechnen“.|true → 1|Gerechnet
+RICHTIG P16 dritte Kurve geladen, gewählt und gerechnet (drei DGL-Läufe): 3|kopie_T140.txt|3|92
+RICHTIG P17 Datei ohne rlc27-Kopf wird mit Meldung abgewiesen: abgewiesen: kein rlc27-Kopf (Spaltenzeile „# k t_s …“) – diese Seite bra
+RICHTIG P18 Leinwandmaße über die Zeit unverändert (kein Wachsen): 355,355,0,0 → 355,355,0,0
+RICHTIG P19 keine Skriptfehler: keine
+RICHTIG P20 kein Netzabruf: keiner
+
+ERGEBNIS 37 von 37 RICHTIG (Skalierung 1)

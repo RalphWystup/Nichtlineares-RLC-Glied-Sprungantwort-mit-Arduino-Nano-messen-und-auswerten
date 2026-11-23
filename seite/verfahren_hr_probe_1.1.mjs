@@ -1,9 +1,10 @@
+// verfahren_hr_probe_1.1.mjs -- (1.1: für Seite 1.1; P11 bis Schritt 12; P22 Faltung: Selbsttest und andere Messung, Zahlen gegen hr_faltung_0.6.py (T140→T128 ≈ 0,5 … 0,8 %); P21 Suche starten, Fehler der gewählten Messung sinkt, andere Messung ausgewiesen, Parametertafel vorher/nachher)
 // verfahren_hr_probe_1.0.mjs -- Knopfprobe der Seite Verfahren_HR_1.0.html als DATEI (file://) im kopflosen Chromium über CDP, Skalierung wählbar.
 // Prüft: Laden, zwei eingebettete Messungen, Rechnung aller Schritte (R_Cu, R_Fe, C_mittel, Fit-Reste, DGL-Fehler gegen die Vorrechnung hr_schritte_0.3.py),
 // jeden Schritt 0 … 10 anklicken (Leinwände gezeichnet, Tafeln gefüllt, kein waagerechtes Rollen, Bild je Schritt), Gleichungen mit Koeffiziententafeln
 // (Schritt 6, 7, 9), Klammern im Bild (feste Klammern höchstens 1,6 Schrifthöhen, dehnbare mit Bruch in eigener mrow), Vergleichstafel Schritt 10 (11 Zeilen),
 // Eingabe ändern und neu rechnen, Datei über lesen()+neueKurve(), Leinwandmaße über die Zeit, keine Skriptfehler, kein Netzabruf.
-// Aufruf: node verfahren_hr_probe_1.0.mjs <cdp-port> <datei.html> <ausgabeordner> <skalierung>
+// Aufruf: node verfahren_hr_probe_1.1.mjs <cdp-port> <datei.html> <ausgabeordner> <skalierung>
 // Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 import {writeFile, mkdir, readFile} from "node:fs/promises";
 const port = process.argv[2], datei = process.argv[3], out = process.argv[4] || ".", dsf = Number(process.argv[5] || "1");
@@ -32,7 +33,7 @@ const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); cons
 
 const massWert = async () => { await js(`$("schritte").querySelector('button[data-s="1"]').click()`); await warte(300); return await js(`[...document.querySelectorAll("#s1 .bild, #s8 .bild")].map(b => Math.round(b.getBoundingClientRect().height)).join(",")`); };
 // P1 geladen
-const titel = await js("document.title"); P("P1 Seite geladen", /Verfahren_HR 1\.0/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /Verfahren_HR 1\.1/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), r = a.getBoundingClientRect(); return a.textContent + "|" + (r.width > 100 && r.height > 8) + "|" + (document.querySelector("main").getBoundingClientRect().top >= r.bottom - 1); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true$/.test(au), au);
 const nk = await js("kurven.length + '|' + kurven.map(k => k.name + ':' + k.n).join(',')"); P("P2 zwei eingebettete Messungen mit Strom (rlc27 T140, T128)", /^2\|.*T140.*:600,.*T128.*:600$/.test(nk), nk);
@@ -53,11 +54,11 @@ P("P9 DGL mit den Kennlinien: T140 (Quelle) RMSE ≤ 5 % ΔU (Vorrechnung 2,6 %)
 P("P10 Vergleich: direkter Fit fällt monoton mit K (8 Werte), Kennlinienweg drei Werte endlich, Vorhersage endlich", z.dir.length === 8 && z.dir.every((v, i) => i === 0 || v <= z.dir[i - 1] * 1.05) && z.weg.length === 3 && z.weg.every(v => Number.isFinite(v[0]) && Number.isFinite(v[1])), JSON.stringify([z.dir, z.weg]));
 // P11 jeden Schritt anklicken
 const schritte = [];
-for (let s = 0; s <= 10; s++) {
+for (let s = 0; s <= 12; s++) {
   await js(`$("schritte").querySelector('button[data-s="${s}"]').click()`); await warte(350);
   const r = JSON.parse(await js(`(() => { const sec = $("s${s}"), cv = [...sec.querySelectorAll("canvas")], re = document.querySelector(".rechts"); return JSON.stringify({sichtbar: !sec.hidden, andere: [...document.querySelectorAll(".schritt")].filter(x => x !== sec && !x.hidden).length, hoehen: cv.map(c => Math.round(c.getBoundingClientRect().height)), gezeichnet: cv.map(c => !!ansichten[c.id]), tafeln: sec.querySelectorAll("table").length, mathe: sec.querySelectorAll("math").length, rollt: re.scrollWidth > re.clientWidth + 1 || sec.scrollWidth > sec.clientWidth + 1}); })()`));
   schritte.push(r); await bild("hr_s" + s);
-  const ok = r.sichtbar && r.andere === 0 && (s === 0 || (r.hoehen.every(h => h > 100) && r.gezeichnet.every(Boolean) && r.tafeln >= 1)) && !r.rollt;
+  const ok = r.sichtbar && r.andere === 0 && (s === 0 || (r.hoehen.every(h => h > 100) && (s === 11 || r.gezeichnet.every(Boolean)) && r.tafeln >= 1)) && !r.rollt;   // Schritt 11 zeichnet erst nach der Suche
   P(`P11.${s} Schritt ${s}: nur dieser sichtbar, Leinwände > 100 px und gezeichnet, Tafel vorhanden, kein waagerechtes Rollen`, ok, JSON.stringify(r));
 }
 P("P12 Gleichungen mit Koeffiziententafeln: Schritt 6 ≥ 4 Gleichungen und ≥ 5 Tafeln, Schritt 7 ≥ 5 Gleichungen, Schritt 9 ≥ 3 Gleichungen und ≥ 3 Tafeln", schritte[6].mathe >= 4 && schritte[6].tafeln >= 5 && schritte[7].mathe >= 5 && schritte[9].mathe >= 3 && schritte[9].tafeln >= 3, JSON.stringify([schritte[6].mathe, schritte[6].tafeln, schritte[7].mathe, schritte[9].mathe, schritte[9].tafeln]));
@@ -71,6 +72,18 @@ const k14 = JSON.parse(await js(`(() => { const erg = {fest: 0, festHoch: [], de
     if (mo.getAttribute("stretchy") === "false") { erg.fest++; if (h > 1.6 * fs) erg.festHoch.push(z + ":" + Math.round(h) + "/" + Math.round(fs)); } else { erg.dehn++; const r = mo.parentElement; if (!(r && r.tagName.toLowerCase() === "mrow" && r.querySelector("mfrac"))) erg.dehnOhneBruch.push(z + "@" + (r ? r.tagName : "-")); } }
   secs.forEach((x, i) => x.hidden = war[i]); return JSON.stringify(erg); })()`));
 P("P14 Klammern: ≥ 60 feste Klammern, keine höher als 1,6 Schrifthöhen, jede dehnbare mit Bruch in eigener mrow", k14.fest >= 60 && k14.festHoch.length === 0 && k14.dehnOhneBruch.length === 0, JSON.stringify(k14));
+// P21 Schritt 11: Suche starten (höchstens 25 Schritte), Fehler der gewählten Messung sinkt, Vorhersage ausgewiesen, Tafeln vorher/nachher
+await js(`$("schritte").querySelector('button[data-s="11"]').click(); $("such_it").value = 25; $("suchen").click();`);
+for (let i = 0; i < 600 && !/Fertig|Fehler/.test(await js(`$("such_stand").textContent`)); i++) await warte(500);
+const s21 = JSON.parse(await js(`(() => { const S = E.suche; if (!S) return JSON.stringify({fehlt: $("such_stand").textContent}); const k = E.k, vor = E.sim.find(x => x.k === k), nach = S.sim.find(x => x.k === k), aV = E.sim.find(x => x.k !== k), aN = S.sim.find(x => x.k !== k);
+  return JSON.stringify({stand: $("such_stand").textContent.slice(0, 40), it: S.it, vor: +vor.rmse.toFixed(3), nach: +nach.rmse.toFixed(3), andereVor: +aV.rmse.toFixed(3), andereNach: +aN.rmse.toFixed(3), tafeln: $("z11").querySelectorAll("table").length, befund: $("z11").textContent.includes("Befund"), gezeichnet: !!ansichten["c11a"] && !!ansichten["c11b"], RCu: Math.round(S.m.RCu), RFe: Math.round(S.m.RFe)}); })()`));
+P("P21 Simulation und Suche: läuft durch, Fehler der gewählten Messung sinkt unter den Startwert und unter 1,5 % ΔU, andere Messung mit Zahl ausgewiesen, zwei Bilder, drei Tafeln, Befund", !s21.fehlt && /^Fertig/.test(s21.stand) && s21.it >= 1 && s21.nach < s21.vor && s21.nach < 1.5 && Number.isFinite(s21.andereNach) && s21.tafeln >= 3 && s21.befund && s21.gezeichnet && s21.RCu > 20 && s21.RFe > 200, JSON.stringify(s21));
+await bild("hr_s11_suche");
+// P22 Schritt 12: Faltung g̃ ∗ u_E der anderen Messung gegen Messung und DGL (Vorrechnung: T140→T128 0,56 % mit geglätteter Differenz)
+await js(`$("schritte").querySelector('button[data-s="12"]').click()`); await warte(400);
+const s22 = JSON.parse(await js(`(() => { const t = $("z12").querySelector("table"); const z = [...t.tBodies[0].rows].map(r => [...r.cells].map(c => c.textContent)); return JSON.stringify({zeilen: z.length, faltH: parseFloat(z[0][2].replace(",", ".")), faltG: parseFloat(z[1][2].replace(",", ".")), dgl: parseFloat(z[2][2].replace(",", ".")), befund: $("z12").textContent.includes("Befund"), gezeichnet: !!ansichten["c12a"] && !!ansichten["c12b"]}); })()`));
+P("P22 Faltung: Tafel mit ≥ 5 Zeilen, Faltung T140→T128 mit g̃ und mit geglätteter Differenz je ≤ 1 % ΔU (Vorrechnung 0,56 %), DGL-Zahl endlich, Befund, zwei Bilder", s22.zeilen >= 5 && s22.faltH <= 1 && s22.faltG <= 1 && Number.isFinite(s22.dgl) && s22.befund && s22.gezeichnet, JSON.stringify(s22));
+await bild("hr_s12_faltung");
 // P15 Eingabe ändern und neu rechnen (K für ψ = 1)
 await js(`$("Kpsi").value = 1; $("Kpsi").dispatchEvent(new Event("change"));`); const leerStand = await js(`$("stand").textContent + "|" + (E === null)`);
 await js(`$("rechnen").click()`); for (let i = 0; i < 240 && !/Gerechnet|Fehler/.test(await js(`$("stand").textContent`)); i++) await warte(500);

@@ -2,6 +2,7 @@
 // Aufruf: node seite_frage_1.0.mjs <cdp-port> <datei.html> <ausdruck> [wartezeit ms] [vorab-ausdruck] [warte-bis-bedingung]   -- Ausgabeordner/Skalierung entfallen (process.argv[4] = Ausdruck)
 // Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 import {writeFile, mkdir, readFile} from "node:fs/promises";
+import {readFileSync} from "node:fs";
 const port = process.argv[2], datei = process.argv[3], ausdruck = process.argv[4], wz = Number(process.argv[5] || "1500"), out = ".", dsf = 1;
 
 const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json(); const tab = tabs.find(t => t.type === "page");
@@ -24,7 +25,9 @@ const bild = async (n) => { const r = await cdp("Page.captureScreenshot", {forma
 await cdp("Runtime.enable"); await cdp("Network.enable"); await cdp("Page.enable"); await cdp("Debugger.enable"); await cdp("Inspector.enable");
 const dprIst = await (async () => { const r = await cdp("Runtime.evaluate", {expression: "window.devicePixelRatio + \"x\" + innerWidth + \"x\" + innerHeight", returnByValue: true}); return r.result.result.value; })(); console.log("Browser: Skalierung/Fenster", dprIst);
 await cdp("Page.navigate", {url: "file://" + datei}); await warte(wz);
-const vorab = process.argv[6], bis = process.argv[7];   // optional: vorab = Ausdruck, der etwas anstößt; bis = Bedingung, auf die bis 300 s gewartet wird (alle 500 ms gefragt)
+const lies = x => (x && x.startsWith("@")) ? (await0(x.slice(1))) : x;   // @datei: Ausdruck aus Datei lesen (umgeht die Anführungszeichen der Shell)
+function await0(f) { return readFileSync(f, "utf8"); }
+const vorab = lies(process.argv[6]), bis = lies(process.argv[7]);   // optional: vorab = Ausdruck, der etwas anstößt; bis = Bedingung, auf die bis 300 s gewartet wird (alle 500 ms gefragt)
 if (vorab) await js(vorab);
 if (bis) for (let i = 0; i < 600 && !(await js(bis)); i++) await warte(500);
-console.log(JSON.stringify(await js(ausdruck), null, 1)); if (fehler.length) console.log("FEHLER:", fehler.join(" | ")); ws.close(); process.exit(0);
+console.log(JSON.stringify(await js(lies(ausdruck)), null, 1)); if (fehler.length) console.log("FEHLER:", fehler.join(" | ")); ws.close(); process.exit(0);
