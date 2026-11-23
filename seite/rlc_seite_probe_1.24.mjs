@@ -1,3 +1,5 @@
+// rlc_seite_probe_1.24.mjs -- (1.24: für Seite 2.23: P19 fährt „K steigern bis 0,1 %“ und verlangt das Ziel bei K ≤ 12, größter Fehler ≤ 0,5 %, tanh in der Fortsetzung
+//   besser als Fourier und Potenzreihe; P19b Treppen-Tafel ≥ 9 Zeilen;
 // rlc_seite_probe_1.23.mjs -- (1.23: für Seite 2.22: P18 prüft drei Fotos (das dritte mit Shunt);
 // rlc_seite_probe_1.22.mjs -- (1.22: für Seite 2.21: P19 ersetzt durch Anfitten (drei Ansätze gleicher Parameterzahl, Tafel, Fehler endlich, tanh im eingeschwungenen
 //   Abschnitt besser als Potenzreihe), P19b Treppe-Knopf vorhanden;
@@ -60,7 +62,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.22/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.23/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
@@ -191,15 +193,16 @@ await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight * 0.5`); await 
 await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight * 0.68`); await warte(200); await bild("p18_theorie_mitte3");
 await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight`); await warte(200); await bild("p18_theorie_unten");
 P("P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite)", await js("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight"), await js(`document.documentElement.scrollWidth + "x" + document.documentElement.scrollHeight + " Fenster " + innerWidth + "x" + innerHeight`));
-// P19 Reiter Anfitten: drei Ansätze mit gleicher Parameterzahl
+// P19 Reiter Anfitten: K steigern bis 0,1 % (tanh nach Ruppert), Fourier und Potenzreihe bei gleicher Parameterzahl
 await js(`$("rt_fit").click()`); await warte(300);
-await js(`$("fk").value = String(kurven.find(k => k.name.includes("T140")).id); $("fk").dispatchEvent(new Event("change")); $("f_K").value = 3; $("f_starts").value = 8; $("f_rechnen").click();`); await warte(4000);
-for (let i = 0; i < 20 && (await js(`$("f_rechnen").disabled`)); i++) await warte(500);
-const f19 = await js(`(() => { const e = fitErg; if (!e) return "kein Ergebnis"; return JSON.stringify({n: e.modelle.length, P: e.modelle.map(m => m.P), ges: e.modelle.map(m => +(m.gesamt * 1000).toFixed(1)), eing: e.modelle.map(m => +(m.eing * 1000).toFixed(1)), fort: e.modelle.map(m => +(m.fort * 1000).toFixed(1)), zeilen: $("f_modelle").tBodies[0].rows.length, c9: Math.round($("c9").getBoundingClientRect().height), stand: $("f_stand").textContent.slice(0, 50)}); })()`);
+await js(`$("fk").value = String(kurven.find(k => k.name.includes("T140")).id); $("fk").dispatchEvent(new Event("change")); $("f_starts").value = 6; $("f_treppe").click();`);
+for (let i = 0; i < 240 && (await js(`$("f_treppe").disabled`)); i++) await warte(1000);
+const f19 = await js(`(() => { const e = fitErg; if (!e) return "kein Ergebnis"; const mt = e.modelle.find(x => x.name.startsWith("tanh")), mf = e.modelle.find(x => x.name.startsWith("Fourier")), mp = e.modelle.find(x => x.name.startsWith("Potenz")); const pz = x => +(x / e.dU * 100).toFixed(3);
+  return JSON.stringify({K: Number($("f_K").value), P: e.P, rms: pz(mt.gesamt), max: pz(mt.max), fort: pz(mt.fort), fortF: pz(mf.fort), fortP: pz(mp.fort), zeilen: $("f_treppe_tafel").tBodies[0].rows.length, stand: $("f_stand").textContent.slice(-30)}); })()`);
 const m19 = f19.startsWith("{") ? JSON.parse(f19) : null;
-P("P19 Anfitten T140, K = 3: drei Ansätze mit 10 (Fourier 9) Parametern, Tafel 3 Zeilen, Fehler im Fenster endlich und unter 500 mV, tanh im eingeschwungenen Abschnitt besser als die Potenzreihe und in der Fortsetzung besser als beide", !!m19 && m19.n === 3 && m19.P[0] === 10 && Math.abs(m19.P[1] - 10) <= 1 && m19.P[2] === 10 && m19.zeilen === 3 && m19.ges.every(x => Number.isFinite(x) && x < 500) && m19.eing[0] < m19.eing[2] && m19.fort[0] < m19.fort[1] && m19.fort[0] < m19.fort[2] && m19.c9 > 100, f19);
+P("P19 Anfitten T140: tanh-Netz erreicht RMSE ≤ 0,1 % ΔU bei K ≤ 12, größter Fehler ≤ 0,5 %, Fortsetzung tanh unter 0,3 % und besser als Fourier und Potenzreihe", !!m19 && m19.K <= 12 && m19.rms <= 0.1 && m19.max <= 0.5 && m19.fort < 0.3 && m19.fort < m19.fortF && m19.fort < m19.fortP && /erreicht\.$/.test(m19.stand), f19);
 await bild("p19_anfitten");
-P("P19b Treppen-Knopf vorhanden und frei", await js(`!$("f_treppe").disabled && $("f_treppe").textContent.includes("Treppe")`), "");
+P("P19b Treppen-Tafel hat mindestens 9 Zeilen (K = 1 … erreicht)", !!m19 && m19.zeilen >= 9 && m19.zeilen === m19.K, m19 ? m19.zeilen + " Zeilen, K = " + m19.K : "–");
 // P17 Löschknöpfe
 await js(`$("rt_aus").click()`); await warte(200);
 const n17 = await js("kurven.length");

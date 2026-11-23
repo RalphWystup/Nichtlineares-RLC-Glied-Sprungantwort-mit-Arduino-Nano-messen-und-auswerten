@@ -1,6 +1,6 @@
-Browser: Skalierung/Fenster 1x1600x708
-RICHTIG P1 Seite geladen: RLC-Sprung 2.22 · Messen und Auswerten
-RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|40
+Browser: Skalierung/Fenster 1.5x1600x708
+RICHTIG P1 Seite geladen: RLC-Sprung 2.23 · Messen und Auswerten
+RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|39
 RICHTIG P2 eingebettete Kurven: 2 Kurven (rlc27 T140, T128 mit Strom)
 RICHTIG P3 Kennwerte T140 (rlc27, Shunt) gegen Datei: Seite Umax 4.3842 V @ 57.5 ms, Uend 2.7436; Datei 4.3842 @ 57.5, 2.7436; D 0.296, f0 10.07 Hz, U_E,end 2.7428 V, Abfall 125 mV
 RICHTIG P3b U_C unter 5 V und nie negativ (alle eingebetteten): alle Werte 0 … 5 V
@@ -16,19 +16,19 @@ RICHTIG P6c Format-2.0-Kurve zeichnet keine Anregung (roher PWM-Mittel): ue() = 
 RICHTIG P6b Tafel hat 5 Zeilen, Liste 5 Einträge: 
 RICHTIG P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt 47 Ω) kleiner 500 mV (Strecke geändert, Scheitel 3,866 → 3,947 V): größte |Δ| 360.5 mV
 RICHTIG P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel nach Median 2,6 … 3,0 mA: i · i|mA|4|2.81|2
-RICHTIG P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“: t = 21,0 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt gemessen: 2,652 mA┄ rlc27_2026-11-23_113109_T140_F3_B4.txt C·dU/dt: 2,757 mA■ rlc27_2026-11-23_113104_T128_F
+RICHTIG P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“: t = 20,4 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt gemessen: 2,548 mA┄ rlc27_2026-11-23_113109_T140_F3_B4.txt C·dU/dt: 2,701 mA■ rlc27_2026-11-23_113104_T128_F
 RICHTIG P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung): 4 Reihen (erwartet 4: beide rlc27 je U_H und U_L)
 RICHTIG P8b U_E − ideal gezeichnet: 2 Reihen
-RICHTIG P9 Zeigertipp zeigt t und Werte aller Kurven: t = 102,0 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt: UC 2,1970 V · UE 2,7462 V■ rlc27_2026-11-23_113104_T128_F3_B4.txt: UC 2,0259 V · UE 2,5098 V■ RLC_Glied.tx
-RICHTIG P10 Maße stabil, kein Wachsen, kein Scrollen (Höhe und Breite): 1224x314x1600x760 -> 1224x314x1600x760, Fenster 1600x760
-RICHTIG P10b Prüfreiter im Auswertungsreiter ausgeblendet, Bild 1 über 250 px hoch: none|317
+RICHTIG P9 Zeigertipp zeigt t und Werte aller Kurven: t = 101,4 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt: UC 2,2165 V · UE 2,7473 V■ rlc27_2026-11-23_113104_T128_F3_B4.txt: UC 2,0455 V · UE 2,5110 V■ RLC_Glied.tx
+RICHTIG P10 Maße stabil, kein Wachsen, kein Scrollen (Höhe und Breite): 1836x482x1600x760 -> 1836x482x1600x760, Fenster 1600x760
+RICHTIG P10b Prüfreiter im Auswertungsreiter ausgeblendet, Bild 1 über 250 px hoch: none|323
 RICHTIG P11 Speichern ohne Ordner meldet Download: Als Download gespeichert: rlc27_2026-11-23_113109_T140_F3_B4.txt (für den Tagesordner erst „Ordner wählen“).
-RICHTIG P14 Reiter Prüfen sichtbar (Leinwand 3 über 200 px hoch, Leinwand 4 über 80 px, Auswertung ausgeblendet = 0 px): false|true|true|443|146|0|1|0
+RICHTIG P14 Reiter Prüfen sichtbar (Leinwand 3 über 200 px hoch, Leinwand 4 über 80 px, Auswertung ausgeblendet = 0 px): false|true|true|445|148|0|1|0
 RICHTIG P15a Knopf Sprung ±20 ms: -20.0..20.0 v=1
-RICHTIG P15b Zeigertipp im Prüfreiter mit k, U_H, nH: t = 0,00 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt: k -1 · t -0,50 ms · UC 0,0000 V · UE 0,0000 V · UH 5,000 · UL 0,000 V · nH 0 nL 4 nF 0
+RICHTIG P15b Zeigertipp im Prüfreiter mit k, U_H, nH: t = 0,01 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt: k 0 · t 0,50 ms · UC 0,0000 V · UE 2,7424 V · UH 4,995 · UL 0,000 V · nH 2 nL 2 nF 0
 RICHTIG P15c Rad zoomt die Zeit (40 ms -> 32 ms): 32.00 ms Ausschnitt
 RICHTIG P15c2 Zeitachse im Zoom eindeutig beschriftet (keine doppelten Werte): -15 -10 -5 0 5 10 15|true
-RICHTIG P15d Rahmen ziehen (120 × 80 px) zoomt auf den gerechneten Ausschnitt, Verlauf 2: 3.33|1.108|2 (Soll 3.33 ms × 1.108 V)
+RICHTIG P15d Rahmen ziehen (120 × 80 px) zoomt auf den gerechneten Ausschnitt, Verlauf 2: 3.33|1.106|2 (Soll 3.33 ms × 1.106 V)
 RICHTIG P15e Messpunkte im Ausschnitt gezeichnet (unter 600): 4 Punkte
 RICHTIG P15f Zurück = voriger Ausschnitt 32 ms: 32.00
 RICHTIG P15g Scheitel: Mitte = t_max, Spannung 0,2 V: 0.000|0.200
@@ -37,12 +37,12 @@ RICHTIG P16 Zählwerte je Wert vollständig (nH+nL+nF = 4), nach dem Sprung nH 1
 RICHTIG P18 Aufbau und Theorie: drei Fotos 2048×944 als data: (das dritte mit Shunt), Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen: false|true|2048x944|2048x944/2048x944|data:image/jpeg;base64|940|11|36|true|392
 RICHTIG P18c Schaltplan ohne R_ext, R_Cu = 92 Ω, A2 am Spulenende: false|true|true
 RICHTIG P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite): 1600x760 Fenster 1600x760
-RICHTIG P19 Anfitten T140, K = 3: drei Ansätze mit 10 (Fourier 9) Parametern, Tafel 3 Zeilen, Fehler im Fenster endlich und unter 500 mV, tanh im eingeschwungenen Abschnitt besser als die Potenzreihe und in der Fortsetzung besser als beide: {"n":3,"P":[10,9,10],"ges":[61.6,309.2,274.2],"eing":[13.6,252.1,121.1],"fort":[13.7,4414.9,225163],"zeilen":3,"c9":202,"stand":"3 Ansätze mit je 10 Parametern in 205 ms. tanh-Net"}
-RICHTIG P19b Treppen-Knopf vorhanden und frei: 
+RICHTIG P19 Anfitten T140: tanh-Netz erreicht RMSE ≤ 0,1 % ΔU bei K ≤ 12, größter Fehler ≤ 0,5 %, Fortsetzung tanh unter 0,3 % und besser als Fourier und Potenzreihe: {"K":11,"P":34,"rms":0.091,"max":0.265,"fort":0.082,"fortF":269.451,"fortP":48463.91,"zeilen":11,"stand":"91 % ΔU – Ziel 0,1 % erreicht."}
+RICHTIG P19b Treppen-Tafel hat mindestens 9 Zeilen (K = 1 … erreicht): 11 Zeilen, K = 11
 RICHTIG P17a Gewählte entfernen nimmt genau die gewählte Kurve: 4|false|„rlc2_2026-11-22_162318_T128_F3_B4.txt“ entfernt; die Datei bleibt.
 RICHTIG P17b Alle entfernen: erster Klick entfernt nichts, fragt nach: 4|Wirklich alle 4 entfernen? (nochmal klicken)|true
 RICHTIG P17c zweiter Klick entfernt alle, Knöpfe danach gesperrt: 0|Alle entfernen|true|true|0
 RICHTIG P12 keine Skriptfehler: keine
 RICHTIG P13 kein Netzabruf: keiner
 
-ERGEBNIS 42 von 42 RICHTIG (Skalierung 1)
+ERGEBNIS 42 von 42 RICHTIG (Skalierung 1.5)

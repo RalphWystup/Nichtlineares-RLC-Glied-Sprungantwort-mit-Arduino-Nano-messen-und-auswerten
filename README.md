@@ -31,7 +31,7 @@ RLC-Schwingkreises“ (04.03.2026), Fassung 2.1 mit dem Schaltplan, Text unverä
 
 | Datei | Inhalt |
 |:--|:--|
-| [`RLC_Sprung_2.22.html`](RLC_Sprung_2.22.html) | die Seite (All-in-one): Messen über Web Serial, Auswertung, Prüfreiter mit Zoom, Aufbau und Theorie, Stromansicht (Shunt), Reiter „Impulsantwort“, Reiter „Anfitten“ (tanh-Netz nach Ruppert gegen Fourier und Potenzreihe bei gleicher Parameterzahl, Fortsetzungstest) |
+| [`RLC_Sprung_2.23.html`](RLC_Sprung_2.23.html) | die Seite (All-in-one): Messen über Web Serial, Auswertung, Prüfreiter mit Zoom, Aufbau und Theorie, Stromansicht (Shunt), Reiter „Impulsantwort“, Reiter „Anfitten“ (tanh-Netz nach Ruppert gegen Fourier und Potenzreihe bei gleicher Parameterzahl, K steigern bis 0,1 % der Sprunghöhe, Fortsetzungstest) |
 | [`rlc_manuskript_2.1_mit_Schaltplan.pdf`](rlc_manuskript_2.1_mit_Schaltplan.pdf) / [`.docx`](rlc_manuskript_2.1_mit_Schaltplan.docx) / [`.md`](rlc_manuskript_2.1_mit_Schaltplan.md) | das Manuskript |
 | `nano/` | `rlc_sprung_2_6.ino` (Firmware ohne Shunt) und `rlc_sprung_2_7.ino` (mit A2 = Spulenende, Strom über R_s = 47 Ω zwischen Spule und Kondensator), Befehl `M T N V F B P R`, 1 000 000 Bd; `rlc_bauen_laden_2.6/2.7.py` (arduino-cli, Board `arduino:avr:nano:cpu=atmega328old`), `rlc_messen_2.6/2.7.py` (Messen ohne Browser), `arduino_cli_laden_1.2.py` (arduino-cli portabel holen) |
 | `messungen/` | Messdateien 23.11.2026 mit Shunt 47 Ω (rlc27, T = 128 und 140, Spalten … U_C_V U_2_V U_H_V U_L_V U_E_V i_mA), 22.11.2026 ohne Shunt (rlc25/26) und die alte Simulink-Messung vom 03.03.2026 |
@@ -42,12 +42,12 @@ RLC-Schwingkreises“ (04.03.2026), Fassung 2.1 mit dem Schaltplan, Text unverä
 ## Messen
 
 1. `nano/rlc_sprung_2_6.ino` auf den Nano laden (`python3 nano/rlc_bauen_laden_2.6.py`, arduino-cli vorher mit `arduino_cli_laden_1.2.py` holen; Anschluss im Skript, Vorgabe COM5).
-2. `RLC_Sprung_2.22.html` in Chrome oder Edge öffnen, „Verbinden …“, Anschluss wählen, Tastgrad T (0 … 140), „Sprung messen“. Jede Messung wird im gewählten Ordner unter `Messungen_TT.MM.JJJJ` abgelegt.
+2. `RLC_Sprung_2.23.html` in Chrome oder Edge öffnen, „Verbinden …“, Anschluss wählen, Tastgrad T (0 … 140), „Sprung messen“. Jede Messung wird im gewählten Ordner unter `Messungen_TT.MM.JJJJ` abgelegt.
 3. Ohne Browser: `python3 nano/rlc_messen_2.6.py T:N:V:F:B:P[:R]`, z. B. `128:600:3000:3:4:20:2000`.
 
 ## Prüfen
 
-    cd seite && node rlc_seite_probe_1.23.mjs <cdp-port> <pfad>/RLC_Sprung_2.22.html <ausgabeordner> 1.5
+    cd seite && node rlc_seite_probe_1.24.mjs <cdp-port> <pfad>/RLC_Sprung_2.23.html <ausgabeordner> 1.5
 
 Die Knopfprobe drückt im kopflosen Chromium jeden Knopf (Reiter, Zoom per Rad und Rahmen, Löschknöpfe zweistufig, Laden,
 Kennwerte gegen eigene Rechnung aus der Messdatei): 42 von 42 richtig bei Skalierung 1 und 1,5, Dateiprobe 4 von 4

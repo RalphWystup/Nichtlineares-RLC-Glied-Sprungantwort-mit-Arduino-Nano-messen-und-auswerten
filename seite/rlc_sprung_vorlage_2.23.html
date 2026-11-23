@@ -3,9 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLC-Sprung 2.22 · Messen und Auswerten</title>
+<title>RLC-Sprung 2.23 · Messen und Auswerten</title>
 <!--
-RLC_Sprung_2.22.html (23.11.2026) -- 2.22: drittes Foto (Aufbau mit Messwiderstand 47 Ω zwischen Spulenende und Kondensator, Messungen_23.11.2026\Bilder\Mit_shunt.jpg,
+RLC_Sprung_2.23.html (23.11.2026) -- 2.23: Anfitten bis 0,1 % (sein Wort: „der Fit der Sprungantwort passt ja gar nicht, das bitte so ausarbeiten dass max 0,1 %
+abweichung auftritt“): Levenberg-Marquardt mit echter Dämpfungssteuerung, bis 400 Schritte, Abbruch bei relativer Verbesserung < 1e-10; Starts: Wendepunkte,
+Ergebnis von K−1 plus ein Baustein am größten Rest, Zufallsstarts; Knopf „K steigern bis 0,1 %“ (K = 1 … 12 nacheinander mit Warmstart, Abbruch sobald
+RMSE ≤ 0,1 % ΔU; gerechnet mit scipy 23.11.: K = 9 … 10, 28 … 31 Parameter, RMSE 0,10 … 0,08 %, größter Fehler 0,27 … 0,32 % = 1,5 … 2 ADC-Stufen);
+Vorgabe K = 10; Potenzreihe als Tschebyschow-Basis gelöst (gleicher Funktionenraum, numerisch stabil bis Grad 30); Treppe als Tafel K, P, RMSE, max, Fortsetzung. 2.22: drittes Foto (Aufbau mit Messwiderstand 47 Ω zwischen Spulenende und Kondensator, Messungen_23.11.2026\Bilder\Mit_shunt.jpg,
 sein Wort: „zuerst noch das bild mit shunt einfügen“); Fotos dreispaltig. 2.21: Reiter „Anfitten“ gefüllt (sein Wort: „du kannst dich nun dem anfitten nach der ruppert methode widmen … im Vergleich zu
 fourier und taylor“): Ansätze bei GLEICHER Parameterzahl P = 3K+1 -- tanh-Netz nach Ruppert (K Bausteine b0 + Σ b1·tanh(b2(τ + b3)), τ = t/t_end;
 Gauß-Newton mit Levenberg-Dämpfung, Start „Bausteine an die Wendepunkte“ + zufällige Starts, Höhen linear exakt), Fourier-Reihe (a0 + Σ an cos nωτ + bn sin nωτ,
@@ -76,7 +80,7 @@ U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U
 d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
 Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
 Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
-Gebaut mit bau_rlc_seite_2.22.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Gebaut mit bau_rlc_seite_2.23.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 -->
 <style>
@@ -163,7 +167,7 @@ select { font: inherit; padding: 2px 4px; }
 </head>
 <body>
 <header>
-  <h1>RLC-Sprung 2.22</h1>
+  <h1>RLC-Sprung 2.23</h1>
   <span class="neben">Nichtlineares RLC-Glied · Nano mit rlc_sprung_2_6/2_7 · D11 PWM → A0 = U<sub>C</sub>, A1 = Pin, A2 = Spulenende · Eingang = Mittelwert U<sub>E</sub></span>
   <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
 </header>
@@ -211,7 +215,7 @@ select { font: inherit; padding: 2px 4px; }
         <button id="alle_weg" disabled title="Keine Kurven geladen">Alle entfernen</button>
         <span class="hinweis" id="stand_k">Entfernen nimmt die Kurve nur aus der Seite; die Datei im Ordner bleibt.</span>
       </div>
-      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc222/221/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
+      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc223/222/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
       <label class="hinweis" style="display:flex;gap:6px;margin-top:6px"><input id="UE" type="checkbox" checked> Anregung U<sub>E</sub> (Mittelwert) gestrichelt mitzeichnen</label>
       <label class="hinweis" style="display:flex;gap:6px"><input id="glatt" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> glätten (gleitender Median über 5 Werte; einzelne Flankentreffer)</label>
       <label class="hinweis" style="display:flex;gap:6px" title="Alle 51 Blöcke trifft die A2-Wandlung eine PWM-Flanke, die kapazitiv durch die Drosselwicklung ans Spulenende gelangt (±1,35 mA, Einzelwerte). Der 3-Punkt-Median nimmt sie heraus; die Rohwerte bleiben in der Datei."><input id="i_median" type="checkbox" checked> Strom: Ausreißer der PWM-Flanken ausblenden (3-Punkt-Median)</label>
@@ -326,14 +330,14 @@ select { font: inherit; padding: 2px 4px; }
     <div class="inhalt" id="r_fit" hidden>
       <div>
         <h2>Anfitten der Sprungantwort: tanh-Netz (Ruppert) gegen Fourier-Reihe und Potenzreihe bei gleicher Parameterzahl</h2>
-        <p class="hinweis" style="max-width:1250px;margin:0 0 4px">Zielkurve ist die gemessene Sprungantwort s(t) ab dem Sprung, Zeit normiert τ = t/t<sub>end</sub>. <b>Ruppert:</b> f̃(τ) = b<sub>0</sub> + Σ<sub>k</sub> b<sub>1,k</sub>·tanh(b<sub>2,k</sub>(τ + b<sub>3,k</sub>)), K Bausteine, P = 3K + 1 Parameter; Fehlerfläche O = Σ(f̃ − s)² (seine Gl. 5), Höhen b<sub>0</sub>, b<sub>1</sub> linear exakt (Gl. 24), Steilheiten und Lagen nichtlinear (Gauß-Newton mit Dämpfung, Start „Bausteine an die Wendepunkte“ plus zufällige Starts, bestes Ergebnis zählt). <b>Fourier:</b> a<sub>0</sub> + Σ a<sub>n</sub>cos(nωτ) + b<sub>n</sub>sin(nωτ) mit ω = 2π auf dem Fenster, 2M + 1 ≈ P Koeffizienten, kleinste Quadrate (die Glieder sind fest, die Kurve ist nicht periodisch: Welligkeit und Randfehler). <b>Potenzreihe:</b> Σ c<sub>n</sub>τ<sup>n</sup> vom Grad 3K (Taylor-Form; kleinste Quadrate statt Ableitungen in einem Punkt, denn die echte Taylor-Reihe um t = 0 ist außerhalb ihres Konvergenzradius wertlos). Bewertet wird der Effektivwert des Fehlers gesamt und in drei Abschnitten (Anstieg bis t<sub>max</sub>, Schwingen bis t<sub>max</sub> + 3·T<sub>d</sub>, eingeschwungen danach). <b>Härtetest Fortsetzung:</b> Fit nur auf den ersten 80 % der Zeit, Fehler auf den letzten 20 % ohne Stützpunkte.</p>
+        <p class="hinweis" style="max-width:1250px;margin:0 0 4px">Zielkurve ist die gemessene Sprungantwort s(t) ab dem Sprung, Zeit normiert τ = t/t<sub>end</sub>. <b>Ruppert:</b> f̃(τ) = b<sub>0</sub> + Σ<sub>k</sub> b<sub>1,k</sub>·tanh(b<sub>2,k</sub>(τ + b<sub>3,k</sub>)), K Bausteine, P = 3K + 1 Parameter; Fehlerfläche O = Σ(f̃ − s)² (seine Gl. 5), Höhen b<sub>0</sub>, b<sub>1</sub> linear exakt (Gl. 24), Steilheiten und Lagen nichtlinear (Gauß-Newton mit Dämpfung, Start „Bausteine an die Wendepunkte“ plus zufällige Starts, bestes Ergebnis zählt). <b>Fourier:</b> a<sub>0</sub> + Σ a<sub>n</sub>cos(nωτ) + b<sub>n</sub>sin(nωτ) mit ω = 2π auf dem Fenster, 2M + 1 ≈ P Koeffizienten, kleinste Quadrate (die Glieder sind fest, die Kurve ist nicht periodisch: Welligkeit und Randfehler). <b>Potenzreihe:</b> Σ c<sub>n</sub>τ<sup>n</sup> vom Grad 3K (Taylor-Form; kleinste Quadrate statt Ableitungen in einem Punkt, denn die echte Taylor-Reihe um t = 0 ist außerhalb ihres Konvergenzradius wertlos). Ziel: Effektivfehler ≤ 0,1 % der Sprunghöhe (2,7 mV bei T = 140); der größte Einzelfehler bleibt bei 1 bis 2 ADC-Stufen (0,2 … 0,3 %). Nach Rupperts Regel braucht das einen Baustein je Wendepunkt, hier 9 bis 10. Bewertet wird der Effektivwert des Fehlers gesamt und in drei Abschnitten (Anstieg bis t<sub>max</sub>, Schwingen bis t<sub>max</sub> + 3·T<sub>d</sub>, eingeschwungen danach). <b>Härtetest Fortsetzung:</b> Fit nur auf den ersten 80 % der Zeit, Fehler auf den letzten 20 % ohne Stützpunkte.</p>
         <div class="knoepfe" style="align-items:center">
           <span class="hinweis">Kurve <select id="fk"></select></span>
-          <span class="hinweis">Bausteine K <input id="f_K" type="number" min="1" max="8" step="1" value="3" style="width:46px;padding:1px 3px;font:inherit"></span>
+          <span class="hinweis">Bausteine K <input id="f_K" type="number" min="1" max="12" step="1" value="10" style="width:46px;padding:1px 3px;font:inherit"></span>
           <span class="hinweis">Fit auf die ersten <input id="f_anteil" type="number" min="30" max="100" step="5" value="80" style="width:50px;padding:1px 3px;font:inherit"> % der Zeit</span>
           <span class="hinweis">Starts <input id="f_starts" type="number" min="1" max="60" step="1" value="12" style="width:46px;padding:1px 3px;font:inherit"></span>
           <button id="f_rechnen" class="haupt">Anfitten</button>
-          <button id="f_treppe" title="K = 1 … 6 nacheinander rechnen: Fehler über der Parameterzahl">Treppe K = 1 … 6</button>
+          <button id="f_treppe" title="K = 1 … 12 nacheinander mit Warmstart rechnen, Abbruch sobald der Effektivfehler 0,1 % der Sprunghöhe unterschreitet; Treppe als Tafel">K steigern bis 0,1 %</button>
           <label class="hinweis" style="display:flex;gap:4px"><input id="f_tanh" type="checkbox" checked> tanh</label>
           <label class="hinweis" style="display:flex;gap:4px"><input id="f_fourier" type="checkbox" checked> Fourier</label>
           <label class="hinweis" style="display:flex;gap:4px"><input id="f_taylor" type="checkbox" checked> Potenzreihe</label>
@@ -342,7 +346,8 @@ select { font: inherit; padding: 2px 4px; }
       </div>
       <div class="bild" id="b9"><canvas id="c9" aria-label="Sprungantwort gemessen und drei Fits"></canvas><div class="tip" id="tip9" hidden></div></div>
       <div class="bild" id="b10"><canvas id="c10" aria-label="Reste der drei Fits in mV"></canvas><div class="tip" id="tip10" hidden></div></div>
-      <div class="tafel" style="max-height:150px"><table id="f_modelle"><thead><tr><th>Ansatz</th><th>Parameter</th><th>Fit-Fenster</th><th>RMSE im Fenster / mV</th><th>Anstieg / mV</th><th>Schwingen / mV</th><th>eingeschwungen (im Fenster) / mV</th><th>max im Fenster / mV</th><th>Fortsetzung ohne Stützpunkte / mV</th><th>Bemerkung</th></tr></thead><tbody><tr><td colspan="10" class="hinweis">Noch nicht gerechnet.</td></tr></tbody></table></div>
+      <div class="tafel" style="max-height:150px"><table id="f_treppe_tafel" style="margin-bottom:6px"><thead><tr><th>K</th><th>P</th><th>RMSE tanh / % ΔU</th><th>max / % ΔU</th><th>Fortsetzung / % ΔU</th><th>Fourier RMSE / %</th><th>Potenzreihe RMSE / %</th><th>Zeit / s</th></tr></thead><tbody><tr><td colspan="8" class="hinweis">Treppe: „K steigern bis 0,1 %“.</td></tr></tbody></table>
+      <table id="f_modelle"><thead><tr><th>Ansatz</th><th>Parameter</th><th>Fit-Fenster</th><th>RMSE im Fenster / mV</th><th>Anstieg / mV</th><th>Schwingen / mV</th><th>eingeschwungen (im Fenster) / mV</th><th>max im Fenster / mV</th><th>Fortsetzung ohne Stützpunkte / mV</th><th>Bemerkung</th></tr></thead><tbody><tr><td colspan="10" class="hinweis">Noch nicht gerechnet.</td></tr></tbody></table></div>
     </div>
   </div>
 </main>
@@ -669,45 +674,49 @@ function fitFourier(tau, y, P) {   // 2M+1 <= P Koeffizienten
   const basis = x => { const r = [1]; for (let n = 1; n <= M; n++) { r.push(Math.cos(n * w * x)); r.push(Math.sin(n * w * x)); } return r; };
   const c = lsq(tau.map(basis), y); return {f: x => basis(x).reduce((a, b, j) => a + b * c[j], 0), P: 2 * M + 1, text: `M = ${M} Harmonische`};
 }
-function fitPotenz(tau, y, P) {   // Grad P-1 in (2τ − 1) (numerisch stabiler als in τ), ausgewertet als Potenzreihe
-  const d = P - 1, basis = x => { const r = [1], z = 2 * x - 1; for (let n = 1; n <= d; n++) r.push(r[n - 1] * z); return r; };
+function fitPotenz(tau, y, P) {   // Grad P-1: Tschebyschow-Basis in z = 2τ − 1 (derselbe Polynomraum wie die Potenzreihe, numerisch stabil bis Grad 30)
+  const d = P - 1, basis = x => { const z = 2 * x - 1, r = [1, z]; for (let n = 2; n <= d; n++) r.push(2 * z * r[n - 1] - r[n - 2]); return r.slice(0, d + 1); };
   const c = lsq(tau.map(basis), y); return {f: x => basis(x).reduce((a, b, j) => a + b * c[j], 0), P: d + 1, text: `Grad ${d}`};
 }
 function wendepunkte(tau, y, K) {   // Startlagen: die K stärksten Wendepunkte der geglätteten Kurve (Nulldurchgänge der zweiten Differenz)
   const g = mittel(y, 9), w = []; for (let n = 2; n < g.length - 2; n++) { const a = g[n - 1] - 2 * g[n] + g[n + 1], b = g[n] - 2 * g[n + 1] + g[n + 2]; if (a * b < 0) w.push({tau: tau[n], st: Math.abs(g[n + 1] - g[n - 1])}); }
   w.sort((p, q) => q.st - p.st); const s = w.slice(0, K).map(p => p.tau); while (s.length < K) s.push((s.length + 0.5) / K); return s.sort((p, q) => p - q);
 }
-function fitTanh(tau, y, K, starts, zufall) {   // Ruppert: b0 + Σ b1 tanh(b2(τ + b3)); Höhen linear, b2/b3 Gauß-Newton (Levenberg)
-  const N = tau.length, th = Math.tanh;
-  const hoehen = (b2, b3) => lsq(tau.map(x => [1, ...b2.map((s, k) => th(s * (x + b3[k])))]), y);   // Gl. 24 verallgemeinert
+function fitTanh(tau, y, K, starts, warm) {   // Ruppert: b0 + Σ b1 tanh(b2(τ + b3)); Höhen linear (Gl. 24), b2/b3 Levenberg-Marquardt; warm = Ergebnis für K−1
+  const N = tau.length, th = Math.tanh, B2 = [0.3, 600], B3 = [-1.5, 0.5];
+  const hoehen = (b2, b3) => lsq(tau.map(x => [1, ...b2.map((s, k) => th(s * (x + b3[k])))]), y);
   const fehler = (b0, b1, b2, b3) => tau.map((x, n) => b0 + b1.reduce((a, h, k) => a + h * th(b2[k] * (x + b3[k])), 0) - y[n]);
   let best = null;
   const lauf = (b2, b3) => {
-    let lam = 1e-2, c = hoehen(b2, b3), r = fehler(c[0], c.slice(1), b2, b3), O = r.reduce((a, x) => a + x * x, 0);
-    for (let it = 0; it < 120; it++) {
-      const b1 = c.slice(1), J = [];   // Jacobi nach (b2_k, b3_k)
-      for (let n = 0; n < N; n++) { const row = []; for (let k = 0; k < K; k++) { const u = th(b2[k] * (tau[n] + b3[k])), d = b1[k] * (1 - u * u); row.push(d * (tau[n] + b3[k]), d * b2[k]); } J.push(row); }
-      const P2 = 2 * K, M = Array.from({length: P2}, () => new Array(P2).fill(0)), g = new Array(P2).fill(0);
-      for (let n = 0; n < N; n++) for (let i = 0; i < P2; i++) { g[i] += J[n][i] * r[n]; for (let j = i; j < P2; j++) M[i][j] += J[n][i] * J[n][j]; }
-      for (let i = 0; i < P2; i++) for (let j = 0; j < i; j++) M[i][j] = M[j][i];
-      let verbessert = false;
-      for (let v = 0; v < 8 && !verbessert; v++) {
-        const Md = M.map((row, i) => row.map((x, j) => i === j ? x * (1 + lam) + 1e-9 : x)), dlt = cholLoesen(Md, g.map(x => -x));
-        const b2n = b2.map((s, k) => Math.min(400, Math.max(0.3, s + dlt[2 * k]))), b3n = b3.map((s, k) => Math.min(0.5, Math.max(-1.5, s + dlt[2 * k + 1])));
+    b2 = b2.map(s => Math.min(B2[1], Math.max(B2[0], s))); b3 = b3.map(s => Math.min(B3[1], Math.max(B3[0], s)));
+    let lam = 1e-3, c = hoehen(b2, b3), r = fehler(c[0], c.slice(1), b2, b3), O = r.reduce((a, x) => a + x * x, 0);
+    for (let it = 0; it < 400; it++) {
+      const b1 = c.slice(1), P2 = 2 * K, M = Array.from({length: P2}, () => new Array(P2).fill(0)), g = new Array(P2).fill(0);
+      for (let n = 0; n < N; n++) { const row = new Array(P2); for (let k = 0; k < K; k++) { const u = th(b2[k] * (tau[n] + b3[k])), d = b1[k] * (1 - u * u); row[2 * k] = d * (tau[n] + b3[k]); row[2 * k + 1] = d * b2[k]; }
+        for (let i2 = 0; i2 < P2; i2++) { g[i2] += row[i2] * r[n]; for (let j2 = i2; j2 < P2; j2++) M[i2][j2] += row[i2] * row[j2]; } }
+      for (let i2 = 0; i2 < P2; i2++) for (let j2 = 0; j2 < i2; j2++) M[i2][j2] = M[j2][i2];
+      let angenommen = false;
+      for (let v2 = 0; v2 < 12; v2++) {
+        const Md = M.map((row, i2) => row.map((x, j2) => i2 === j2 ? x + lam * (x + 1e-9) : x)), dlt = cholLoesen(Md, g.map(x => -x));
+        const b2n = b2.map((s, k) => Math.min(B2[1], Math.max(B2[0], s + dlt[2 * k]))), b3n = b3.map((s, k) => Math.min(B3[1], Math.max(B3[0], s + dlt[2 * k + 1])));
         const cn = hoehen(b2n, b3n), rn = fehler(cn[0], cn.slice(1), b2n, b3n), On = rn.reduce((a, x) => a + x * x, 0);
-        if (On < O) { b2 = b2n; b3 = b3n; c = cn; r = rn; if (O - On < 1e-12 * O) { O = On; verbessert = true; it = 999; break; } O = On; lam = Math.max(1e-6, lam / 3); verbessert = true; } else lam *= 4;
+        if (On < O) { const rel = (O - On) / O; b2 = b2n; b3 = b3n; c = cn; r = rn; O = On; lam = Math.max(1e-9, lam / 4); angenommen = true; if (rel < 1e-10) it = 1e9; break; } else lam *= 5;
       }
-      if (!verbessert) break;
+      if (!angenommen) break;
     }
     if (!best || O < best.O) best = {O, b0: c[0], b1: c.slice(1), b2: b2.slice(), b3: b3.slice()};
   };
   const wp = wendepunkte(tau, y, K); lauf(wp.map(() => 6 * K), wp.map(x => -x));
-  let seed = 12345; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-  for (let s = 1; s < starts; s++) lauf(Array.from({length: K}, () => 2 + 20 * rnd()), Array.from({length: K}, () => -rnd()));
+  if (warm && warm.b2.length === K - 1) {   // Warmstart: K−1 Bausteine behalten, einen neuen an der Stelle des größten Rests
+    const rw = fehler(warm.b0, warm.b1, warm.b2, warm.b3); let im = 0; for (let n = 1; n < N; n++) if (Math.abs(rw[n]) > Math.abs(rw[im])) im = n;
+    lauf([...warm.b2, 6 * K], [...warm.b3, -tau[im]]);
+  }
+  let seed = 12345 + 17 * K; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  for (let s = 1; s < starts; s++) lauf(Array.from({length: K}, () => 2 + 30 * rnd()), Array.from({length: K}, () => -rnd()));
   const {b0, b1, b2, b3} = best;
-  return {f: x => b0 + b1.reduce((a, h, k) => a + h * th(b2[k] * (x + b3[k])), 0), P: 3 * K + 1, text: `K = ${K}: Lagen ${b3.map(x => zahl(-x, 2)).join(", ")}, Steilheiten ${b2.map(x => zahl(x, 1)).join(", ")}`, b0, b1, b2, b3};
+  return {f: x => b0 + b1.reduce((a, h, k) => a + h * th(b2[k] * (x + b3[k])), 0), P: 3 * K + 1, text: `K = ${K}: Lagen ${b3.map(x => zahl(-x, 2)).join(", ")}`, b0, b1, b2, b3};
 }
-let fitErg = null, ansicht9 = null, treppe = null;
+let fitErg = null, ansicht9 = null;
 function fitAbschnitte(d, tau, y, f, tFit) {
   const r = tau.map((x, n) => f(x) - y[n]), tms = d.t, inA = (a, b) => tms.map(t => t >= a && t < b);
   const seg = m => rmsVon(r.filter((_, n) => m[n]));
@@ -715,11 +724,12 @@ function fitAbschnitte(d, tau, y, f, tFit) {
   // Abschnitte nur INNERHALB des Fit-Fensters; die Fortsetzung (ohne Stützpunkte) getrennt
   return {r, gesamt: rmsVon(r.filter((_, n) => imF[n])), anstieg: seg(mA), schwingen: seg(mS), eing: mE.some(x => x) ? seg(mE) : NaN, max: Math.max(...r.filter((_, n) => imF[n]).map(Math.abs)), fort: mF.some(x => x) ? seg(mF) : NaN};
 }
-function anfitten(K, anteil, starts) {
+function anfitten(K, anteil, starts, warm) {
   const k = kurven.find(q => String(q.id) === $("fk").value); if (!k) return null;
   const d = fitDaten(k), tEnd = d.t[d.n - 1], tau = d.t.map(t => t / tEnd), tFit = anteil / 100 * tEnd, nFit = d.t.filter(t => t <= tFit).length;
   const tauF = tau.slice(0, nFit), yF = d.u.slice(0, nFit), P = 3 * K + 1, erg = {k, d, tau, tFit, P, modelle: []};
-  if ($("f_tanh").checked) { const m = fitTanh(tauF, yF, K, starts); erg.modelle.push(Object.assign({name: "tanh-Netz (Ruppert)", farbe: "#2a78d6"}, m, fitAbschnitte(d, tau, d.u, m.f, tFit))); }
+  erg.dU = Number.isFinite(d.UEend) ? d.UEend : d.Uend;
+  if ($("f_tanh").checked) { const m = fitTanh(tauF, yF, K, starts, warm); erg.modelle.push(Object.assign({name: "tanh-Netz (Ruppert)", farbe: "#2a78d6"}, m, fitAbschnitte(d, tau, d.u, m.f, tFit))); erg.tanh = m; }
   if ($("f_fourier").checked) { const m = fitFourier(tauF, yF, P); erg.modelle.push(Object.assign({name: "Fourier-Reihe", farbe: "#1b8a3a"}, m, fitAbschnitte(d, tau, d.u, m.f, tFit))); }
   if ($("f_taylor").checked) { const m = fitPotenz(tauF, yF, P); erg.modelle.push(Object.assign({name: "Potenzreihe (Taylor-Form)", farbe: "#b42318"}, m, fitAbschnitte(d, tau, d.u, m.f, tFit))); }
   return erg;
@@ -752,17 +762,27 @@ function zeichneFit() {
 new ResizeObserver(() => zeichneFit()).observe($("b9"));
 $("f_rechnen").onclick = () => {
   const K = Number($("f_K").value), anteil = Number($("f_anteil").value), starts = Number($("f_starts").value);
-  if (!(K >= 1 && K <= 8) || !(anteil >= 30 && anteil <= 100) || !(starts >= 1 && starts <= 60)) { $("f_stand").textContent = "Eingaben: K 1 … 8, Anteil 30 … 100 %, Starts 1 … 60."; return; }
+  if (!(K >= 1 && K <= 12) || !(anteil >= 30 && anteil <= 100) || !(starts >= 1 && starts <= 60)) { $("f_stand").textContent = "Eingaben: K 1 … 12, Anteil 30 … 100 %, Starts 1 … 60."; return; }
   $("f_rechnen").disabled = true; $("f_stand").textContent = "rechnet …";
   setTimeout(() => { const t0 = performance.now(); fitErg = anfitten(K, anteil, starts); fitTafel(); zeichneFit(); $("f_rechnen").disabled = false;
-    if (fitErg) { $("f_stand").textContent = `${fitErg.modelle.length} Ansätze mit je ${fitErg.P} Parametern in ${zahl(performance.now() - t0, 0)} ms. ` + fitErg.modelle.map(m => `${m.name}: gesamt ${zahl(m.gesamt * 1000, 1)} mV, eingeschwungen ${zahl(m.eing * 1000, 1)} mV, Fortsetzung ${zahl(m.fort * 1000, 1)} mV`).join(" · ");
+    if (fitErg) { const mt = fitErg.modelle.find(x => x.name.startsWith("tanh")); $("f_stand").textContent = `${fitErg.modelle.length} Ansätze mit je ${fitErg.P} Parametern in ${zahl((performance.now() - t0) / 1000, 1)} s.` + (mt ? ` tanh: ${zahl(mt.gesamt / fitErg.dU * 100, 3)} % ΔU, Ziel 0,1 % ${mt.gesamt <= 0.001 * fitErg.dU ? "erreicht" : "nicht erreicht (K steigern)"}. ` : " ") + fitErg.modelle.map(m => `${m.name}: gesamt ${zahl(m.gesamt * 1000, 1)} mV, eingeschwungen ${zahl(m.eing * 1000, 1)} mV, Fortsetzung ${zahl(m.fort * 1000, 1)} mV`).join(" · ");
       protokoll("Anfitten", `${fitErg.k.name} K ${K} Fenster ${anteil} %: ` + fitErg.modelle.map(m => `${m.name} P ${m.P} RMSE ${(m.gesamt * 1000).toFixed(1)} mV eing ${(m.eing * 1000).toFixed(1)} fort ${(m.fort * 1000).toFixed(1)}`).join("; ")); } else $("f_stand").textContent = "Keine Kurve."; }, 30);
 };
 $("f_treppe").onclick = () => {
-  $("f_treppe").disabled = true; $("f_stand").textContent = "Treppe rechnet K = 1 … 6 …";
-  setTimeout(() => { const anteil = Number($("f_anteil").value), starts = Number($("f_starts").value), zeilen = [];
-    for (let K = 1; K <= 6; K++) { const e = anfitten(K, anteil, starts); if (!e) break; zeilen.push(`K = ${K} (P = ${e.P}): ` + e.modelle.map(m => `${m.name.split(" ")[0]} ${zahl(m.gesamt * 1000, 1)}/${zahl(m.eing * 1000, 1)}/${zahl(m.fort * 1000, 1)} mV`).join(" · ")); fitErg = e; }
-    fitTafel(); zeichneFit(); $("f_treppe").disabled = false; $("f_stand").textContent = "Treppe (gesamt/eingeschwungen/Fortsetzung): " + zeilen.join("  |  "); protokoll("Anfitten Treppe", zeilen.join(" | ")); }, 30);
+  $("f_treppe").disabled = true; $("f_rechnen").disabled = true; const anteil = Number($("f_anteil").value), starts = Math.min(Number($("f_starts").value), 6), tb = $("f_treppe_tafel").tBodies[0]; tb.innerHTML = "";
+  let K = 1, warm = null; const t0 = performance.now();
+  const schritt = () => {
+    const tK = performance.now(), e = anfitten(K, anteil, starts, warm); if (!e) { $("f_stand").textContent = "Keine Kurve."; $("f_treppe").disabled = false; $("f_rechnen").disabled = false; return; }
+    const m = e.tanh, mt = e.modelle.find(x => x.name.startsWith("tanh")), mf = e.modelle.find(x => x.name.startsWith("Fourier")), mp = e.modelle.find(x => x.name.startsWith("Potenz"));
+    const pz = x => zahl(x / e.dU * 100, 3), tr = document.createElement("tr");
+    for (const x of [K, e.P, mt ? pz(mt.gesamt) : "–", mt ? pz(mt.max) : "–", mt ? pz(mt.fort) : "–", mf ? pz(mf.gesamt) : "–", mp ? pz(mp.gesamt) : "–", zahl((performance.now() - tK) / 1000, 1)]) { const td = document.createElement("td"); td.textContent = x; tr.append(td); }
+    tb.append(tr); fitErg = e; $("f_K").value = K; fitTafel(); zeichneFit();
+    const erreicht = mt && mt.gesamt <= 0.001 * e.dU;
+    $("f_stand").textContent = `K = ${K}: tanh RMSE ${mt ? pz(mt.gesamt) : "–"} % ΔU` + (erreicht ? " – Ziel 0,1 % erreicht." : K < 12 ? " – rechnet weiter …" : " – K = 12 erreicht, Ziel nicht erreicht.");
+    if (erreicht || K >= 12 || !mt) { protokoll("Anfitten Treppe", [...tb.rows].map(r => [...r.cells].map(c => c.textContent).join("/")).join(" | ") + ` in ${zahl((performance.now() - t0) / 1000, 1)} s`); $("f_treppe").disabled = false; $("f_rechnen").disabled = false; return; }
+    warm = m; K++; setTimeout(schritt, 20);
+  };
+  setTimeout(schritt, 20);
 };
 $("fk").onchange = () => { fitErg = null; fitTafel(); zeichneFit(); };
 // ---------- Prüfreiter: eine Kurve mit Messpunkten, Zoom (sein Wort: „zum reinzoomen ob das wirklich alles so ist … dient nur zur überprüfung“)
@@ -997,17 +1017,17 @@ async function eineMessung(E, nr) {
     const roh6 = roh.map(z => [z[0], z[1], z[3], z[4], z[5], z[6], z[7]]), a = anregung(roh6, E.T, E.F, E.B); d = a.d;
     const hb = E.B / 2, u = roh.map(z => z[1] / hb * LSB), u2 = roh.map(z => z[2] / hb * LSB), im = u2.map((x, i) => E.Rs > 0 ? (x - u[i]) / E.Rs : NaN);
     anschlag = roh.filter(z => z[0] >= 0 && (z[2] === 0 || z[2] >= 1023 * hb)).length;   // nur ab dem Sprung: vor dem Sprung ist A2 = 0 V richtig
-    text = `# RLC_Sprung_2.22.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
+    text = `# RLC_Sprung_2.23.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
     roh.forEach(([kq, s0, s2, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${s2} ${sH} ${nH} ${sL} ${nL} ${nF} ${u[i].toFixed(6)} ${u2[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)} ${(im[i] * 1000).toFixed(4)}\n`; });
-    name = `rlc222_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc223_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, u2, im, Rs: E.Rs, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   } else {
     const a = anregung(roh, E.T, E.F, E.B); d = a.d;
-    text = `# RLC_Sprung_2.22.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+    text = `# RLC_Sprung_2.23.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
     roh.forEach(([kq, s0, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
-    name = `rlc222_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc223_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   }
   kw = kennwerte(k);
@@ -1066,7 +1086,7 @@ function bildZusammen() {   // die Leinwände des aktuellen Reiters untereinande
   const w = Math.max(...cs.map(c => c.width)), kopf = 28 * (window.devicePixelRatio || 1), h = cs.reduce((a, c) => a + c.height, 0) + kopf;
   const o = document.createElement("canvas"); o.width = w; o.height = h; const g = o.getContext("2d");
   g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#111"; g.font = `${12 * (window.devicePixelRatio || 1)}px system-ui, Segoe UI, Arial`;
-  g.fillText(`RLC-Sprung 2.22 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
+  g.fillText(`RLC-Sprung 2.23 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
   let y = kopf; for (const c of cs) { g.drawImage(c, 0, y); y += c.height; }
   return o;
 }
