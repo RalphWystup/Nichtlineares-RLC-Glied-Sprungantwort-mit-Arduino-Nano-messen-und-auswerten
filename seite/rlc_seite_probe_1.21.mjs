@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.21.mjs -- (1.21: für Seite 2.20: P21f drittes Bild (Rest in mV) gezeichnet, P24 Median blendet die 51-ms-Ausreißer aus (T140: 46 roh, 0 danach), P8c Scheitel nach Median 2,6 … 3,0 mA;
 // rlc_seite_probe_1.20.mjs -- (1.20: für Seite 2.19: P21 prüft das Abnahmekriterium Rest RMS ≤ 0,1 % ΔU für beide eingebetteten Kurven (w = 3);
 // rlc_seite_probe_1.19.mjs -- (1.19: für Seite 2.18: P8c Strom im unteren Bild der Auswertung (Vorgabe, 4 Reihen, Scheitel 3,9 mA, Zeigertipp in mA);
 // rlc_seite_probe_1.18.mjs -- (1.18: für Seite 2.17: eingebettet rlc27 T140/T128 mit Strom (Spalte U_C_V aus dem Kopf gelesen); zwei eingebettete Kurven (ohne Simulink), kein Kalibrierreiter (P20, P21d entfallen), Stromansicht nur Shunt;
@@ -56,7 +57,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.19/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.20/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 2, `${n0} Kurven (rlc27 T140, T128 mit Strom)`);
@@ -101,7 +102,7 @@ P("P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt
 // P8c Strom im unteren Bild (Vorgabe, weil die eingebetteten Kurven Strom haben)
 const v8 = await js(`$("unten").value`); await js(`$("unten").value = "i"; $("unten").dispatchEvent(new Event("change"));`); await warte(200);
 const s8 = await js(`(() => { const r = ansicht2.reihen; const mess = r.filter(x => !x.s.length), mx = Math.max(...mess.flatMap(x => x.y.filter(Number.isFinite))); return [ansicht2.art, ansicht2.einheit, r.length, mx.toFixed(2), r.filter(x => x.s.length).length].join("|"); })()`);
-P("P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel 3,8 … 4,0 mA", v8 === "i" && /^i\|mA\|4\|3\.[89]\d\|2$/.test(s8), v8 + " · " + s8);
+P("P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel nach Median 2,6 … 3,0 mA", v8 === "i" && /^i\|mA\|4\|2\.[6-9]\d\|2$/.test(s8), v8 + " · " + s8);
 const b2 = await js(`(() => { const b = $("c2").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
 await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b2[0] + 58 + (b2[2] - 72) * 0.04, y: b2[1] + b2[3] * 0.5}); await warte(150);
 const tip2 = await js(`$("tip2").hidden ? "versteckt" : $("tip2").textContent`); P("P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“", /gemessen: -?\d+,\d{3} mA/.test(tip2) && /C·dU\/dt: -?\d+,\d{3} mA/.test(tip2), tip2.slice(0, 160));
@@ -200,7 +201,7 @@ await js(`$("ik").value = String(kurven.find(k => k.name.startsWith("rlc27") && 
 const i21 = await js(`(() => { const r = imp; const m = {it: r.it, rms: (r.rms * 1000).toFixed(2), erreicht: r.erreicht, prozent: r.restProzent.toFixed(3), maxp: r.maxProzent.toFixed(2), krit: r.kriterium, integ: r.integral.toFixed(3), gmax: r.gmax.toFixed(1), tgmax: (r.tgmax * 1000).toFixed(1), tnull: (r.tnull * 1000).toFixed(1), rohRms: (r.rohRms * 1000).toFixed(3), rohSpitze: r.rohSpitze.toFixed(1), lin: !!r.lin, linmax: r.lin ? Math.max(...r.lin).toFixed(1) : "-", zeilen: $("i_tafel").tBodies[0].rows.length, reihen: ansicht6.reihen.length, c6h: Math.round($("c6").getBoundingClientRect().height)}; return JSON.stringify(m); })()`);
 const m21 = JSON.parse(i21);
 P("P21 Impulsantwort rlc27 T140: Abnahmekriterium Rest RMS ≤ 0,1 % ΔU erfüllt, größter Fehler unter 0,4 %, ∫g = 0,97 … 1,03, g-Scheitel 10 … 60 ms, Nulldurchgang 50 … 70 ms, rohe Differenz exakt (Rest 0) aber Spitze über 4 s⁻¹, lineares Modell da, drei Reihen gezeichnet",
-  m21.erreicht === true && m21.krit === true && Number(m21.prozent) <= 0.1 && Number(m21.maxp) < 0.4 && Math.abs(Number(m21.integ) - 1) < 0.03 && Number(m21.tgmax) > 10 && Number(m21.tgmax) < 60 && Number(m21.tnull) > 50 && Number(m21.tnull) < 70 && Number(m21.rohRms) < 0.001 && Number(m21.rohSpitze) > 4 && m21.lin && m21.zeilen === 1 && m21.reihen === 3 && m21.c6h > 150, i21);
+  m21.erreicht === true && m21.krit === true && Number(m21.prozent) <= 0.1 && Number(m21.maxp) < 0.4 && Math.abs(Number(m21.integ) - 1) < 0.03 && Number(m21.tgmax) > 10 && Number(m21.tgmax) < 60 && Number(m21.tnull) > 50 && Number(m21.tnull) < 70 && Number(m21.rohRms) < 0.001 && Number(m21.rohSpitze) > 4 && m21.lin && m21.zeilen === 1 && m21.reihen === 2 && m21.c6h > 150, i21);
 await bild("p21_impulsantwort");
 const b6 = await js(`(() => { const b = $("c6").getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()`);
 await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b6[0] + 58 + (b6[2] - 72) * 0.05, y: b6[1] + b6[3] * 0.5}); await warte(150);
@@ -225,6 +226,14 @@ const b23 = await js(`(async () => { const z = protokollZeile("Probe", "eine   Z
 const m23 = JSON.parse(b23);
 P("P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller drei Leinwand-Reiter über 5 kB", /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} \| Probe \| eine Zeile$/.test(m23.z) && ["aus", "pruef", "imp"].every(t => /^\d+:image\/png$/.test(m23.r[t]) && Number(m23.r[t].split(":")[0]) > 5000) && m23.puffer >= 1, b23.slice(0, 200));
 await warte(300);
+// P21f drittes Bild der Impulsantwort (Rest in mV) und Kreise im zweiten
+await js(`$("rt_imp").click()`); await warte(200);
+const f21 = await js(`[Math.round($("c8").getBoundingClientRect().height), Math.round($("c7").getBoundingClientRect().height), Math.round($("c6").getBoundingClientRect().height), $("i_roh").checked].join("|")`);
+P("P21f Impulsantwort: drei Bilder sichtbar (g, Sprung mit Punkten und Linie, Rest in mV), rohe Differenz als Vorgabe aus", f21.split("|").slice(0, 3).every(x => Number(x) > 60) && f21.endsWith("|false"), f21);
+await bild("p21f_drei_bilder");
+// P24 Ausreißer des Shunt-Stroms (alle 51 ms) per Median
+const p24 = await js(`(() => { const k = kurven.find(k => k.name.includes("T140")); const z = a => { let n = 0; for (let j = 2; j < a.length - 2; j++) { const w = a.slice(j - 2, j + 3).slice().sort((p, q) => p - q); if (Math.abs(a[j] - w[2]) > 0.5e-3) n++; } return n; }; return [z(k.im), z(median3(k.im)), $("i_median").checked].join("|"); })()`);
+P("P24 Shunt-Strom T140: Ausreißer über 0,5 mA roh 40 … 59, nach 3-Punkt-Median 0, Schalter an", /^(4[0-9]|5[0-9])\|0\|true$/.test(p24), p24);
 // P17 Löschknöpfe
 await js(`$("rt_aus").click()`); await warte(200);
 const n17 = await js("kurven.length");

@@ -3,9 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLC-Sprung 2.19 · Messen und Auswerten</title>
+<title>RLC-Sprung 2.20 · Messen und Auswerten</title>
 <!--
-RLC_Sprung_2.19.html (23.11.2026) -- 2.19: Abnahmekriterium der Impulsantwort (sein Wort: „die daraus erzeugte Sprungantwort muss bis auf 0,1 % an den original
+RLC_Sprung_2.20.html (23.11.2026) -- 2.20: (a) Impulsantwort KLAR DARGESTELLT (sein Wort: „die anpassung stimmt wohl schon … ich konnte es aber nicht erkennen,
+das war undeutlich aus dem Graphen heraus, bitte das saubere darstellen“): drei Bilder -- g(t); Sprungantwort gemessen als Punkte, darüber die integrierte
+Impulsantwort als Linie; Rest gemessen − ∫g·ΔU in mV mit eigener Achse und ε-Grenzen; rohe Differenz nur auf Wunsch. (b) Ausreißer im Shunt-Strom erklärt
+(Schwebung 16000/510 Takte = 51 Blöcke: alle 51 ms trifft die A2-Wandlung eine PWM-Flanke, die kapazitiv durch die Wicklung bis ans Spulenende läuft, ±1,35 mA
+im Mittel zweier Abtastwerte, nie in U_C; der „Scheitel 3,9 mA“ bei T = 140 war ein solcher Treffer, echt 2,8 mA) und Schalter „Ausreißer ausblenden“ =
+3-Punkt-Median (Vorgabe an). Ein Spline-Verfahren wurde gebaut und verworfen (Rest 0,1 % zwar erreicht, Randfehler 1,5 %). 2.19: Abnahmekriterium der Impulsantwort (sein Wort: „die daraus erzeugte Sprungantwort muss bis auf 0,1 % an den original
 gemessenen Sprung angepasst werden, sonst entfernen wir das wieder“): ε in Prozent der Sprunghöhe ΔU (Vorgabe 0,1 %), Glättung w Vorgabe 3 ms (gerechnet 23.11.:
 T140 0,057 %, T128 0,100 % nach 10 Schritten; größter Einzelfehler 0,2–0,3 % = 1–2 ADC-Stufen), Tafel zeigt Rest in % ΔU und „Kriterium erfüllt“. 2.18: Strom in der AUSWERTUNG unter dem Spannungsbild (sein Wort: „ich kann den Stromverlauf nicht sehen, unter dem
 Spannungsgraphen den Stromgraphen darstellen“): unteres Bild „Strom i (Shunt)“ für alle sichtbaren Kurven mit Strom, gestrichelt C·dU_C/dt zum Vergleich;
@@ -65,7 +70,7 @@ U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U
 d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
 Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
 Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
-Gebaut mit bau_rlc_seite_2.19.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Gebaut mit bau_rlc_seite_2.20.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 -->
 <style>
@@ -91,7 +96,7 @@ main { display: grid; grid-template-columns: 330px 1fr; gap: 12px; padding: 10px
 #r_fit p { max-width: 1000px; margin: 4px 0; }
 #r_fit table.werte { width: auto; margin: 4px 0 8px; }
 #r_fit table.werte th, #r_fit table.werte td { border: 1px solid #ddd; }
-#r_imp { grid-template-rows: auto minmax(0, 2fr) minmax(0, 1.2fr) auto; }
+#r_imp { grid-template-rows: auto minmax(0, 1.7fr) minmax(0, 1.3fr) minmax(0, 0.9fr) auto; }
 #r_imp h2 { font-size: 15px; margin: 2px 0 2px; }
 #r_imp math { font-size: 14px; }
 #r_imp math[display=block] { margin: 2px 0 2px 16px; }
@@ -150,7 +155,7 @@ select { font: inherit; padding: 2px 4px; }
 </head>
 <body>
 <header>
-  <h1>RLC-Sprung 2.19</h1>
+  <h1>RLC-Sprung 2.20</h1>
   <span class="neben">Nichtlineares RLC-Glied · Nano mit rlc_sprung_2_6/2_7 · D11 PWM → A0 = U<sub>C</sub>, A1 = Pin, A2 = Spulenende · Eingang = Mittelwert U<sub>E</sub></span>
   <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
 </header>
@@ -198,9 +203,10 @@ select { font: inherit; padding: 2px 4px; }
         <button id="alle_weg" disabled title="Keine Kurven geladen">Alle entfernen</button>
         <span class="hinweis" id="stand_k">Entfernen nimmt die Kurve nur aus der Seite; die Datei im Ordner bleibt.</span>
       </div>
-      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc219/218/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
+      <div class="hinweis">Dateien auch hierher ziehen. Liest rlc220/219/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
       <label class="hinweis" style="display:flex;gap:6px;margin-top:6px"><input id="UE" type="checkbox" checked> Anregung U<sub>E</sub> (Mittelwert) gestrichelt mitzeichnen</label>
       <label class="hinweis" style="display:flex;gap:6px"><input id="glatt" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> glätten (gleitender Median über 5 Werte; einzelne Flankentreffer)</label>
+      <label class="hinweis" style="display:flex;gap:6px" title="Alle 51 Blöcke trifft die A2-Wandlung eine PWM-Flanke, die kapazitiv durch die Drosselwicklung ans Spulenende gelangt (±1,35 mA, Einzelwerte). Der 3-Punkt-Median nimmt sie heraus; die Rohwerte bleiben in der Datei."><input id="i_median" type="checkbox" checked> Strom: Ausreißer der PWM-Flanken ausblenden (3-Punkt-Median)</label>
     </fieldset>
   </div>
   <div class="rechts">
@@ -380,13 +386,14 @@ select { font: inherit; padding: 2px 4px; }
           <span class="hinweis">höchstens <input id="i_max" type="number" min="1" max="5000" step="1" value="400" style="width:60px;padding:1px 3px;font:inherit"> Iterationen</span>
           <span class="hinweis">α <input id="i_alpha" type="number" min="0.05" max="1" step="0.05" value="0.5" style="width:55px;padding:1px 3px;font:inherit"></span>
           <button id="i_rechnen" class="haupt">Impulsantwort berechnen</button>
-          <label class="hinweis" style="display:flex;gap:4px"><input id="i_roh" type="checkbox" checked> rohe Differenz</label>
+          <label class="hinweis" style="display:flex;gap:4px"><input id="i_roh" type="checkbox"> rohe Differenz zeigen</label>
           <label class="hinweis" style="display:flex;gap:4px"><input id="i_lin" type="checkbox" checked> linear nach Kennwerten</label>
           <span class="hinweis" id="i_stand">Noch nicht gerechnet.</span>
         </div>
       </div>
       <div class="bild" id="b6"><canvas id="c6" class="zoom" aria-label="Impulsantwort g(t)"></canvas><div class="tip" id="tip6" hidden></div></div>
-      <div class="bild" id="b7"><canvas id="c7" aria-label="Sprungantwort gemessen und aus der Impulsantwort integriert, Rest"></canvas><div class="tip" id="tip7" hidden></div></div>
+      <div class="bild" id="b7"><canvas id="c7" aria-label="Sprungantwort gemessen (Punkte) und aus der Impulsantwort integriert (Linie)"></canvas><div class="tip" id="tip7" hidden></div></div>
+      <div class="bild" id="b8"><canvas id="c8" aria-label="Rest gemessen minus integrierte Impulsantwort in mV"></canvas><div class="tip" id="tip8" hidden></div></div>
       <div class="tafel" style="max-height:120px"><table id="i_tafel"><thead><tr><th>Kurve</th><th>ΔU / V</th><th>Iterationen</th><th>Rest RMS / mV</th><th>Rest RMS / % ΔU</th><th>Rest max / % ΔU</th><th>Kriterium 0,1 %</th><th>∫g(t<sub>end</sub>)</th><th>g<sub>max</sub> / s<sup>−1</sup></th><th>t(g<sub>max</sub>) / ms</th><th>Nulldurchgang / ms</th><th>rohe Differenz: Rest RMS / mV · Spitze / s<sup>−1</sup></th></tr></thead><tbody></tbody></table></div>
     </div>
     <div class="inhalt" id="r_fit" hidden>
@@ -538,8 +545,8 @@ function zeichne2() {
   const c = $("c2"), {g, w, h} = leinwand(c), art = $("unten").value, B = bereich();
   let reihen = [], ytext = "", xtext = "", lsb = false, einheit = "mV";
   if (art === "i") {
-    for (const k of B.v) if (k.im) { reihen.push({k, y: k.im.map(x => x * 1000), s: k.strich}, {k, y: stromBezug(k).map(x => x * 1000), s: [5, 3]}); }
-    ytext = "i / mA"; xtext = "Strom durch die Strecke: durchgezogen gemessen über den Shunt (A2 − A0)/R_s, gestrichelt C·dU_C/dt mit C = " + $("z_C").value + " µF (Prüfreiter)"; einheit = "mA";
+    for (const k of B.v) if (k.im) { reihen.push({k, y: stromAnzeige(k).map(x => x * 1000), s: k.strich}, {k, y: stromBezug(k).map(x => x * 1000), s: [5, 3]}); }
+    ytext = "i / mA"; xtext = "Strom durch die Strecke: durchgezogen gemessen über den Shunt (A2 − A0)/R_s" + ($("i_median").checked ? ", 3-Punkt-Median (PWM-Flankentreffer alle 51 ms ausgeblendet)" : ", roh") + ", gestrichelt C·dU_C/dt mit C = " + $("z_C").value + " µF (Prüfreiter)"; einheit = "mA";
   } else if (art === "d") {
     const r = kurven.find(k => k.id === Number($("bezug").value));
     if (r) reihen = B.v.filter(k => k !== r).map(k => ({k, y: differenz(k, r), s: k.strich}));
@@ -611,7 +618,7 @@ function tafel() {
 function alles() { liste(); tafel(); if (reiter === "aus") { zeichne1(); zeichne2(); } else if (reiter === "pruef") { zeichne3(); zeichne4(); } }
 new ResizeObserver(() => { zeichne1(); zeichne2(); }).observe($("b1"));
 new ResizeObserver(() => { zeichne3(); zeichne4(); }).observe($("b3"));
-for (const id of ["UE", "glatt", "unten", "bezug"]) $(id).onchange = alles;
+for (const id of ["UE", "glatt", "unten", "bezug", "i_median"]) $(id).onchange = alles;
 let reiter = "aus";
 function reiterWahl(r) {
   reiter = r; for (const n of ["aus", "pruef", "theorie", "fit", "imp"]) { $("r_" + n).hidden = r !== n; $("rt_" + n).classList.toggle("aktiv", r === n); }
@@ -669,12 +676,20 @@ function zeichneImp() {
       const p = (hi - lo) * 0.06, x1 = imp.t[imp.t.length - 1] * 1000, {X, Y} = achsen(g, w, h, 0, x1, lo - p, hi + p, "g / s⁻¹", "t / ms   ·   Impulsantwort g = s′/ΔU: farbig iterativ (w = " + imp.w + " ms, " + imp.it + " Iterationen)" + (mitLin ? "   ·   grau gestrichelt: linear ω0²/ωd·e^(−αt)·sin(ωd t) aus den Kennwerten" : "") + (mitRoh ? "   ·   hellgrau: rohe Differenz" : ""));
       ansicht6 = {X, Y, w, h, x0: 0, x1, reihen}; klipp(g, w, h); g.strokeStyle = "#ccc"; g.beginPath(); g.moveTo(RAND.l, Y(0)); g.lineTo(w - RAND.r, Y(0)); g.stroke();
       for (const [y, farbe, br, strich] of reihen.slice().reverse()) linie(g, X, Y, imp.t, y, farbe, br, strich); g.restore(); } }
-  { const c = $("c7"), {g, w, h} = leinwand(c); if (!imp) { achsen(g, w, h, 0, 600, 0, 5, "U / V", "t / ms"); ansicht7 = null; return; }
-    const x1 = imp.t[imp.t.length - 1] * 1000, hi = Math.max(...imp.s) * 1.08, {X, Y} = achsen(g, w, h, 0, x1, Math.min(0, Math.min(...imp.s)) - 0.1, hi, "U / V", "t / ms   ·   durchgezogen: Sprungantwort gemessen (ohne Vorlaufwert)   ·   gestrichelt: ∫g·ΔU aus der Impulsantwort   ·   rot: Rest ×50");
-    ansicht7 = {X, Y, w, h, x0: 0, x1}; klipp(g, w, h);
-    linie(g, X, Y, imp.t, imp.s, imp.k.farbe, 1.6, []); linie(g, X, Y, imp.t, imp.sI, "#111", 1.2, [6, 4]); linie(g, X, Y, imp.t, imp.rest.map(x => x * 50), "#b42318", 1, []); g.restore(); }
+  { const c = $("c7"), {g, w, h} = leinwand(c); if (!imp) { achsen(g, w, h, 0, 600, 0, 5, "U / V", "t / ms"); ansicht7 = null; }
+    else { const x1 = imp.t[imp.t.length - 1] * 1000, hi = Math.max(...imp.s) * 1.08, {X, Y} = achsen(g, w, h, 0, x1, Math.min(0, Math.min(...imp.s)) - 0.1, hi, "U / V", "t / ms   ·   ○ Sprungantwort gemessen (jeder Abtastwert, ohne Vorlaufwert)   ·   Linie: integrierte Impulsantwort ∫g·ΔU   ·   decken sich die beiden, stimmt g");
+      ansicht7 = {X, Y, w, h, x0: 0, x1}; klipp(g, w, h);
+      g.strokeStyle = imp.k.farbe; g.lineWidth = 1; for (let n = 0; n < imp.t.length; n++) { g.beginPath(); g.arc(X(imp.t[n] * 1000), Y(imp.s[n]), 2.2, 0, 2 * Math.PI); g.stroke(); }
+      linie(g, X, Y, imp.t, imp.sI, "#111", 1.6, []); g.restore(); } }
+  { const c = $("c8"), {g, w, h} = leinwand(c); if (!imp) { achsen(g, w, h, 0, 600, -5, 5, "Rest / mV", "t / ms"); return; }
+    const x1 = imp.t[imp.t.length - 1] * 1000, e = imp.eps * 1000, m = Math.max(e * 1.5, Math.max(...imp.rest.map(x => Math.abs(x) * 1000)) * 1.1);
+    const {X, Y} = achsen(g, w, h, 0, x1, -m, m, "Rest / mV", "t / ms   ·   Rest = gemessen − ∫g·ΔU   ·   gestrichelt: ±ε = ±" + zahl(e, 2) + " mV (0,1 % von ΔU)   ·   Effektivwert " + zahl(imp.rms * 1000, 2) + " mV, größter Betrag " + zahl(imp.max * 1000, 1) + " mV");
+    klipp(g, w, h); g.strokeStyle = "#ccc"; g.beginPath(); g.moveTo(RAND.l, Y(0)); g.lineTo(w - RAND.r, Y(0)); g.stroke();
+    g.strokeStyle = "#555"; g.setLineDash([5, 4]); for (const sgn of [-1, 1]) { g.beginPath(); g.moveTo(RAND.l, Y(sgn * e)); g.lineTo(w - RAND.r, Y(sgn * e)); g.stroke(); } g.setLineDash([]);
+    linie(g, X, Y, imp.t, imp.rest.map(x => x * 1000), "#b42318", 1.2, []); g.restore(); }
 }
 new ResizeObserver(() => zeichneImp()).observe($("b6"));
+const idsImp = {aus: ["c1", "c2"], pruef: ["c3", "c4"], theorie: [], fit: [], imp: ["c6", "c7", "c8"]};
 for (const id of ["i_roh", "i_lin"]) $(id).onchange = zeichneImp;
 (function () { const c = $("c6"), tip = $("tip6"); c.addEventListener("mousemove", ev => { const A = ansicht6; if (!A || !imp) return; const {mx} = zoomMaus(c, ev); if (mx < RAND.l || mx > A.w - RAND.r) { tip.hidden = true; return; }
   const tms = xVon(A, mx), i = naechster(imp.t, tms); tip.innerHTML = `t = ${zahl(imp.t[i] * 1000, 1)} ms<br>g iterativ <b>${zahl(imp.g[i], 3)} s⁻¹</b>` + (imp.lin ? `<br>linear ${zahl(imp.lin[i], 3)} s⁻¹` : "") + `<br>rohe Differenz ${zahl(imp.roh[i], 2)} s⁻¹<br>s ${zahl(imp.s[i], 4)} V · ∫g·ΔU ${zahl(imp.sI[i], 4)} V · Rest ${zahl(imp.rest[i] * 1000, 2)} mV`; tip.hidden = false;
@@ -682,6 +697,8 @@ for (const id of ["i_roh", "i_lin"]) $(id).onchange = zeichneImp;
   c.addEventListener("mouseleave", () => { tip.hidden = true; }); })();
 
 // ---------- Strom (2.17): gemessen über den Shunt (Firmware 2.7); Bezug C·dU_C/dt
+function median3(a) { return a.map((x, j) => { const w = [a[j - 1], x, a[j + 1]].filter(Number.isFinite).sort((p, q) => p - q); return w.length ? w[w.length >> 1] : x; }); }
+function stromAnzeige(k) { return $("i_median").checked ? median3(k.im) : k.im; }   // 2.20: Ausreißer der PWM-Flanken (alle 51 ms, ±1,35 mA) per Median
 function stromBezug(k) { const n = k.t.length, C = Number($("z_C").value) * 1e-6, du = new Array(n).fill(0);
   for (let j = 1; j < n - 1; j++) du[j] = (k.u[j + 1] - k.u[j - 1]) / (k.t[j + 1] - k.t[j - 1]);
   return du.map((_, j) => { let s = 0, m = 0; for (let q = Math.max(1, j - 2); q <= Math.min(n - 2, j + 2); q++) { s += du[q]; m++; } return m ? C * s / m : NaN; }); }
@@ -759,7 +776,7 @@ function zeichne4() {
   if (!hat) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(k ? "„" + k.name + "“ hat keine Zählwerte (Format ohne getrennte Pegel, vor rlc_sprung_2_2)" : "Keine Kurve gewählt", w / 2, h / 2); }
 }
 function zeichne4Strom(g, w, h, B, k) {
-  const s = k && k.im ? {im: k.im, iC: stromBezug(k)} : null; let lo = -1, hi = 1;
+  const s = k && k.im ? {im: stromAnzeige(k), iC: stromBezug(k)} : null; let lo = -1, hi = 1;
   if (s) for (const a of [s.iC, s.im]) for (let j = 0; j < k.t.length; j++) { const tm = k.t[j] * 1000; if (tm < B.x0 || tm > B.x1 || !Number.isFinite(a[j])) continue; lo = Math.min(lo, a[j] * 1000); hi = Math.max(hi, a[j] * 1000); }
   const p = (hi - lo) * 0.08, {X, Y} = achsen(g, w, h, B.x0, B.x1, lo - p, hi + p, "i / mA", "Strom: schwarz i gemessen (Shunt " + (k && k.Rs ? k.Rs : "?") + " Ω, A2 − A0) · orange C·dU_C/dt (C = " + $("z_C").value + " µF)" + (k ? " · „" + k.name + "“" : ""));
   ansicht4 = {X, w, h, x0: B.x0, x1: B.x1, k: s ? k : null, strom: s};
@@ -940,17 +957,17 @@ async function eineMessung(E, nr) {
     const roh6 = roh.map(z => [z[0], z[1], z[3], z[4], z[5], z[6], z[7]]), a = anregung(roh6, E.T, E.F, E.B); d = a.d;
     const hb = E.B / 2, u = roh.map(z => z[1] / hb * LSB), u2 = roh.map(z => z[2] / hb * LSB), im = u2.map((x, i) => E.Rs > 0 ? (x - u[i]) / E.Rs : NaN);
     anschlag = roh.filter(z => z[0] >= 0 && (z[2] === 0 || z[2] >= 1023 * hb)).length;   // nur ab dem Sprung: vor dem Sprung ist A2 = 0 V richtig
-    text = `# RLC_Sprung_2.19.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
+    text = `# RLC_Sprung_2.20.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
     roh.forEach(([kq, s0, s2, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${s2} ${sH} ${nH} ${sL} ${nL} ${nF} ${u[i].toFixed(6)} ${u2[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)} ${(im[i] * 1000).toFixed(4)}\n`; });
-    name = `rlc219_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc220_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, u2, im, Rs: E.Rs, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   } else {
     const a = anregung(roh, E.T, E.F, E.B); d = a.d;
-    text = `# RLC_Sprung_2.19.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+    text = `# RLC_Sprung_2.20.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
     roh.forEach(([kq, s0, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
       text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
-    name = `rlc219_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    name = `rlc220_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
     k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
   }
   kw = kennwerte(k);
@@ -1004,12 +1021,12 @@ async function protokoll(ereignis, text) {
 }
 const protokollPuffer = [];
 function bildZusammen() {   // die Leinwände des aktuellen Reiters untereinander in ein Bild
-  const ids = {aus: ["c1", "c2"], pruef: ["c3", "c4"], theorie: [], fit: [], imp: ["c6", "c7"]}[reiter] || [];
+  const ids = idsImp[reiter] || [];
   const cs = ids.map(i => $(i)).filter(c => c.width > 10 && c.height > 10); if (!cs.length) return null;
   const w = Math.max(...cs.map(c => c.width)), kopf = 28 * (window.devicePixelRatio || 1), h = cs.reduce((a, c) => a + c.height, 0) + kopf;
   const o = document.createElement("canvas"); o.width = w; o.height = h; const g = o.getContext("2d");
   g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#111"; g.font = `${12 * (window.devicePixelRatio || 1)}px system-ui, Segoe UI, Arial`;
-  g.fillText(`RLC-Sprung 2.19 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
+  g.fillText(`RLC-Sprung 2.20 · Reiter ${reiter} · ${new Date().toLocaleString("de-DE")} · Kurven: ${kurven.filter(k => k.sichtbar).map(k => k.name).join(", ").slice(0, 160)}`, 8, kopf - 10);
   let y = kopf; for (const c of cs) { g.drawImage(c, 0, y); y += c.height; }
   return o;
 }

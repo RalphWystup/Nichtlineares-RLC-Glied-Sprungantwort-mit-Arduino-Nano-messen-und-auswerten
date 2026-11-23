@@ -1,5 +1,5 @@
 Browser: Skalierung/Fenster 1.5x1600x708
-RICHTIG P1 Seite geladen: RLC-Sprung 2.19 · Messen und Auswerten
+RICHTIG P1 Seite geladen: RLC-Sprung 2.20 · Messen und Auswerten
 RICHTIG P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter: Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)|true|true|39
 RICHTIG P2 eingebettete Kurven: 2 Kurven (rlc27 T140, T128 mit Strom)
 RICHTIG P3 Kennwerte T140 (rlc27, Shunt) gegen Datei: Seite Umax 4.3842 V @ 57.5 ms, Uend 2.7436; Datei 4.3842 @ 57.5, 2.7436; D 0.296, f0 10.07 Hz, U_E,end 2.7428 V, Abfall 125 mV
@@ -15,7 +15,7 @@ RICHTIG P6 drei Dateien geladen (ADC-Zählwerte, 1.0, 2.0): RLC_Glied.txt:676:3.
 RICHTIG P6c Format-2.0-Kurve zeichnet keine Anregung (roher PWM-Mittel): ue() = null
 RICHTIG P6b Tafel hat 5 Zeilen, Liste 5 Einträge: 
 RICHTIG P7 Differenz rlc2 T128 (22.11., ohne Shunt) − rlc27 T128 (23.11., mit Shunt 47 Ω) kleiner 500 mV (Strecke geändert, Scheitel 3,866 → 3,947 V): größte |Δ| 360.5 mV
-RICHTIG P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel 3,8 … 4,0 mA: i · i|mA|4|3.90|2
+RICHTIG P8c Auswertung unten: Strom als Vorgabe nach dem Laden, 4 Reihen (2 gemessen, 2 C·dU/dt), Scheitel nach Median 2,6 … 3,0 mA: i · i|mA|4|2.81|2
 RICHTIG P8d Zeigertipp im Strombild in mA mit „gemessen“ und „C·dU/dt“: t = 20,4 ms■ rlc27_2026-11-23_113109_T140_F3_B4.txt gemessen: 2,548 mA┄ rlc27_2026-11-23_113109_T140_F3_B4.txt C·dU/dt: 2,701 mA■ rlc27_2026-11-23_113104_T128_F
 RICHTIG P8 Port-Abfall gezeichnet (2 Reihen je Kurve mit Anregung): 4 Reihen (erwartet 4: beide rlc27 je U_H und U_L)
 RICHTIG P8b U_E − ideal gezeichnet: 2 Reihen
@@ -38,17 +38,19 @@ RICHTIG P18 Aufbau und Theorie: zwei Fotos 2048×944 als data:, Schaltplan-SVG g
 RICHTIG P18c Schaltplan ohne R_ext, R_Cu = 92 Ω, A2 am Spulenende: false|true|true
 RICHTIG P18b Seite nach dem Theorie-Reiter nicht gewachsen (kein Rollbalken der Seite): 1600x760 Fenster 1600x760
 RICHTIG P19 Reiter Anfitten: 600 Werte ab t = 0,5 ms, U_C und U_E gleich lang, Δt = 1 ms, Registratur leer, Tafel 1 Zeile, Abschnittsgrenze Schwingen 5·T_d: false|true|600|0.0005|true|true|0|1|Daten von „rlc27_2026-11-23_113109_T140_|578
-RICHTIG P21 Impulsantwort rlc27 T140: Abnahmekriterium Rest RMS ≤ 0,1 % ΔU erfüllt, größter Fehler unter 0,4 %, ∫g = 0,97 … 1,03, g-Scheitel 10 … 60 ms, Nulldurchgang 50 … 70 ms, rohe Differenz exakt (Rest 0) aber Spitze über 4 s⁻¹, lineares Modell da, drei Reihen gezeichnet: {"it":10,"rms":"1.58","erreicht":true,"prozent":"0.057","maxp":"0.22","krit":true,"integ":"0.999","gmax":"41.4","tgmax":"31.5","tnull":"57.5","rohRms":"0.000","rohSpitze":"41.9","lin":true,"linmax":"42.7","zeilen":1,"reihen":3,"c6h":236}
+RICHTIG P21 Impulsantwort rlc27 T140: Abnahmekriterium Rest RMS ≤ 0,1 % ΔU erfüllt, größter Fehler unter 0,4 %, ∫g = 0,97 … 1,03, g-Scheitel 10 … 60 ms, Nulldurchgang 50 … 70 ms, rohe Differenz exakt (Rest 0) aber Spitze über 4 s⁻¹, lineares Modell da, drei Reihen gezeichnet: {"it":10,"rms":"1.58","erreicht":true,"prozent":"0.057","maxp":"0.22","krit":true,"integ":"0.999","gmax":"41.4","tgmax":"31.5","tnull":"57.5","rohRms":"0.000","rohSpitze":"41.9","lin":true,"linmax":"42.7","zeilen":1,"reihen":2,"c6h":161}
 RICHTIG P21b Zeigertipp der Impulsantwort: t = 29,5 msg iterativ 40,914 s⁻¹linear 37,274 s⁻¹rohe Differenz 40,98 s⁻¹s 2,2923 V · ∫g·ΔU 2,2923 V · Rest -0,07 mV
 RICHTIG P21c zweite Kurve T128: Abnahmekriterium 0,1 % ebenfalls erfüllt: rlc27_2026-11-23_113104_T128_F3_|10|0.047|0.32|true
 RICHTIG P22 Format 2.7 gelesen: U_2 und i je 7 Werte, Rs = 47, i(k=0) = 15 LSB/47 Ω = 1,5599 mA, i(k=4) = −10 LSB/47 Ω = −1,0399 mA: 7|7|47|1.5599|-1.0399|7
 RICHTIG P22b Stromansicht zeichnet den gemessenen Strom der 2.7-Kurve: true|7|rlc213_probe.txt
 RICHTIG P22c R_s = 2000 Ω abgewiesen: Shunt R_s: 0 … 1000 Ω
-RICHTIG P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller drei Leinwand-Reiter über 5 kB: {"z":"2026-11-23 11:18:33 | Probe | eine Zeile","r":{"aus":"210550:image/png","pruef":"139574:image/png","imp":"183606:image/png"},"puffer":2}
+RICHTIG P23 Protokollzeile mit Zeitstempel, PNG-Bilder aller drei Leinwand-Reiter über 5 kB: {"z":"2026-11-23 11:37:02 | Probe | eine Zeile","r":{"aus":"210577:image/png","pruef":"139374:image/png","imp":"227881:image/png"},"puffer":2}
+RICHTIG P21f Impulsantwort: drei Bilder sichtbar (g, Sprung mit Punkten und Linie, Rest in mV), rohe Differenz als Vorgabe aus: 84|123|161|false
+RICHTIG P24 Shunt-Strom T140: Ausreißer über 0,5 mA roh 40 … 59, nach 3-Punkt-Median 0, Schalter an: 46|0|true
 RICHTIG P17a Gewählte entfernen nimmt genau die gewählte Kurve: 4|false|„rlc2_2026-11-22_162318_T128_F3_B4.txt“ entfernt; die Datei bleibt.
 RICHTIG P17b Alle entfernen: erster Klick entfernt nichts, fragt nach: 4|Wirklich alle 4 entfernen? (nochmal klicken)|true
 RICHTIG P17c zweiter Klick entfernt alle, Knöpfe danach gesperrt: 0|Alle entfernen|true|true|0
 RICHTIG P12 keine Skriptfehler: keine
 RICHTIG P13 kein Netzabruf: keiner
 
-ERGEBNIS 48 von 48 RICHTIG (Skalierung 1.5)
+ERGEBNIS 50 von 50 RICHTIG (Skalierung 1.5)
