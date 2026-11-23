@@ -3,9 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLC-Sprung 2.12 · Messen und Auswerten</title>
+<title>RLC-Sprung 2.13 · Messen und Auswerten</title>
 <!--
-RLC_Sprung_2.12.html (23.11.2026) -- 2.12: Reiter „Impulsantwort“ (sein Wort: „kann man aus der sprungantwort auch eine impulsantwort erzeugen … ableiten,
+RLC_Sprung_2.13.html (23.11.2026) -- 2.13: Strommessung mit Messwiderstand R_s ZWISCHEN Spule und Kondensator, A2 = Spulenende (Firmware
+rlc_sprung_2_7, Zeile „k s0 s2 sH nH sL nL nF“, A0/A2 je B/2 Wandlungen nebeneinander, A1 B Wandlungen); i = (U_2 − U_C)/R_s; Eingabe R_s (0 = kein
+Shunt, Firmware 2.6 wie bisher); Kennung 2.6 oder 2.7 angenommen, Zeilenformat nach Kennung; Dateien rlc213_* mit Spalten
+k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA; lesen() erkennt U_2_V/i_mA; Prüfreiter Stromansicht zeichnet i gemessen (Shunt)
+zusätzlich; A2 am Anschlag (0 oder 1023) wird gezählt und gemeldet. Schaltplan 1.2. Sein Wort: „ich habe keinen messverstärker, einfach widerstand
+in reihe und spannungsabfall mit ad differenz bestimmen“. 2.12: Reiter „Impulsantwort“ (sein Wort: „kann man aus der sprungantwort auch eine impulsantwort erzeugen … ableiten,
 danach wieder integrieren und das solange bis die integrierte impulsantwort wieder die sprungantwort ist“): g = s'/ΔU; iterativ h ← h + α·M_w[D(s − I h)]
 (D Differenz, I kumulierte Summe, M_w gleitendes Mittel über w ms) bis RMS(s − I h) ≤ ε (Vorgabe 1 ADC-Stufe = 4,89 mV); daneben die rohe Differenz
 (zeigt, warum einfaches Differenzieren nicht taugt) und das lineare Modell aus den Kennwerten g = ω0²/ωd·e^(−αt)·sin(ωd t); unteres Bild: s gemessen
@@ -44,7 +49,7 @@ U_C und den MITTELWERT der Anregung U_E = d·U_H + (1−d)·U_L zeichnen (U_H, U
 d exakt aus dem Timer) -- sein Wort: „vom Sprung der Mittelwert … nicht das pwm signal“, „das ist das eigentliche Eingangssignal“.
 Speichern im Tagesordner Messungen_TT.MM.JJJJ, Messungen laden (rlc24/23/22, rlc2, rlc 1.0, Simulink-txt) und überlagern, Differenz, Kennwerte.
 Protokoll wie rlc_messen_2.6.py: "M T N V F B P R" -> "START …", Zeilen "k s0 sH nH sL nL nF", "ENDE dauer_us verloren".
-Gebaut mit bau_rlc_seite_2.12.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
+Gebaut mit bau_rlc_seite_2.13.py (Messungen eingebettet, bei jedem Bau neu aus der Quelle).
 Autoren: Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt.
 -->
 <style>
@@ -135,8 +140,8 @@ select { font: inherit; padding: 2px 4px; }
 </head>
 <body>
 <header>
-  <h1>RLC-Sprung 2.12</h1>
-  <span class="neben">Nichtlineares RLC-Glied · Arduino Nano mit rlc_sprung_2_6 · Pin 11 PWM → U<sub>C</sub> an A0, Pinspannung an A1 · Eingangssignal = Mittelwert U<sub>E</sub></span>
+  <h1>RLC-Sprung 2.13</h1>
+  <span class="neben">Nichtlineares RLC-Glied · Arduino Nano mit rlc_sprung_2_6/2_7 · Pin 11 PWM → U<sub>C</sub> an A0, Pinspannung an A1, Spulenende an A2 (Shunt) · Eingangssignal = Mittelwert U<sub>E</sub></span>
   <span class="autor" id="autor">Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)</span>
 </header>
 <main>
@@ -160,6 +165,7 @@ select { font: inherit; padding: 2px 4px; }
       <label class="zeile">Entladen vorher V<input id="V" type="number" min="0" max="60000" step="100" value="3000"><span class="einheit">ms</span></label>
       <label class="zeile">Rampe abwärts danach R<input id="R" type="number" min="0" max="60000" step="100" value="2000"><span class="einheit">ms</span></label>
       <label class="zeile">Wiederholungen W<input id="W" type="number" min="1" max="50" step="1" value="1"><span class="einheit">×</span></label>
+      <label class="zeile" title="Messwiderstand zwischen Spule und Kondensator, A2 am Spulenende (Firmware rlc_sprung_2_7); 0 = kein Shunt">Shunt R<sub>s</sub> (0 = keiner)<input id="Rs" type="number" min="0" max="1000" step="0.1" value="47"><span class="einheit">Ω</span></label>
       <div class="hinweis">Schutz des ADC-Eingangs A0 (Datenblatt: 0 … 5 V): T ist auf 140 begrenzt (Scheitel ≤ 4,5 V gemessen, der Überschwingfaktor steigt mit der Anregung), und nach jeder Messung fährt die Anregung als Rampe auf 0 statt zu springen (sonst Unterschwingen ins Negative).</div>
       <div class="knoepfe"><button id="messen" class="haupt" disabled title="Erst mit dem Nano verbinden">Sprung messen</button><button id="abbruch" hidden title="Nach der laufenden Messung aufhören">Abbrechen</button></div>
       <div id="stand_m" class="stand">Gesperrt: erst mit dem Nano verbinden.</div>
@@ -182,7 +188,7 @@ select { font: inherit; padding: 2px 4px; }
         <button id="alle_weg" disabled title="Keine Kurven geladen">Alle entfernen</button>
         <span class="hinweis" id="stand_k">Entfernen nimmt die Kurve nur aus der Seite; die Datei im Ordner bleibt.</span>
       </div>
-      <div class="hinweis">Dateien auch hierher ziehen (Kalibrierdateien .json ebenfalls). Liest rlc212/211/210/29/28/27/26/25/24/23/22_*.txt, rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
+      <div class="hinweis">Dateien auch hierher ziehen (Kalibrierdateien .json ebenfalls). Liest rlc213/212/…/22_*.txt, rlc27_*.txt (mit Strom), rlc2_*.txt (ohne Anregung), rlc_*.txt, RLC_Glied_2.txt (t, U) und RLC_Glied.txt (t, adc).</div>
       <label class="hinweis" style="display:flex;gap:6px;margin-top:6px"><input id="UE" type="checkbox" checked> Anregung U<sub>E</sub> (Mittelwert) gestrichelt mitzeichnen</label>
       <label class="hinweis" style="display:flex;gap:6px"><input id="glatt" type="checkbox" checked> U<sub>H</sub>, U<sub>L</sub> glätten (gleitender Median über 5 Werte; einzelne Flankentreffer)</label>
     </fieldset>
@@ -225,7 +231,7 @@ select { font: inherit; padding: 2px 4px; }
         <figure><img id="foto2" src="/*FOTO2*/" alt="Aufbau von schräg oben: Drossel, Steckplatine, Nano mit Steckbrücken"><figcaption>Bild 2: derselbe Aufbau von schräg oben; die Steckbrücken führen von der Drossel und dem Kondensator zur Steckplatine und zum Nano (D11, A0, A1, GND). Foto 23.11.2026.</figcaption></figure>
       </div>
       <h3>Schaltplan</h3>
-      <figure id="schaltplan">/*SCHALTPLAN*/<figcaption>Bild 3: Serienschwingkreis aus der Drossel (L mit Eisenkern, Kupferwiderstand der Wicklung R<sub>Cu</sub> = 92 Ω) und dem Kondensator C am Nano; einen Vorwiderstand gibt es nicht. D11 liefert die PWM, A1 misst die Pinspannung, A0 die Kondensatorspannung U<sub>C</sub>. Das Manuskript (Abschn. 3.1, Gl. 3.9, und Abschn. 8) deutet die 92 Ω als äußeren Widerstand R<sub>ext</sub>; nach Auskunft des Verfassers (23.11.2026) sind es die Kupferwiderstände der Spule.</figcaption></figure>
+      <figure id="schaltplan">/*SCHALTPLAN*/<figcaption>Bild 3: Serienschwingkreis aus der Drossel (L mit Eisenkern, Kupferwiderstand der Wicklung R<sub>Cu</sub> = 92 Ω) und dem Kondensator C am Nano; einen Vorwiderstand gibt es nicht. Gestrichelt: Messwiderstand R<sub>s</sub> = 47 Ω zwischen Spule und Kondensator (ab Firmware 2.7), A2 misst das Spulenende, i = (U<sub>A2</sub> − U<sub>C</sub>)/R<sub>s</sub>; an dieser Stelle wird kein Pin negativ, weil negativer Strom nur nach dem Scheitel bei hohem U<sub>C</sub> fließt (A2 = U<sub>C</sub> + R<sub>s</sub>·i ≥ 2,5 V). 47 Ω heben den wirksamen Widerstand von 330 auf 377 Ω (D +14 %, Scheitel 54 → 50 %); 1 ADC-Stufe = 0,10 mA. D11 liefert die PWM, A1 misst die Pinspannung, A0 die Kondensatorspannung U<sub>C</sub>. Das Manuskript (Abschn. 3.1, Gl. 3.9, und Abschn. 8) deutet die 92 Ω als äußeren Widerstand R<sub>ext</sub>; nach Auskunft des Verfassers (23.11.2026) sind es die Kupferwiderstände der Spule.</figcaption></figure>
       <h3>Bauteilwerte</h3>
       <table class="werte"><thead><tr><th>Größe</th><th>Nennwert</th><th>analytisch (log. Dekrement, Manuskript 3.1)</th><th>Nelder-Mead (Manuskript 3.2)</th></tr></thead><tbody>
         <tr><td>R / Ω</td><td>92 (Kupferwiderstand der Spule)</td><td>335</td><td>330</td></tr>
@@ -258,7 +264,7 @@ select { font: inherit; padding: 2px 4px; }
       <p><b>Die neuronale Struktur der Kennlinien (Ruppert).</b> Nachgebildet werden nicht L und C, sondern die integrierten Kennlinien ψ(i) und q(u<sub>C</sub>): Sie sind S-förmig mit einem Wendepunkt im Ursprung, also Rupperts Fall mit K = 1, plus ein fast gerader Baustein für den linearen Rest (L<sub>0</sub>i/μ<sub>e</sub> bzw. γC<sub>0</sub>u<sub>C</sub>). Beide sind ungerade, deshalb wird die Punktwolke am Ursprung gespiegelt. Die Ableitungen der Netze sind dann geschlossen Summen von sech²-Glocken:</p>
       <math display="block"><mrow><mover><mi>ψ</mi><mo>~</mo></mover><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><mi>tanh</mi><mo>⁡</mo><mo>(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>(</mo><mi>i</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo><mo>)</mo><mspace width="0.8em"/><mo>⇒</mo><mspace width="0.8em"/><mi>L</mi><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>b</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><msup><mi>sech</mi><mn>2</mn></msup><mo>(</mo><msub><mi>b</mi><mrow><mn>2</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>(</mo><mi>i</mi><mo>+</mo><msub><mi>b</mi><mrow><mn>3</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo><mo>)</mo><mo>;</mo><mspace width="1.5em"/><mtext>ebenso</mtext><mspace width="0.6em"/><mover><mi>q</mi><mo>~</mo></mover><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo><mo>⇒</mo><mi>C</mi><mo>(</mo><msub><mi>u</mi><mi>C</mi></msub><mo>)</mo></mrow></math>
       <p>Auf der Ruppert-Seite ist das gegen Polynom siebten Grades, Tabelle mit 40 Klassen und kubischen Spline durchgerechnet (gleiche Punktwolken, gleiche Differentialgleichung, größter Fehler von u<sub>C</sub> in Prozent der Sprunghöhe), und das graue Modell – Dynamik aus der Physik, Kennlinien aus dem Netz – rechnet danach jede abgetastete Anregung, nicht nur die gelernte Sprunghöhe.</p>
-      <p><b>Wie die Verläufe L(i) und C(u) aus dem Fit kommen – drei Wege.</b> (0) <i>Rupperts Verfahren wörtlich</i> braucht den Strom i(t): q(t) = ∫i dt über u<sub>C</sub>(t) aufgetragen gibt q(u<sub>C</sub>) Punkt für Punkt, ψ(t) = ∫(u<sub>E</sub> − R·i − u<sub>C</sub>) dt über i(t) gibt ψ(i); durch beide Punktwolken je ein tanh-Netz. <b>Diese Seite misst i noch nicht</b> – ein Shunt in der Masseleitung des Kondensators an einem freien ADC-Kanal (A2; der Nano hat A2 … A7 frei) wäre der nächste Schritt am Aufbau und machte die Trennung von L(i) und C(u<sub>C</sub>) aus einer einzigen Sprungantwort möglich. Bis dahin: (1) <i>Simulation und Suche</i> (Manuskript Abschn. 6): Zustandssystem integrieren, Parameter θ = (M<sub>s</sub>, a, α, k, L<sub>0</sub>, R<sub>0</sub>, C<sub>0</sub>, γ, R<sub>skin</sub>, t<sub>d</sub>) mit Differentialevolution so wählen, dass J(θ) = Σ w(t<sub>i</sub>)·[U<sub>C,sim</sub>(t<sub>i</sub>) − U<sub>C,mess</sub>(t<sub>i</sub>)]² (Gl. 6.4) klein wird; die Kennlinien folgen aus θ. (2) <i>Gleichungsfehler aus dem glatten Fit</i> – das ist der Weg, für den der Reiter „Anfitten“ gebaut wird: Erst wird die Messung durch eine glatte Funktion û<sub>C</sub>(t) angenähert, deren erste und zweite Ableitung in geschlossener Form vorliegen (bei tanh-Neuronen: tanh′ = 1 − tanh², tanh″ = −2·tanh·tanh′; bei Messwerten müsste man numerisch differenzieren und verstärkte das ADC-Rauschen). Dann sind Strom und Stromanstieg ohne Integration bekannt:</p>
+      <p><b>Wie die Verläufe L(i) und C(u) aus dem Fit kommen – drei Wege.</b> (0) <i>Rupperts Verfahren wörtlich</i> braucht den Strom i(t): q(t) = ∫i dt über u<sub>C</sub>(t) aufgetragen gibt q(u<sub>C</sub>) Punkt für Punkt, ψ(t) = ∫(u<sub>E</sub> − R·i − u<sub>C</sub>) dt über i(t) gibt ψ(i); durch beide Punktwolken je ein tanh-Netz. Mit Firmware 2.7 misst die Seite i über den Messwiderstand R<sub>s</sub> zwischen Spule und Kondensator (A2 − A0); das macht die Trennung von L(i) und C(u<sub>C</sub>) aus einer einzigen Sprungantwort möglich. Ohne Shunt: (1) <i>Simulation und Suche</i> (Manuskript Abschn. 6): Zustandssystem integrieren, Parameter θ = (M<sub>s</sub>, a, α, k, L<sub>0</sub>, R<sub>0</sub>, C<sub>0</sub>, γ, R<sub>skin</sub>, t<sub>d</sub>) mit Differentialevolution so wählen, dass J(θ) = Σ w(t<sub>i</sub>)·[U<sub>C,sim</sub>(t<sub>i</sub>) − U<sub>C,mess</sub>(t<sub>i</sub>)]² (Gl. 6.4) klein wird; die Kennlinien folgen aus θ. (2) <i>Gleichungsfehler aus dem glatten Fit</i> – das ist der Weg, für den der Reiter „Anfitten“ gebaut wird: Erst wird die Messung durch eine glatte Funktion û<sub>C</sub>(t) angenähert, deren erste und zweite Ableitung in geschlossener Form vorliegen (bei tanh-Neuronen: tanh′ = 1 − tanh², tanh″ = −2·tanh·tanh′; bei Messwerten müsste man numerisch differenzieren und verstärkte das ADC-Rauschen). Dann sind Strom und Stromanstieg ohne Integration bekannt:</p>
       <math display="block"><mrow><mi>i</mi><mo>=</mo><msub><mi>C</mi><mi>d</mi></msub><mo>(</mo><mover><mi>u</mi><mo>^</mo></mover><mo>)</mo><mo>·</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mo>′</mo></msup><mo>,</mo><mspace width="1.2em"/><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msubsup><mi>C</mi><mi>d</mi><mo>′</mo></msubsup><mo>(</mo><mover><mi>u</mi><mo>^</mo></mover><mo>)</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mrow><mo>′</mo><mn>2</mn></mrow></msup><mo>+</mo><msub><mi>C</mi><mi>d</mi></msub><mo>(</mo><mover><mi>u</mi><mo>^</mo></mover><mo>)</mo><msup><mover><mi>u</mi><mo>^</mo></mover><mo>″</mo></msup><mo>,</mo><mspace width="1.5em"/><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>u</mi><mi>E</mi></msub><mo>−</mo><mi>R</mi><mi>i</mi><mo>−</mo><msub><mi>L</mi><mi>d</mi></msub><mo>(</mo><mi>i</mi><mo>)</mo><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>−</mo><mover><mi>u</mi><mo>^</mo></mover><mo>,</mo><mspace width="1.2em"/><munder><mo>min</mo><mrow><msub><mi>L</mi><mi>d</mi></msub><mo>,</mo><msub><mi>C</mi><mi>d</mi></msub></mrow></munder><munder><mo>∑</mo><mi>n</mi></munder><mi>r</mi><msup><mrow><mo>(</mo><msub><mi>t</mi><mi>n</mi></msub><mo>)</mo></mrow><mn>2</mn></msup></mrow></math>
       <p>Der Maschensatz muss in jedem Abtastpunkt aufgehen; die Parameter der Kennlinien (L<sub>0</sub>, i<sub>s</sub> bzw. a<sub>k</sub>, b<sub>k</sub>; C<sub>0</sub>, γ) minimieren den Gleichungsfehler r, und daraus werden L<sub>d</sub>(i) und C<sub>d</sub>(u<sub>C</sub>) als Kurven gezeichnet. Dabei gilt ohne Strommessung: Aus <b>einer</b> Sprungantwort allein sind L(i) und C(u<sub>C</sub>) nicht zu trennen (nur ihr Zusammenwirken entlang der einen Bahn in der i-u<sub>C</sub>-Ebene ist angeregt); die Messung mit mehreren Tastgraden (T = 100 … 140, Wiederholungen W) liefert mehrere Bahnen und macht die Trennung möglich. Genau dafür zeichnet die Seite die Anregung U<sub>E</sub> exakt mit auf.</p>
       <p><b>Warum die Wahl der Ansatzfunktion die eigentliche Frage ist.</b> Fourier-Glieder sind periodisch und können den Übergang in den eingeschwungenen Zustand nur mit vielen Gliedern und Welligkeit nachbilden; Taylor-Polynome laufen außerhalb des Entwicklungspunkts davon. Gedämpfte Sinusglieder e<sup>−αt</sup>·sin(ω<sub>d</sub>t + φ) sind die exakte Lösungsklasse des linearen Falls und scheitern erst an der Nichtlinearität (Frequenz hängt von der Amplitude ab). tanh-Neuronen sind glatt, sättigen von selbst auf einen Endwert und haben geschlossene Ableitungen – deshalb der Vergleich bei gleicher Parameterzahl in Anstieg, Schwingen und eingeschwungenem Zustand. Offen ist, ob der tanh die beste Ansatzfunktion für gedämpfte nichtlineare Schwingungen ist oder nur eine spezielle Lösung des allgemeinen Approximationsproblems; das soll der Reiter „Anfitten“ zeigen.</p>
@@ -393,6 +399,7 @@ function lesen(text, name) {
     const r = {t: sp(ix("t_s")), u: sp(ix("U_C_V")), kk: sp(ix("k"))};
     const dm = /d = ([0-9.]+)/.exec(kopf), satz = /T:N:V:F:B:P = (\d+):(\d+):(\d+):(\d+):(\d+):(\d+)/.exec(kopf);
     if (ix("U_H_V") >= 0) { r.uh = sp(ix("U_H_V")); r.ul = sp(ix("U_L_V")); r.d = dm ? Number(dm[1]) : satz ? tastgrad(+satz[1], +satz[4]) : NaN; if (ix("nF") >= 0) { r.nf = sp(ix("nF")); r.nh = sp(ix("nH")); r.nl = sp(ix("nL")); } if (!Number.isFinite(r.d)) r.ue_fertig = sp(ix("U_E_V")); }
+    if (ix("U_2_V") >= 0) { r.u2 = sp(ix("U_2_V")); const rs = /Rs = ([0-9.]+)/.exec(kopf); r.Rs = rs ? Number(rs[1]) : NaN; r.im = ix("i_mA") >= 0 ? sp(ix("i_mA")).map(x => x / 1000) : (r.Rs > 0 ? r.u2.map((x, i) => (x - r.u[i]) / r.Rs) : null); if (!r.im) delete r.im; }
     // rlc2_* (Format 2.0): U_E_V ist nur der rohe PWM-Mittel aus 4 Momentwerten -- kein Mittelwert der Anregung, wird nicht gezeichnet (2.7)
     r.text = text; return r;
   }
@@ -676,6 +683,9 @@ function zeichneKal() {
   if (!pts.length) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText("Keine Kalibrierpunkte: messen oder laden", w / 2, h / 2); }
 }
 new ResizeObserver(() => zeichneKal()).observe($("b5"));
+function stromBezug(k) { const n = k.t.length, C = Number($("z_C").value) * 1e-6, du = new Array(n).fill(0);
+  for (let j = 1; j < n - 1; j++) du[j] = (k.u[j + 1] - k.u[j - 1]) / (k.t[j + 1] - k.t[j - 1]);
+  return du.map((_, j) => { let s = 0, m = 0; for (let q = Math.max(1, j - 2); q <= Math.min(n - 2, j + 2); q++) { s += du[q]; m++; } return m ? C * s / m : NaN; }); }
 function stromAusAbfall(k) {   // {iH, iL, iC}: Strom aus den Pegeln (NaN, wo kein Treffer oder am Anschlag), Bezug C·dU_C/dt geglättet
   if (!k.uh || !kal) return null; const n = k.t.length, iH = new Array(n).fill(NaN), iL = new Array(n).fill(NaN);
   for (let j = 0; j < n; j++) { if (k.nh && k.nh[j] >= 1 && Number.isFinite(kal.RH) && k.uh[j] < 5 - LSB / 2) iH[j] = (5 - k.uh[j] - kal.U0H) / kal.RH; if (k.nl && k.nl[j] >= 1 && Number.isFinite(kal.RL) && k.ul[j] > LSB / 2) iL[j] = (k.ul[j] - kal.U0L) / kal.RL; }
@@ -759,16 +769,19 @@ function zeichne4() {
   if (!hat) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(k ? "„" + k.name + "“ hat keine Zählwerte (Format ohne getrennte Pegel, vor rlc_sprung_2_2)" : "Keine Kurve gewählt", w / 2, h / 2); }
 }
 function zeichne4Strom(g, w, h, B, k) {
-  const s = k ? stromAusAbfall(k) : null; let lo = -1, hi = 1;
-  if (s) for (const a of [s.iH, s.iL, s.iC]) for (let j = 0; j < k.t.length; j++) { const tm = k.t[j] * 1000; if (tm < B.x0 || tm > B.x1 || !Number.isFinite(a[j])) continue; lo = Math.min(lo, a[j] * 1000); hi = Math.max(hi, a[j] * 1000); }
-  const p = (hi - lo) * 0.08, {X, Y} = achsen(g, w, h, B.x0, B.x1, lo - p, hi + p, "i / mA", "Strom: grün i_H aus 5 V − U_H (High-Treiber), blau i_L aus U_L (Low-Treiber), orange C·dU_C/dt (C = " + $("z_C").value + " µF) · Lücken: kein Treffer oder am Anschlag (ADC liest nicht über VCC / unter GND)" + (k ? " · „" + k.name + "“" : ""));
+  let s = k ? stromAusAbfall(k) : null; let lo = -1, hi = 1;
+  if (!s && k && k.im) s = {iH: new Array(k.t.length).fill(NaN), iL: new Array(k.t.length).fill(NaN), iC: stromBezug(k)};
+  if (s && k.im) s.im = k.im;
+  if (s) for (const a of [s.iH, s.iL, s.iC, s.im || []]) for (let j = 0; j < k.t.length; j++) { const tm = k.t[j] * 1000; if (tm < B.x0 || tm > B.x1 || !Number.isFinite(a[j])) continue; lo = Math.min(lo, a[j] * 1000); hi = Math.max(hi, a[j] * 1000); }
+  const p = (hi - lo) * 0.08, {X, Y} = achsen(g, w, h, B.x0, B.x1, lo - p, hi + p, "i / mA", "Strom: " + (s && s.im ? "schwarz i gemessen (Shunt " + (k.Rs || "?") + " Ω, A2 − A0) · " : "") + "grün i_H aus 5 V − U_H (High-Treiber), blau i_L aus U_L (Low-Treiber), orange C·dU_C/dt (C = " + $("z_C").value + " µF) · Lücken: kein Treffer oder am Anschlag" + (k ? " · „" + k.name + "“" : ""));
   ansicht4 = {X, w, h, x0: B.x0, x1: B.x1, k: s ? k : null, strom: s};
   klipp(g, w, h);
   if (s) { g.strokeStyle = "#ccc"; g.beginPath(); g.moveTo(RAND.l, Y(0)); g.lineTo(w - RAND.r, Y(0)); g.stroke();
     linie(g, X, Y, k.t, s.iC.map(x => x * 1000), "#eb6834", 1.4, []); linie(g, X, Y, k.t, s.iH.map(x => x * 1000), "#1b8a3a", 1.4, []); linie(g, X, Y, k.t, s.iL.map(x => x * 1000), "#2a78d6", 1.4, [5, 3]);
+    if (s.im) linie(g, X, Y, k.t, s.im.map(x => x * 1000), "#111", 1.8, []);
     if (k.t.filter(t => t * 1000 >= B.x0 && t * 1000 <= B.x1).length <= 600) { punkte(g, X, Y, k.t, s.iH.map(x => x * 1000), "#1b8a3a", "o", B.x0, B.x1); punkte(g, X, Y, k.t, s.iL.map(x => x * 1000), "#2a78d6", "q", B.x0, B.x1); } }
   g.restore();
-  if (!s) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(!kal ? "Keine Kalibrierung: Reiter „Kalibrieren“ (messen oder laden), dann „Gerade rechnen und übernehmen“" : "Kurve ohne getrennte Pegel (vor rlc_sprung_2_2)", w / 2, h / 2); }
+  if (!s) { g.fillStyle = "#666"; g.textAlign = "center"; g.fillText(!kal ? "Kein gemessener Strom (Shunt, Firmware 2.7) und keine Kalibrierung: Reiter „Kalibrieren“ (messen oder laden), dann „Gerade rechnen und übernehmen“" : "Kurve ohne getrennte Pegel (vor rlc_sprung_2_2)", w / 2, h / 2); }
 }
 function zoomMaus(c, ev) { const b = c.getBoundingClientRect(); return {mx: ev.clientX - b.left, my: ev.clientY - b.top}; }
 function xVon(A, mx) { return A.x0 + (mx - RAND.l) / (A.w - RAND.l - RAND.r) * (A.x1 - A.x0); }
@@ -802,7 +815,7 @@ function zeiger3(cid, tid, nr) {
     if (mx < RAND.l || mx > A.w - RAND.r) { tip.hidden = true; return; }
     const tms = xVon(A, mx), ks = nr === 3 ? A.v : (A.k ? [A.k] : []);
     const zl = ks.map(k => { const i = naechster(k.t, tms), e = ue(k); let s = `<span style="color:${k.farbe}">■</span> ${k.name}: k ${k.kk ? k.kk[i] : i} · t ${zahl(k.t[i] * 1000, 2)} ms · U<sub>C</sub> <b>${zahl(k.u[i], 4)} V</b>`;
-      if (e) s += ` · U<sub>E</sub> <b>${zahl(e[i], 4)} V</b>`; if (k.uh) s += ` · U<sub>H</sub> ${zahl(k.uh[i], 3)} · U<sub>L</sub> ${zahl(k.ul[i], 3)} V`; if (k.nh) s += ` · nH ${k.nh[i]} nL ${k.nl[i]} nF ${k.nf[i]}`; if (nr === 4 && A.strom) s += ` · i_H <b>${zahl(A.strom.iH[i] * 1000, 2)}</b> · i_L <b>${zahl(A.strom.iL[i] * 1000, 2)}</b> · C·dU/dt <b>${zahl(A.strom.iC[i] * 1000, 2)} mA</b>`; return s; });
+      if (e) s += ` · U<sub>E</sub> <b>${zahl(e[i], 4)} V</b>`; if (k.uh) s += ` · U<sub>H</sub> ${zahl(k.uh[i], 3)} · U<sub>L</sub> ${zahl(k.ul[i], 3)} V`; if (k.nh) s += ` · nH ${k.nh[i]} nL ${k.nl[i]} nF ${k.nf[i]}`; if (nr === 4 && A.strom) s += (A.strom.im ? ` · i gemessen <b>${zahl(A.strom.im[i] * 1000, 3)} mA</b>` : "") + ` · i_H <b>${zahl(A.strom.iH[i] * 1000, 2)}</b> · i_L <b>${zahl(A.strom.iL[i] * 1000, 2)}</b> · C·dU/dt <b>${zahl(A.strom.iC[i] * 1000, 2)} mA</b>`; return s; });
     if (!zl.length) { tip.hidden = true; return; }
     tip.innerHTML = `t = ${zahl(tms, 2)} ms<br>` + zl.join("<br>"); tip.hidden = false;
     const b = c.getBoundingClientRect(), bw = tip.offsetWidth; tip.style.left = (mx + 14 + bw > b.width ? Math.max(0, mx - 14 - bw) : mx + 14) + "px"; tip.style.top = "10px";
@@ -834,7 +847,7 @@ function zeiger(cid, tid, nr) {
 zeiger("c1", "tip1", 1); zeiger("c2", "tip2", 2);
 
 // ---------- Web Serial
-let port = null, leser = null, zeilenPuffer = "", zeilen = [], warter = null, beschaeftigt = false, abbrechen = false;
+let port = null, leser = null, zeilenPuffer = "", zeilen = [], warter = null, beschaeftigt = false, abbrechen = false, nanoFassung = null;
 function standV(t, art) { const e = $("stand_v"); e.textContent = t; e.className = "stand" + (art ? " " + art : ""); }
 function standM(t, art) { const e = $("stand_m"); e.textContent = t; e.className = "stand" + (art ? " " + art : ""); }
 function knoepfe() {
@@ -878,8 +891,9 @@ $("verbinden").onclick = async () => {
     standV("Warte auf den Nano (er startet beim Öffnen neu) …");
     await warteAuf(() => zeilen.find(l => l.startsWith("RLC_SPRUNG")), 5000);
     zeilen = []; await senden("?"); const k = await warteAuf(() => zeilen.find(l => l.startsWith("RLC_SPRUNG")), 3000);
-    if (!/RLC_SPRUNG 2\.6/.test(k)) standV("Verbunden, aber falsche Fassung: " + k + "\nDiese Seite braucht rlc_sprung_2_6.", "fehler");
-    else standV("Verbunden: " + k, "gut");
+    const mf = /RLC_SPRUNG (2\.[67])/.exec(k); nanoFassung = mf ? mf[1] : null;
+    if (!mf) standV("Verbunden, aber falsche Fassung: " + k + "\nDiese Seite braucht rlc_sprung_2_6 oder 2_7.", "fehler");
+    else standV("Verbunden: " + k + (nanoFassung === "2.7" ? "\nFirmware 2.7: Strom über Shunt R_s an A2." : "\nFirmware 2.6: ohne Strommessung (R_s wird nicht verwendet)."), "gut");
   } catch (e) {
     const t = /already open|Failed to open/i.test(e.message) ? "Anschluss belegt – läuft gerade eine Messung über die Brücke oder ein anderes Programm (Arduino IDE, Thonny)?" : e.name === "NotFoundError" ? "Kein Anschluss gewählt." : e.message;
     standV("Nicht verbunden: " + t + (port ? "\nAntwortet der Nano nicht, ist vielleicht ein anderes Programm darauf (rlc_sprung_2_6 nötig)." : ""), "fehler");
@@ -914,6 +928,8 @@ function pruefeEingabe() {
   if (!g(E.V, 0, 60000)) throw new Error("Entladen V muss eine ganze Zahl 0…60000 ms sein");
   if (!g(E.W, 1, 50)) throw new Error("Wiederholungen W: 1…50");
   if (!g(E.R, 0, 60000)) throw new Error("Rampe R muss eine ganze Zahl 0…60000 ms sein");
+  E.Rs = Number($("Rs").value); if (!(E.Rs >= 0 && E.Rs <= 1000)) throw new Error("Shunt R_s: 0 … 1000 Ω");
+  if (nanoFassung === "2.7" && (E.B & 1)) throw new Error("Firmware 2.7 braucht ein gerades B (Takt je Wert)");
   return E;
 }
 const zwei = n => String(n).padStart(2, "0");
@@ -926,20 +942,33 @@ async function eineMessung(E, nr) {
   if (start.startsWith("FEHLER")) throw new Error(start);
   const ende = await warteAuf(() => zeilen.find(l => l.startsWith("ENDE") || l.startsWith("FEHLER")), (E.N + E.P) * E.B * 0.25 + E.R + 15000);
   if (ende.startsWith("FEHLER")) throw new Error(ende);
-  const roh = zeilen.filter(l => /^-?\d+( \d+){6}$/.test(l)).map(l => l.split(" ").map(Number));
+  const f27 = nanoFassung === "2.7";
+  const roh = zeilen.filter(l => (f27 ? /^-?\d+( \d+){7}$/ : /^-?\d+( \d+){6}$/).test(l)).map(l => l.split(" ").map(Number));
   const [, dauer, verloren] = ende.split(" ").map(Number);
   if (roh.length !== E.N + E.P) throw new Error(`${roh.length} statt ${E.N + E.P} Werte empfangen`);
   if (roh.some(([k], i) => k !== i - E.P)) throw new Error("Werte nicht lückenlos nummeriert");
   if (verloren) throw new Error(`${verloren} Werte im Nano verloren (Ausgabe zu langsam für diesen Takt)`);
-  const a = anregung(roh, E.T, E.F, E.B), d = a.d;
-  const kopf = zeilen.filter(l => !/^-?\d/.test(l));
-  let text = `# RLC_Sprung_2.12.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
-  roh.forEach(([k, s0, sH, nH, sL, nL, nF], i) => { const dd = k >= 0 ? d : 0;
-    text += `${k} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
-  const name = `rlc212_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
-  const k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
-  const kw = kennwerte(k);
-  standM(`Messung ${nr}/${E.W}: ${roh.length} Werte in ${zahl(dauer / 1000, 1)} ms, keine Lücke. U_C max ${zahl(kw.Umax, 4)} V bei ${zahl(kw.tmax * 1000, 1)} ms, U_E Ende ${zahl(kw.UEend, 4)} V (ideal ${zahl(d * 5, 4)} V).`, "gut");
+  const kopf = zeilen.filter(l => !/^-?\d/.test(l)); let k, kw, d, text, name, anschlag = 0;
+  if (f27) {   // 2.7: k s0 s2 sH nH sL nL nF; A0 und A2 je B/2 Wandlungen
+    const roh6 = roh.map(z => [z[0], z[1], z[3], z[4], z[5], z[6], z[7]]), a = anregung(roh6, E.T, E.F, E.B); d = a.d;
+    const hb = E.B / 2, u = roh.map(z => z[1] / hb * LSB), u2 = roh.map(z => z[2] / hb * LSB), im = u2.map((x, i) => E.Rs > 0 ? (x - u[i]) / E.Rs : NaN);
+    anschlag = roh.filter(z => z[2] === 0 || z[2] >= 1023 * hb).length;
+    text = `# RLC_Sprung_2.13.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende (Shunt Rs zwischen Spule und C), A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; Rs = ${E.Rs}; ${JSON.stringify(kopf)}\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n`;
+    roh.forEach(([kq, s0, s2, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
+      text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${s2} ${sH} ${nH} ${sL} ${nL} ${nF} ${u[i].toFixed(6)} ${u2[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)} ${(im[i] * 1000).toFixed(4)}\n`; });
+    name = `rlc213_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    k = neueKurve(name, {t: a.t, u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, u2, im, Rs: E.Rs, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
+  } else {
+    const a = anregung(roh, E.T, E.F, E.B); d = a.d;
+    text = `# RLC_Sprung_2.13.html / rlc_sprung_2_6: Pin 11 PWM, A0 = U_C, A1 = Pinspannung (High ab 4,5 V / Low bis 0,5 V getrennt, Flanken nF verworfen); Satz T:N:V:F:B:P:R = ${satz}; d = ${d.toFixed(6)}; ${JSON.stringify(kopf)}\n# k t_s s0 sH nH sL nL nF U_C_V U_H_V U_L_V U_E_V\n`;
+    roh.forEach(([kq, s0, sH, nH, sL, nL, nF], i) => { const dd = kq >= 0 ? d : 0;
+      text += `${kq} ${a.t[i].toFixed(6)} ${s0} ${sH} ${nH} ${sL} ${nL} ${nF} ${a.u[i].toFixed(6)} ${a.uh[i].toFixed(6)} ${a.ul[i].toFixed(6)} ${(dd * a.uh[i] + (1 - dd) * a.ul[i]).toFixed(6)}\n`; });
+    name = `rlc212_${zeitname(jetzt)}_T${E.T}_F${E.F}_B${E.B}.txt`;
+    k = neueKurve(name, {t: a.t, u: a.u, kk: a.k, uh: a.uh, ul: a.ul, nf: a.nf, nh: a.nh, nl: a.nl, d, text}, "gemessen " + jetzt.toLocaleString("de-DE"));
+  }
+  kw = kennwerte(k);
+  const imax = k.im ? Math.max(...k.im.filter(Number.isFinite)) : NaN;
+  standM(`Messung ${nr}/${E.W}: ${roh.length} Werte in ${zahl(dauer / 1000, 1)} ms, keine Lücke. U_C max ${zahl(kw.Umax, 4)} V bei ${zahl(kw.tmax * 1000, 1)} ms, U_E Ende ${zahl(kw.UEend, 4)} V (ideal ${zahl(d * 5, 4)} V).` + (k.im ? ` Strom max ${zahl(imax * 1000, 2)} mA (Shunt ${E.Rs} Ω)` + (anschlag ? `, A2 ${anschlag}-mal am Anschlag!` : ", A2 nie am Anschlag.") : ""), anschlag ? "fehler" : "gut");
   await ablegen(k);
 }
 $("messen").onclick = async () => {

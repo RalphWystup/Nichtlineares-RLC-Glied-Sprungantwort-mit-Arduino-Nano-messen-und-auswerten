@@ -1,3 +1,4 @@
+// rlc_seite_probe_1.14.mjs -- (1.14: für Seite 2.13; P22 Format 2.7 lesen (U_2_V, i_mA, Rs), Stromansicht mit gemessenem Strom, R_s-Eingabe geprüft, Kennung 2.7 angenommen;
 // rlc_seite_probe_1.13.mjs -- (1.13: für Seite 2.12; P21 Impulsantwort: Rest unter 1 ADC-Stufe, ∫g ≈ 1, rohe Differenz exakt aber mit Spitzen über 4 s⁻¹, lineares Modell vorhanden;
 // rlc_seite_probe_1.12.mjs -- (1.12: für Seite 2.11; P20 Kalibrierreiter: R_cal < 250 abgewiesen, Rechnung aus synthetischen Rohzeilen, Gerade aus zwei Punkten,
 //   JSON-Text, Laden, Stromansicht im Prüfreiter zeichnet drei Reihen; P4 prüft auch k_messen gesperrt;
@@ -49,7 +50,7 @@ await cdp("Page.navigate", {url: "file://" + datei}); await warte(1500);
 const erg = []; const P = (name, ok, text) => { erg.push([name, ok, text]); console.log((ok ? "RICHTIG " : "FALSCH  ") + name + ": " + text); };
 
 // P1 geladen, Titel, Kurven eingebettet
-const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.12/.test(titel), titel);
+const titel = await js("document.title"); P("P1 Seite geladen", /RLC-Sprung 2\.13/.test(titel), titel);
 const au = await js(`(() => { const a = $("autor"), b = a.getBoundingClientRect(), h = document.querySelector("header").getBoundingClientRect(), m = document.querySelector("main").getBoundingClientRect(); return [a.textContent, b.width > 100 && b.right <= innerWidth, m.top >= h.bottom, Math.round(h.height)].join("|"); })()`);
 P("P1b Namensnennung sichtbar in der Kopfzeile, Hauptteil darunter", /^Prof\. Dr\.-Ing\. Ralph Wystup M\.Sc\. — erstellt mit KI und Agent \(Claude Code, Anthropic\)\|true\|true\|\d+$/.test(au), au);
 const n0 = await js("kurven.length"); P("P2 eingebettete Kurven", n0 === 3, `${n0} Kurven (Simulink, T140, T128)`);
@@ -163,8 +164,8 @@ const t18 = await js(`(() => { const f1 = $("foto1"), f2 = $("foto2"), sv = docu
   return [$("r_theorie").hidden, $("r_pruef").hidden, f1.naturalWidth + "x" + f1.naturalHeight, f2.naturalWidth + "x" + f2.naturalHeight, f1.src.slice(0, 22), sv ? Math.round(sv.getBoundingClientRect().width) : 0, mm.length, fr ? Math.round(fr.getBoundingClientRect().height) : 0, $("r_theorie").scrollWidth <= $("r_theorie").clientWidth, Math.round(f1.getBoundingClientRect().width)].join("|"); })()`);
 const t = t18.split("|");
 P("P18 Aufbau und Theorie: zwei Fotos 2048×944 als data:, Schaltplan-SVG gezeichnet, 11 MathML-Blöcke mit Bruchhöhe, kein waagerechtes Rollen", t[0] === "false" && t[1] === "true" && t[2] === "2048x944" && t[3] === "2048x944" && t[4] === "data:image/jpeg;base64" && Number(t[5]) > 300 && Number(t[6]) === 11 && Number(t[7]) > 20 && t[8] === "true" && Number(t[9]) > 200, t18);
-const rx = await js(`document.querySelector("#schaltplan svg").textContent.includes("ext") + "|" + document.querySelector("#schaltplan svg").textContent.includes("= 92 Ω")`);
-P("P18c Schaltplan ohne R_ext, R_Cu = 92 Ω beschriftet", rx === "false|true", rx);
+const rx = await js(`document.querySelector("#schaltplan svg").textContent.includes("ext") + "|" + document.querySelector("#schaltplan svg").textContent.includes("= 92 Ω") + "|" + document.querySelector("#schaltplan svg").textContent.includes("A2 (ADC)")`);
+P("P18c Schaltplan ohne R_ext, R_Cu = 92 Ω, A2 am Spulenende", rx === "false|true|true", rx);
 await bild("p18_theorie_oben");
 await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight * 0.3`); await warte(200); await bild("p18_theorie_mitte");
 await js(`$("r_theorie").scrollTop = $("r_theorie").scrollHeight * 0.5`); await warte(200); await bild("p18_theorie_mitte2");
@@ -214,6 +215,18 @@ await cdp("Input.dispatchMouseEvent", {type: "mouseMoved", x: b6[0] + 58 + (b6[2
 const t6 = await js(`$("tip6").hidden ? "versteckt" : $("tip6").textContent`); P("P21b Zeigertipp der Impulsantwort", /g iterativ .* s⁻¹/.test(t6) && /Rest/.test(t6), t6.slice(0, 120));
 await js(`$("i_w").value = 3; $("i_rechnen").click()`); await warte(200);
 const i21b = await js(`[imp.it, (imp.rms * 1000).toFixed(2), imp.erreicht].join("|")`); P("P21c kleinere Glättung w = 3: Rest ebenfalls erreicht", /\|true$/.test(i21b), i21b);
+// P22 Format 2.7 (Shunt): Datei mit U_2_V und i_mA lesen, Strom in der Stromansicht
+const t27 = "# RLC_Sprung_2.13.html / rlc_sprung_2_7: Pin 11 PWM, A0 = U_C, A2 = Spulenende; Satz T:N:V:F:B:P:R = 128:5:0:3:4:2:0; d = 0.501961; Rs = 47; []\n# k t_s s0 s2 sH nH sL nL nF U_C_V U_2_V U_H_V U_L_V U_E_V i_mA\n" +
+  [[-2, 0, 0], [-1, 0, 0], [0, 20, 50], [1, 100, 150], [2, 300, 330], [3, 600, 600], [4, 800, 780]].map(([k, a, b], j) => { const uc = a / 2 * 5 / 1023, u2 = b / 2 * 5 / 1023; return `${k} ${((k + 0.5) * 0.001).toFixed(6)} ${a} ${b} ${k >= 0 ? 2000 : 0} ${k >= 0 ? 2 : 0} 0 ${k >= 0 ? 2 : 4} 0 ${uc.toFixed(6)} ${u2.toFixed(6)} 5.000000 0.000000 ${(k >= 0 ? 2.509804 : 0).toFixed(6)} ${((u2 - uc) / 47 * 1000).toFixed(4)}`; }).join("\n") + "\n";
+const r22 = await js(`(() => { const r = lesen(${JSON.stringify(t27)}, "rlc213_probe.txt"); const k = neueKurve("rlc213_probe.txt", r, "Probe"); return [k.u2 ? k.u2.length : 0, k.im ? k.im.length : 0, k.Rs, k.im ? (k.im[2] * 1000).toFixed(4) : "-", k.im ? (k.im[6] * 1000).toFixed(4) : "-", k.u.length].join("|"); })()`);
+P("P22 Format 2.7 gelesen: U_2 und i je 7 Werte, Rs = 47, i(k=0) = 15 LSB/47 Ω = 1,5599 mA, i(k=4) = −10 LSB/47 Ω = −1,0399 mA", r22 === "7|7|47|1.5599|-1.0399|7", r22);
+await js(`$("rt_pruef").click()`); await warte(300); await js(`$("pk").value = String(kurven[kurven.length - 1].id); $("unten4").value = "i"; $("unten4").dispatchEvent(new Event("change")); $("z_alles").click();`); await warte(200);
+const s22 = await js(`[!!ansicht4.strom, ansicht4.strom && ansicht4.strom.im ? ansicht4.strom.im.length : 0, ansicht4.k ? ansicht4.k.name : "-"].join("|")`);
+P("P22b Stromansicht zeichnet den gemessenen Strom der 2.7-Kurve (auch ohne Kalibrierung)", s22 === "true|7|rlc213_probe.txt", s22);
+await bild("p22_strom_shunt");
+await js(`$("unten4").value = "n"; $("unten4").dispatchEvent(new Event("change")); entfernen(kurven[kurven.length - 1]); $("rt_aus").click();`); await warte(200);
+await js(`$("Rs").value = 2000`); let e22 = await js(`(() => { try { pruefeEingabe(); return "keine Sperre"; } catch (x) { return x.message; } })()`); P("P22c R_s = 2000 Ω abgewiesen", /Shunt R_s: 0 … 1000/.test(e22), e22);
+await js(`$("Rs").value = 47`);
 // P17 Löschknöpfe
 await js(`$("rt_aus").click()`); await warte(200);
 const n17 = await js("kurven.length");
