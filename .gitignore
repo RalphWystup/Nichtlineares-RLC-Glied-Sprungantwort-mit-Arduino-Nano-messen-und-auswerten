@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 nano/arduino/
 nano/Messungen_*/
+nano/Nano_einrichten/pakete/
